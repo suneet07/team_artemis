@@ -1,0 +1,548 @@
+openapi: 3.1.0
+info:
+  title: SatQuery AI API
+  version: 1.0.0-frozen
+  description: >
+    Frozen frontend contract for SatQuery AI (master plan v3.8, sections 4.8/4.10).
+    Field-level shapes live in ./types.ts; trace objects follow configs/trace_schema.json
+    (schema_version 2) verbatim. Any change here requires a version bump and notifying
+    both frontend and backend the same day.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: local dev / offline demo compose
+
+tags:
+  - name: scenes
+  - name: bundles
+  - name: jobs
+  - name: queries
+  - name: assets
+  - name: reports
+  - name: meta
+
+paths:
+  /scenes:
+    post:
+      tags: [scenes]
+      summary: Upload one raster
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                declared_modality: { type: string, enum: [optical, sar] }
+                acquired_at: { type: string, format: date-time }
+                role: { type: string, enum: [optical, sar, t1, t2] }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Scene" } } } }
+        "413": { $ref: "#/components/responses/Error" }
+        "415": { $ref: "#/components/responses/Error" }
+    get:
+      tags: [scenes]
+      summary: List scenes
+      parameters:
+        - { name: is_demo, in: query, schema: { type: boolean } }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { type: object, properties: { scenes: { type: array, items: { $ref: "#/components/schemas/Scene" } } } } } }
+
+  /scenes/{scene_id}:
+    parameters: [{ $ref: "#/components/parameters/SceneId" }]
+    get:
+      tags: [scenes]
+      summary: Scene detail with CompatibilityReport
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Scene" } } } }
+        "404": { $ref: "#/components/responses/Error" }
+    patch:
+      tags: [scenes]
+      summary: Set role / acquisition date / declared modality
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { type: string, enum: [optical, sar, t1, t2] }
+                acquired_at: { type: string, format: date-time }
+                declared_modality: { type: string, enum: [optical, sar] }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Scene" } } } }
+    delete:
+      tags: [scenes]
+      responses: { "204": { description: Deleted } }
+
+  /scenes/{scene_id}/preview.png:
+    parameters: [{ $ref: "#/components/parameters/SceneId" }]
+    get:
+      tags: [scenes]
+      summary: Display thumbnail (<=1024px, stretched RGB or SAR dB)
+      responses: { "200": { description: PNG, content: { image/png: { schema: { type: string, format: binary } } } } }
+
+  /scenes/{scene_id}/tiles/{z}/{x}/{y}.png:
+    parameters:
+      - { $ref: "#/components/parameters/SceneId" }
+      - { name: z, in: path, required: true, schema: { type: integer } }
+      - { name: x, in: path, required: true, schema: { type: integer } }
+      - { name: y, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [scenes]
+      summary: XYZ display tiles (EPSG:3857)
+      responses: { "200": { description: PNG tile, content: { image/png: { schema: { type: string, format: binary } } } } }
+
+  /scenes/{scene_id}/footprint.geojson:
+    parameters: [{ $ref: "#/components/parameters/SceneId" }]
+    get:
+      tags: [scenes]
+      responses: { "200": { description: GeoJSON polygon, content: { application/geo+json: { schema: { type: object } } } } }
+
+  /bundles:
+    post:
+      tags: [bundles]
+      summary: Create a bundle from scenes; starts the P1-P4 preparation job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scenes, pair_type]
+              properties:
+                scenes:
+                  type: array
+                  items:
+                    type: object
+                    required: [scene_id, role]
+                    properties:
+                      scene_id: { type: string }
+                      role: { type: string, enum: [optical, sar, t1, t2] }
+                pair_type: { type: string, enum: [single, crossmodal, bitemporal] }
+                label: { type: string }
+      responses:
+        "202": { description: Accepted, content: { application/json: { schema: { $ref: "#/components/schemas/Bundle" } } } }
+        "409": { $ref: "#/components/responses/Error" }
+    get:
+      tags: [bundles]
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { type: object, properties: { bundles: { type: array, items: { $ref: "#/components/schemas/Bundle" } } } } } }
+
+  /bundles/{bundle_id}:
+    parameters: [{ $ref: "#/components/parameters/BundleId" }]
+    get:
+      tags: [bundles]
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Bundle" } } } } }
+    delete:
+      tags: [bundles]
+      responses: { "204": { description: Deleted } }
+
+  /bundles/{bundle_id}/reprepare:
+    parameters: [{ $ref: "#/components/parameters/BundleId" }]
+    post:
+      tags: [bundles]
+      responses: { "202": { description: Accepted, content: { application/json: { schema: { $ref: "#/components/schemas/Bundle" } } } } }
+
+  /jobs/{job_id}:
+    parameters: [{ name: job_id, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [jobs]
+      summary: Poll job status (SSE fallback)
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/JobStatus" } } } } }
+
+  /jobs/{job_id}/events:
+    parameters: [{ name: job_id, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [jobs]
+      summary: "SSE progress stream. Events: progress | stage_complete | done | error"
+      responses:
+        "200":
+          description: event-stream
+          content: { text/event-stream: { schema: { type: string } } }
+
+  /jobs/{job_id}/cancel:
+    parameters: [{ name: job_id, in: path, required: true, schema: { type: string } }]
+    post:
+      tags: [jobs]
+      responses: { "200": { description: Cancelled, content: { application/json: { schema: { $ref: "#/components/schemas/JobStatus" } } } } }
+
+  /queries:
+    post:
+      tags: [queries]
+      summary: Ask a question against a prepared bundle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bundle_id, question]
+              properties:
+                bundle_id: { type: string }
+                question: { type: string }
+                options:
+                  type: object
+                  properties:
+                    allow_llm_router: { type: boolean, default: true }
+                    stream: { type: boolean, default: true }
+      responses:
+        "202":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  query_id: { type: string }
+                  stream_url: { type: string }
+        "409": { $ref: "#/components/responses/Error" }
+    get:
+      tags: [queries]
+      parameters: [{ name: bundle_id, in: query, schema: { type: string } }]
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { type: object, properties: { queries: { type: array, items: { $ref: "#/components/schemas/QueryResult" } } } } } }
+
+  /queries/{query_id}:
+    parameters: [{ $ref: "#/components/parameters/QueryId" }]
+    get:
+      tags: [queries]
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/QueryResult" } } } } }
+
+  /queries/{query_id}/events:
+    parameters: [{ $ref: "#/components/parameters/QueryId" }]
+    get:
+      tags: [queries]
+      summary: >
+        SSE execution stream. Events in order: accepted, router, validator,
+        plan, step_started*, step_completed*, evidence*, agreement?, token*, fusion, done.
+        A refusal ends after validator (or plan) then done with state=refused.
+      responses:
+        "200": { description: event-stream, content: { text/event-stream: { schema: { type: string } } } }
+
+  /queries/{query_id}/trace:
+    parameters:
+      - { $ref: "#/components/parameters/QueryId" }
+      - { name: download, in: query, schema: { type: boolean } }
+    get:
+      tags: [queries]
+      summary: Raw execution trace (configs/trace_schema.json v2) - the graded artifact
+      responses: { "200": { description: OK, content: { application/json: { schema: { type: object } } } } }
+
+  /queries/{query_id}/evidence:
+    parameters: [{ $ref: "#/components/parameters/QueryId" }]
+    get:
+      tags: [queries]
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { type: object, properties: { assets: { type: array, items: { $ref: "#/components/schemas/AssetRef" } } } } } }
+
+  /queries/{query_id}/cancel:
+    parameters: [{ $ref: "#/components/parameters/QueryId" }]
+    post:
+      tags: [queries]
+      responses: { "200": { description: Cancelled } }
+
+  /queries/{query_id}/report:
+    parameters: [{ $ref: "#/components/parameters/QueryId" }]
+    post:
+      tags: [reports]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                include: { type: array, items: { type: string, enum: [evidence, trace, warnings] } }
+                format: { type: string, enum: [pdf], default: pdf }
+      responses: { "202": { description: Accepted, content: { application/json: { schema: { $ref: "#/components/schemas/Report" } } } } }
+
+  /reports/{report_id}:
+    parameters: [{ name: report_id, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [reports]
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Report" } } } } }
+
+  /reports/{report_id}/file:
+    parameters: [{ name: report_id, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [reports]
+      responses: { "200": { description: PDF, content: { application/pdf: { schema: { type: string, format: binary } } } } }
+
+  /assets/{asset_id}:
+    parameters:
+      - { $ref: "#/components/parameters/AssetId" }
+      - { name: download, in: query, schema: { type: boolean } }
+    get:
+      tags: [assets]
+      summary: Asset bytes (GeoTIFF mask in source CRS, PNG overlay, ...)
+      responses: { "200": { description: bytes, content: { application/octet-stream: { schema: { type: string, format: binary } } } } }
+
+  /assets/{asset_id}/meta:
+    parameters: [{ $ref: "#/components/parameters/AssetId" }]
+    get:
+      tags: [assets]
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/AssetRef" } } } } }
+
+  /assets/{asset_id}/tiles/{z}/{x}/{y}.png:
+    parameters:
+      - { $ref: "#/components/parameters/AssetId" }
+      - { name: z, in: path, required: true, schema: { type: integer } }
+      - { name: x, in: path, required: true, schema: { type: integer } }
+      - { name: y, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [assets]
+      responses: { "200": { description: PNG tile, content: { image/png: { schema: { type: string, format: binary } } } } }
+
+  /assets/{asset_id}/overlay.png:
+    parameters: [{ $ref: "#/components/parameters/AssetId" }]
+    get:
+      tags: [assets]
+      summary: Whole-mask PNG reprojected for image-source overlay (small scenes)
+      responses: { "200": { description: PNG, content: { image/png: { schema: { type: string, format: binary } } } } }
+
+  /meta/tasks:
+    get:
+      tags: [meta]
+      responses: { "200": { description: OK, content: { application/json: { schema: { type: object } } } } }
+
+  /meta/tools:
+    get:
+      tags: [meta]
+      summary: All tool manifests (configs/tool_manifest_schema.json)
+      responses: { "200": { description: OK, content: { application/json: { schema: { type: object } } } } }
+
+  /meta/disagreement-causes:
+    get:
+      tags: [meta]
+      responses: { "200": { description: OK, content: { application/json: { schema: { type: object } } } } }
+
+  /meta/health:
+    get:
+      tags: [meta]
+      responses: { "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Health" } } } } }
+
+  /demo/bundles:
+    get:
+      tags: [bundles]
+      summary: Pre-warmed demo bundles (offline venue path)
+      responses:
+        "200":
+          description: OK
+          content: { application/json: { schema: { type: object, properties: { bundles: { type: array, items: { $ref: "#/components/schemas/Bundle" } } } } } }
+
+components:
+  parameters:
+    SceneId: { name: scene_id, in: path, required: true, schema: { type: string } }
+    BundleId: { name: bundle_id, in: path, required: true, schema: { type: string } }
+    QueryId: { name: query_id, in: path, required: true, schema: { type: string } }
+    AssetId: { name: asset_id, in: path, required: true, schema: { type: string } }
+
+  responses:
+    Error:
+      description: Error envelope
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiErrorEnvelope" }
+
+  schemas:
+    ApiErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [UPLOAD_TOO_LARGE, UNSUPPORTED_FORMAT, INGEST_UNREADABLE, NO_CRS,
+                     PAIR_INVALID, COREG_FAILED, BUNDLE_NOT_READY, QUERY_REFUSED,
+                     PARAM_REJECTED, MODEL_UNAVAILABLE, JOB_CANCELLED, INTERNAL]
+            message: { type: string }
+            hint: { type: string }
+            details: { type: object }
+
+    BandInventory:
+      type: object
+      properties:
+        bands: { type: object, additionalProperties: { type: integer } }
+        has_swir: { type: boolean }
+        has_nir: { type: boolean }
+        is_pan_only: { type: boolean }
+        polarisations: { type: array, items: { type: string } }
+        sar_band: { type: [string, "null"], enum: [C, X, L, S, P, null] }
+        sensor_hint: { type: [string, "null"] }
+        computable_indices: { type: array, items: { type: string } }
+
+    CompatibilityReport:
+      type: object
+      properties:
+        format_ok: { type: boolean }
+        crs_valid: { type: boolean }
+        is_georeferenced: { type: boolean }
+        modality: { type: string, enum: [optical, sar, unknown] }
+        modality_source: { type: [string, "null"], enum: [declared, sensor_tag, intensity_signature, band_count, null] }
+        bands_present: { type: array, items: { type: string } }
+        computable_indices: { type: array, items: { type: string } }
+        nodata_frac: { type: number }
+        bit_depth: { type: integer, enum: [8, 12, 16, 32] }
+        bit_depth_source: { type: [string, "null"] }
+        pixel_size_m: { type: [number, "null"] }
+        native_gsd_m: { type: [number, "null"] }
+        band_inventory: { $ref: "#/components/schemas/BandInventory" }
+        warnings: { type: array, items: { type: string } }
+
+    Scene:
+      type: object
+      properties:
+        scene_id: { type: string }
+        filename: { type: string }
+        bytes: { type: integer }
+        uploaded_at: { type: string }
+        status: { type: string, enum: [uploading, ingesting, ready, failed] }
+        role: { type: [string, "null"], enum: [optical, sar, t1, t2, null] }
+        acquired_at: { type: [string, "null"] }
+        is_demo: { type: boolean }
+        preview_url: { type: string }
+        tile_url_template: { type: [string, "null"] }
+        footprint_url: { type: [string, "null"] }
+        bounds_wgs84: { type: [array, "null"], items: { type: number }, minItems: 4, maxItems: 4 }
+        width_px: { type: integer }
+        height_px: { type: integer }
+        compatibility: { oneOf: [{ $ref: "#/components/schemas/CompatibilityReport" }, { type: "null" }] }
+        job_id: { type: string }
+        stream_url: { type: string }
+
+    Bundle:
+      type: object
+      properties:
+        bundle_id: { type: string }
+        label: { type: [string, "null"] }
+        created_at: { type: string }
+        pair_type: { type: string, enum: [single, crossmodal, bitemporal] }
+        status: { type: string, enum: [queued, preparing, ready, failed] }
+        prep_ms: { type: [integer, "null"] }
+        scenes: { type: array, items: { $ref: "#/components/schemas/Scene" } }
+        pair_compatibility:
+          type: [object, "null"]
+          properties:
+            coregistered: { type: boolean }
+            rmse_px: { type: [number, "null"] }
+            correction_applied: { type: boolean }
+            method: { type: [string, "null"] }
+            common_crs: { type: [string, "null"] }
+            checks_passed: { type: array, items: { type: string } }
+        tiles:
+          type: [object, "null"]
+          properties:
+            tile_count: { type: integer }
+            tile_size_px: { type: integer }
+            overlap_frac: { type: number }
+        provenance: { type: array, items: { type: object } }
+        supported_tasks: { type: array, items: { type: string } }
+        blocked_tasks:
+          type: array
+          items:
+            type: object
+            properties: { task: { type: string }, reason: { type: string } }
+        bounds_wgs84: { type: [array, "null"], items: { type: number } }
+        warnings: { type: array, items: { type: string } }
+        job_id: { type: string }
+        stream_url: { type: string }
+
+    JobStatus:
+      type: object
+      properties:
+        job_id: { type: string }
+        kind: { type: string, enum: [prepare, query, report] }
+        state: { type: string, enum: [queued, running, succeeded, failed, cancelled] }
+        stage: { type: [string, "null"] }
+        stage_index: { type: [integer, "null"] }
+        stage_count: { type: [integer, "null"] }
+        percent: { type: number }
+        message: { type: [string, "null"] }
+        eta_s: { type: [number, "null"] }
+        scene_id: { type: string }
+        started_at: { type: [string, "null"] }
+        finished_at: { type: [string, "null"] }
+        elapsed_ms: { type: [integer, "null"] }
+        error: { oneOf: [{ type: "null" }, { type: object }] }
+
+    AssetRef:
+      type: object
+      properties:
+        asset_id: { type: string }
+        kind: { type: string, enum: [mask_geotiff, overlay_png, chart_png, report_pdf, scene_preview, bbox_geojson] }
+        label: { type: string }
+        produced_by: { type: string }
+        media_type: { type: string }
+        bytes: { type: integer }
+        crs: { type: [string, "null"] }
+        bounds_wgs84: { type: [array, "null"], items: { type: number } }
+        bbox_px: { type: array, items: { type: array, items: { type: number } } }
+        tile_url_template: { type: [string, "null"] }
+        overlay_url: { type: [string, "null"] }
+        download_url: { type: string }
+        colour: { type: string }
+        stats: { type: object }
+
+    QueryResult:
+      type: object
+      properties:
+        query_id: { type: string }
+        bundle_id: { type: string }
+        question: { type: string }
+        created_at: { type: string }
+        state: { type: string, enum: [queued, running, succeeded, refused, failed, cancelled] }
+        answer: { type: [string, "null"] }
+        confidence: { type: [number, "null"] }
+        confidence_basis: { type: [string, "null"], enum: [heuristic, calibrated, null] }
+        latency_ms: { type: [integer, "null"] }
+        refusal:
+          type: [object, "null"]
+          properties:
+            reason: { type: string }
+            category: { type: string, enum: [parameter_gate, validator, modality_limitation, missing_input, unsupported_class] }
+            remedy:
+              type: object
+              properties:
+                action: { type: string, enum: [add_second_image, add_optical, add_sar, ask_different_question, reupload, none] }
+                label: { type: string }
+                suggested_questions: { type: array, items: { type: string } }
+        evidence: { type: array, items: { $ref: "#/components/schemas/AssetRef" } }
+        warnings: { type: array, items: { type: string } }
+        trace:
+          type: object
+          description: configs/trace_schema.json, schema_version 2, verbatim
+
+    Report:
+      type: object
+      properties:
+        report_id: { type: string }
+        query_id: { type: string }
+        state: { type: string, enum: [queued, running, succeeded, failed, cancelled] }
+        file_url: { type: [string, "null"] }
+        bytes: { type: [integer, "null"] }
+        job_id: { type: string }
+        stream_url: { type: string }
+
+    Health:
+      type: object
+      properties:
+        status: { type: string, enum: [ok, degraded, down] }
+        version: { type: string }
+        trace_schema_version: { type: integer }
+        serving: { type: string, enum: [vllm, local_quantised, down] }
+        gpu: { type: boolean }
+        offline_mode: { type: boolean }
+        adapters_loaded: { type: array, items: { type: string } }
+        demo_bundles_warm: { type: integer }

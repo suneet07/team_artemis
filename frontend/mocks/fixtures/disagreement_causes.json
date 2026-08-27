@@ -1,0 +1,14 @@
+{
+  "causes": [
+    {"code": "cloud_over_water", "label": "Cloud over water", "trusted_modality": "sar",
+     "explanation": "The optical image shows cloud where SAR shows water. Radar penetrates cloud, so the SAR result is trusted here and confidence is lowered."},
+    {"code": "wet_smooth_soil", "label": "Wet smooth soil", "trusted_modality": "optical",
+     "explanation": "SAR reads this surface as dark like water, but the optical image shows bare soil. Smooth wet ground mimics water in radar; optical is trusted."},
+    {"code": "radar_shadow", "label": "Radar shadow", "trusted_modality": "optical",
+     "explanation": "Terrain blocked the radar beam, producing a dark area that is not water. Optical evidence is trusted."},
+    {"code": "wind_roughened_surface", "label": "Wind-roughened water", "trusted_modality": "optical",
+     "explanation": "Wind roughened the water surface, so SAR reads it as bright land. The optical result is trusted."},
+    {"code": "dry_smooth_sand", "label": "Dry smooth sand", "trusted_modality": "optical",
+     "explanation": "Smooth arid sand scatters little energy back, so SAR reads it as dark like water. Optical is trusted."}
+  ]
+}

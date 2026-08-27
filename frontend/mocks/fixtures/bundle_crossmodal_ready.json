@@ -1,0 +1,78 @@
+{
+  "bundle_id": "bn_c3f81a",
+  "label": "Delhi flood — Mar 2024",
+  "created_at": "2026-08-27T09:05:00Z",
+  "pair_type": "crossmodal",
+  "status": "ready",
+  "prep_ms": 238410,
+  "scenes": [
+    {
+      "scene_id": "sc_9f2ab1", "filename": "cartosat_mx.tif", "bytes": 412334592,
+      "uploaded_at": "2026-08-27T09:00:11Z", "status": "ready", "role": "optical",
+      "acquired_at": "2024-03-11T05:20:00Z", "is_demo": true,
+      "preview_url": "/api/v1/scenes/sc_9f2ab1/preview.png",
+      "tile_url_template": "/api/v1/scenes/sc_9f2ab1/tiles/{z}/{x}/{y}.png",
+      "footprint_url": "/api/v1/scenes/sc_9f2ab1/footprint.geojson",
+      "bounds_wgs84": [77.05, 28.44, 77.31, 28.68],
+      "width_px": 10240, "height_px": 10240,
+      "compatibility": {
+        "format_ok": true, "crs_valid": true, "is_georeferenced": true,
+        "modality": "optical", "modality_source": "sensor_tag",
+        "bands_present": ["blue", "green", "nir", "red"],
+        "computable_indices": ["NDVI", "NDWI"],
+        "nodata_frac": 0.02, "bit_depth": 12, "bit_depth_source": "tag:NBITS",
+        "pixel_size_m": 2.0, "native_gsd_m": 2.0,
+        "band_inventory": {
+          "bands": {"blue": 1, "green": 2, "red": 3, "nir": 4},
+          "has_swir": false, "has_nir": true, "is_pan_only": false,
+          "polarisations": [], "sar_band": null, "sensor_hint": "CARTOSAT-3",
+          "computable_indices": ["NDVI", "NDWI"]
+        },
+        "warnings": ["NDBI unavailable: source lacks SWIR band"]
+      }
+    },
+    {
+      "scene_id": "sc_7b1cd2", "filename": "risat_vv.tif", "bytes": 208441344,
+      "uploaded_at": "2026-08-27T09:01:47Z", "status": "ready", "role": "sar",
+      "acquired_at": "2024-03-12T18:02:00Z", "is_demo": true,
+      "preview_url": "/api/v1/scenes/sc_7b1cd2/preview.png",
+      "tile_url_template": "/api/v1/scenes/sc_7b1cd2/tiles/{z}/{x}/{y}.png",
+      "footprint_url": "/api/v1/scenes/sc_7b1cd2/footprint.geojson",
+      "bounds_wgs84": [77.04, 28.43, 77.33, 28.69],
+      "width_px": 6400, "height_px": 6400,
+      "compatibility": {
+        "format_ok": true, "crs_valid": true, "is_georeferenced": true,
+        "modality": "sar", "modality_source": "intensity_signature",
+        "bands_present": ["vv"], "computable_indices": [],
+        "nodata_frac": 0.01, "bit_depth": 16, "bit_depth_source": "dtype",
+        "pixel_size_m": 6.0, "native_gsd_m": 6.0,
+        "band_inventory": {
+          "bands": {"vv": 1}, "has_swir": false, "has_nir": false, "is_pan_only": false,
+          "polarisations": ["VV"], "sar_band": "C", "sensor_hint": "RISAT-1A",
+          "computable_indices": []
+        },
+        "warnings": ["single-polarisation source: polarimetric questions cannot be answered"]
+      }
+    }
+  ],
+  "pair_compatibility": {
+    "coregistered": true, "rmse_px": 0.8, "correction_applied": true,
+    "method": "phase_correlation+AROSICS", "common_crs": "EPSG:32644",
+    "checks_passed": ["crs_match", "extent_overlap", "gsd_ratio_ok"]
+  },
+  "tiles": {"tile_count": 36, "tile_size_px": 512, "overlap_frac": 0.1},
+  "provenance": [
+    {"stage": "p1_ingest", "op": "read+band_inventory", "params": {}, "at": "2026-08-27T09:01:02Z", "scene_id": "sc_9f2ab1"},
+    {"stage": "p2_sar_normalise", "op": "refined_lee", "params": {"window": 5}, "at": "2026-08-27T09:02:40Z", "scene_id": "sc_7b1cd2"},
+    {"stage": "p3_coregister", "op": "arosics", "params": {"max_shift_px": 20}, "at": "2026-08-27T09:04:10Z"},
+    {"stage": "p4_tiling", "op": "adaptive_partition", "params": {"tile_size_px": 512, "overlap_frac": 0.1}, "at": "2026-08-27T09:04:58Z"}
+  ],
+  "supported_tasks": ["crossmodal_extraction", "crossmodal_vqa", "single_vqa", "single_caption", "single_grounding"],
+  "blocked_tasks": [
+    {"task": "change_vqa", "reason": "needs two scenes of the same modality"},
+    {"task": "change_map", "reason": "needs two scenes of the same modality"},
+    {"task": "change_description", "reason": "needs two scenes of the same modality"}
+  ],
+  "bounds_wgs84": [77.05, 28.44, 77.31, 28.68],
+  "warnings": ["NDBI unavailable: source lacks SWIR band"]
+}

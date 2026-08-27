@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "satquery/tool_manifest_schema-v1.json",
+  "title": "SatQuery Tool Manifest",
+  "description": "Enforceable contract for every tool in the registry (master plan sections 4.6 and 4.5.4). The parameter gate validates planned steps against this data; a parameter not declared here cannot be set.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "description", "required_modalities", "permitted_parameters", "outputs"],
+  "properties": {
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "description": { "type": "string", "minLength": 1 },
+    "version": { "type": "integer", "minimum": 1, "default": 1 },
+    "required_modalities": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "enum": ["optical", "sar"] }
+    },
+    "confidence_source": {
+      "enum": ["learned_logprob", "threshold_statistics", "heuristic", "deterministic_fallback"]
+    },
+    "low_confidence_proposer": { "type": "boolean" },
+    "expected_latency_ms": { "type": "integer", "minimum": 0 },
+    "permitted_parameters": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/ParamSpec" }
+    },
+    "outputs": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/OutputSpec" }
+    }
+  },
+  "$defs": {
+    "ParamSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["enum", "float", "int", "bool", "string"] },
+        "values": { "type": "array", "minItems": 1 },
+        "range": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" }
+        },
+        "optional": { "type": "boolean", "default": false },
+        "default": {},
+        "requires_bands": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "enum" } }, "required": ["type"] },
+          "then": { "required": ["values"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "float" } }, "required": ["type"] },
+          "then": { "required": ["range"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "int" } }, "required": ["type"] },
+          "then": { "required": ["range"] }
+        },
+        {
+          "if": { "required": ["values"], "not": { "properties": { "type": { "const": "enum" } }, "required": ["type"] } },
+          "then": false
+        },
+        {
+          "if": { "required": ["range"], "not": { "properties": { "type": { "enum": ["float", "int"] } }, "required": ["type"] } },
+          "then": false
+        }
+      ]
+    },
+    "OutputSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["geotiff", "png_overlay", "float", "int", "text", "bbox_list", "stats"] },
+        "crs": { "enum": ["source", "none"] },
+        "resolution": { "enum": ["full_scene", "tile"] }
+      }
+    }
+  }
+}

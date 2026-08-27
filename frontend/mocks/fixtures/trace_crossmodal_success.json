@@ -1,0 +1,66 @@
+{
+  "schema_version": 2,
+  "query_id": "qr_51c9a0f2",
+  "timestamp": "2026-08-27T09:14:02Z",
+  "query_text": "How much of the built-up area is under water?",
+  "graded": {
+    "task_selected": "crossmodal_extraction",
+    "tools_invoked": ["spectral_index", "sar_backscatter", "optsar_fusion@qwen3vl-4b-v3"],
+    "permitted_parameters": [
+      {"tool": "spectral_index", "params": {"index": "NDWI", "threshold_method": "otsu", "threshold_value": 0.14}, "within_manifest": true, "defaults_applied": ["threshold_method"]},
+      {"tool": "sar_backscatter", "params": {"pol": "VV", "threshold_db": -18.0}, "within_manifest": true}
+    ],
+    "parameter_check": {"passed": true, "rejected": []},
+    "outputs": {
+      "answer": "About 3.4 km² of built-up land is under water — roughly 12% of the built-up extent in the scene.",
+      "masks": ["water_mask.tif", "builtup_mask.tif"],
+      "area_km2": 3.4,
+      "confidence": 0.81
+    }
+  },
+  "router_path": "rules",
+  "inputs": [
+    {"file": "cartosat_mx.tif", "modality": "optical", "modality_source": "sensor_tag",
+     "computable_indices": ["NDVI", "NDWI"], "native_gsd_m": 2.0, "pixel_size_m": 2.0,
+     "crs": "EPSG:32644", "bands": ["blue", "green", "red", "nir"], "swir_available": false,
+     "bit_depth": 12, "bit_depth_source": "tag:NBITS", "nodata_frac": 0.02},
+    {"file": "risat_vv.tif", "modality": "sar", "modality_source": "sensor_tag",
+     "computable_indices": [], "native_gsd_m": 6.0, "pixel_size_m": 2.0, "crs": "EPSG:32644",
+     "bands": ["vv"], "bit_depth": 16, "nodata_frac": 0.01, "polarisations": ["VV"], "sar_band": "C"}
+  ],
+  "compatibility": {
+    "coregistered": true, "rmse_px": 0.8, "correction_applied": true,
+    "method": "phase_correlation+AROSICS", "common_crs": "EPSG:32644",
+    "checks_passed": ["crs_match", "extent_overlap", "gsd_ratio_ok"],
+    "ingest": {"format_ok": true, "crs_valid": true, "georeferenced_required_for_masks": true,
+               "modality": "optical", "modality_source": "sensor_tag",
+               "bands_present": ["blue", "green", "nir", "red"],
+               "computable_indices": ["NDVI", "NDWI"], "nodata_frac": 0.02, "bit_depth": 12,
+               "pixel_size_m": 2.0, "native_gsd_m": 2.0,
+               "warnings": ["NDBI unavailable: source lacks SWIR band"]}
+  },
+  "routing_notes": ["SWIR unavailable; NDBI skipped; SAR primary for built-up"],
+  "steps": [
+    {"tool": "spectral_index",
+     "params": {"index": "NDWI", "threshold_method": "otsu", "threshold_value": 0.14, "bimodality_passed": true},
+     "param_source": "manifest_validated",
+     "outputs": {"mask_uri": "as_2a11", "mask_crs": "EPSG:32644", "mask_res_m": 2.0, "area_km2": 3.4},
+     "confidence": 0.79, "latency_ms": 180},
+    {"tool": "sar_backscatter",
+     "params": {"pol": "VV", "threshold_db": -18.0},
+     "param_source": "manifest_validated",
+     "outputs": {"mask_uri": "as_2a12", "mask_crs": "EPSG:32644", "area_km2": 3.9},
+     "confidence": 0.83, "latency_ms": 240},
+    {"tool": "optsar_fusion@qwen3vl-4b-v3",
+     "params": {"adapter": "optsar_fusion@v3"},
+     "param_source": "manifest_validated",
+     "outputs": {"answer": "About 3.4 km² of built-up land is under water."},
+     "confidence": 0.81, "latency_ms": 4120}
+  ],
+  "agreement": {"iou": 0.62, "verdict": "disagreement", "disagreement_cause": "cloud_over_water"},
+  "fusion": {"model": "qwen3vl-4b-instruct+optsar_fusion@v3",
+             "answer": "About 3.4 km² of built-up land is under water — roughly 12% of the built-up extent in the scene.",
+             "confidence": 0.81},
+  "evidence": ["as_2a11", "as_2a12", "as_2a13"],
+  "warnings": ["NDBI unavailable: source lacks SWIR band"]
+}

@@ -1,0 +1,21 @@
+{
+  "scene_id": "sc_bench01", "filename": "rsvqa_chip_00412.png", "bytes": 214880,
+  "uploaded_at": "2026-08-27T10:02:00Z", "status": "ready", "role": "optical",
+  "acquired_at": null, "is_demo": false,
+  "preview_url": "/api/v1/scenes/sc_bench01/preview.png",
+  "tile_url_template": null, "footprint_url": null, "bounds_wgs84": null,
+  "width_px": 512, "height_px": 512,
+  "compatibility": {
+    "format_ok": true, "crs_valid": false, "is_georeferenced": false,
+    "modality": "optical", "modality_source": "band_count",
+    "bands_present": ["blue", "green", "red"], "computable_indices": [],
+    "nodata_frac": 0.0, "bit_depth": 8, "bit_depth_source": "dtype",
+    "pixel_size_m": null, "native_gsd_m": null,
+    "band_inventory": {"bands": {"blue": 1, "green": 2, "red": 3}, "has_swir": false,
+      "has_nir": false, "is_pan_only": false, "polarisations": [], "sar_band": null,
+      "sensor_hint": null, "computable_indices": []},
+    "warnings": ["no CRS: georeferencing unavailable until user supplies it",
+                 "band descriptions absent; band semantics inferred",
+                 "masks will be emitted in pixel coordinates, not a projected CRS"]
+  }
+}
