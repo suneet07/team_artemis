@@ -1,0 +1,28 @@
+# Deps for scripts/phase0_timing_sweep.py ONLY.
+#
+# Do NOT use `pip install -e ".[train]"` on a GPU box. That also installs the
+# package's base deps, which include arosics -> the `gdal` sdist, which needs
+# system GDAL headers (`gdal-config`) and fails on a stock Lightning AI Studio:
+#
+#     Could not find gdal-config. Make sure you have installed the GDAL
+#     native library and development headers.
+#
+# The timing harness is standalone -- it imports no satquery module, no
+# rasterio, no arosics, no gdal. The geo stack is Phase 1 ingest work and is
+# not needed to measure training throughput.
+#
+#     pip install -r scripts/requirements-timing.txt
+#
+# torch, lightning, torchvision, pillow and numpy ship preinstalled on Lightning
+# AI Studio images; they are listed here for a bare environment and will be
+# skipped as already-satisfied on the Studio.
+
+torch>=2.4
+lightning>=2.4
+torchvision>=0.19
+pillow>=10.0
+numpy>=1.24
+
+transformers>=4.57
+peft>=0.13
+accelerate>=0.34

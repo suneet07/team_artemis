@@ -1,0 +1,45 @@
+# Phase 0: 200-Step Timing Test Report
+
+**Execution Date:** 2026-08-26
+**Environment:** Lightning AI Studio
+**Hardware:** NVIDIA A100-SXM4-40GB
+**Base Model:** `Qwen/Qwen3-VL-4B-Instruct`
+**Adapter:** PEFT LoRA (r=16, alpha=32, target="all-linear")
+
+## Key Metrics
+- **Steps:** 200
+- **Total Time:** 96.75 seconds
+- **Average Time/Step:** 0.48 seconds
+- **Extrapolated Epoch Time:** 2.69 hours (Based on 80,000 samples @ batch size 4)
+- **Status:** `SUCCESS` (Safely fits within the 31-hour A100 budget specified in Master Plan v3.8, §5.5)
+
+## Raw Log Output
+--- Starting 200-Step Timing Test on <lightning.pytorch.accelerators.cuda.CUDAAccelerator object at 0x7a14312d2ab0> (1 devices) ---
+Step 10/200 | Loss: 11.3152 | Elapsed: 6.3s
+Step 20/200 | Loss: 8.9071 | Elapsed: 10.8s
+Step 30/200 | Loss: 7.5954 | Elapsed: 15.8s
+Step 40/200 | Loss: 6.5001 | Elapsed: 20.5s
+Step 50/200 | Loss: 6.0207 | Elapsed: 24.9s
+Step 60/200 | Loss: 5.5833 | Elapsed: 29.3s
+Step 70/200 | Loss: 5.0873 | Elapsed: 34.4s
+Step 80/200 | Loss: 5.0915 | Elapsed: 39.2s
+Step 90/200 | Loss: 4.8639 | Elapsed: 44.3s
+Step 100/200 | Loss: 4.8866 | Elapsed: 49.3s
+Step 110/200 | Loss: 4.7676 | Elapsed: 53.6s
+Step 120/200 | Loss: 4.5125 | Elapsed: 58.3s
+Step 130/200 | Loss: 4.5453 | Elapsed: 63.1s
+Step 140/200 | Loss: 4.4814 | Elapsed: 68.0s
+Step 150/200 | Loss: 4.5966 | Elapsed: 72.4s
+Step 160/200 | Loss: 4.4256 | Elapsed: 77.5s
+Step 170/200 | Loss: 4.6390 | Elapsed: 82.4s
+Step 180/200 | Loss: 4.3639 | Elapsed: 87.3s
+Step 190/200 | Loss: 4.2350 | Elapsed: 92.0s
+Step 200/200 | Loss: 4.3171 | Elapsed: 96.7s
+Epoch 0/-2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸ 199/200 0:01:36 • 0:00:01 2.07it/s train_loss: 4.454`Trainer.fit` stopped: `max_steps=200` reached.
+
+--- TIMING REPORT ---
+Total time for 200 steps: 96.75 seconds
+Average time per step: 0.48 seconds
+Estimated time for 1 full epoch (80,000 samples @ batch size 4): 2.69 hours
+
+[SUCCESS] Projected time is within the 31-hour budget.

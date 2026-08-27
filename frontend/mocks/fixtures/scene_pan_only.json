@@ -1,0 +1,22 @@
+{
+  "scene_id": "sc_pan77", "filename": "cartosat_pan.tif", "bytes": 933212160,
+  "uploaded_at": "2026-08-27T10:11:00Z", "status": "ready", "role": "optical",
+  "acquired_at": "2024-01-08T05:41:00Z", "is_demo": false,
+  "preview_url": "/api/v1/scenes/sc_pan77/preview.png",
+  "tile_url_template": "/api/v1/scenes/sc_pan77/tiles/{z}/{x}/{y}.png",
+  "footprint_url": "/api/v1/scenes/sc_pan77/footprint.geojson",
+  "bounds_wgs84": [78.31, 17.31, 78.52, 17.52],
+  "width_px": 15360, "height_px": 15360,
+  "compatibility": {
+    "format_ok": true, "crs_valid": true, "is_georeferenced": true,
+    "modality": "optical", "modality_source": "sensor_tag",
+    "bands_present": ["pan"], "computable_indices": [],
+    "nodata_frac": 0.0, "bit_depth": 12, "bit_depth_source": "tag:NBITS",
+    "pixel_size_m": 0.25, "native_gsd_m": 0.25,
+    "band_inventory": {"bands": {"pan": 1}, "has_swir": false, "has_nir": false,
+      "is_pan_only": true, "polarisations": [], "sar_band": null,
+      "sensor_hint": "CARTOSAT-3 PAN", "computable_indices": []},
+    "warnings": ["panchromatic source: no spectral index is computable",
+                 "spectral questions will be refused or rerouted to texture/SAR evidence"]
+  }
+}

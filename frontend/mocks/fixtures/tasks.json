@@ -1,0 +1,12 @@
+{
+  "tasks": [
+    {"task": "single_vqa", "label": "Ask about one image", "description": "Free-form question over a single scene.", "requires": ["single", "crossmodal", "bitemporal"]},
+    {"task": "single_caption", "label": "Describe the scene", "description": "Caption of a single scene.", "requires": ["single", "crossmodal", "bitemporal"]},
+    {"task": "single_grounding", "label": "Locate something", "description": "Find and box a referred object or region.", "requires": ["single", "crossmodal", "bitemporal"]},
+    {"task": "change_description", "label": "Describe the changes", "description": "Narrative of what changed between two dates.", "requires": ["bitemporal"]},
+    {"task": "change_vqa", "label": "Ask about the change", "description": "Question over a bi-temporal pair.", "requires": ["bitemporal"]},
+    {"task": "change_map", "label": "Map the change", "description": "Geo-referenced change mask plus statistics.", "requires": ["bitemporal"]},
+    {"task": "crossmodal_extraction", "label": "Extract from optical + SAR", "description": "Fuse optical and SAR evidence into masks and statistics.", "requires": ["crossmodal"]},
+    {"task": "crossmodal_vqa", "label": "Ask across optical + SAR", "description": "Question answered from both modalities with an agreement verdict.", "requires": ["crossmodal"]}
+  ]
+}

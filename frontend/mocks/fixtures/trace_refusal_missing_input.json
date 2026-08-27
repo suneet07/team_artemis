@@ -1,0 +1,30 @@
+{
+  "schema_version": 2,
+  "query_id": "qr_77b31c04",
+  "timestamp": "2026-08-27T09:20:11Z",
+  "query_text": "What changed between the two dates?",
+  "graded": {
+    "task_selected": "change_vqa",
+    "tools_invoked": [],
+    "permitted_parameters": [],
+    "parameter_check": {"passed": true, "rejected": []},
+    "outputs": {
+      "answer": null,
+      "masks": [],
+      "refusal": {
+        "reason": "A change question needs two images of the same area. This bundle has one optical scene. Add a second scene from a different date and ask again.",
+        "category": "missing_input"
+      }
+    }
+  },
+  "router_path": "rules",
+  "inputs": [
+    {"file": "cartosat_mx.tif", "modality": "optical", "modality_source": "sensor_tag",
+     "computable_indices": ["NDVI", "NDWI"], "crs": "EPSG:32644",
+     "bands": ["blue", "green", "red", "nir"], "swir_available": false, "nodata_frac": 0.02}
+  ],
+  "routing_notes": ["change_* requires pair_type=bitemporal; bundle is single"],
+  "steps": [],
+  "evidence": [],
+  "warnings": []
+}

@@ -1,0 +1,112 @@
+# SatQuery preprocessing contract — FROZEN in Phase 0 (master plan Part 8 item 4).
+#
+# Master plan section 4.2: "this chain must be byte-identical at training and
+# inference. If BigEarthNet's S1 was processed one way and RISAT another, you
+# have manufactured a domain gap by hand."
+#
+# The same argument applies to the optical side. Every constant that shapes what
+# the model sees lives here, not in code. Changing a value here is a domain
+# shift: bump `version`, and re-derive any number that was tuned against the old
+# one. Unknown or missing keys are a hard load error, not a warning.
+
+version: 1
+
+ingest:
+  # Decimated read used for metadata, modality and nodata estimation. Never a
+  # full src.read() of a Cartosat scene (section 4.1.1).
+  overview_max_side: 512
+  # Above this the scene is flagged; masked statistics still proceed (4.5.3).
+  nodata_warn_fraction: 0.5
+
+radiometry:
+  # Robust stretch for model input (section 4.1.3). Bounds are per-scene and
+  # must be recorded in provenance by the caller — reproducibility depends on it.
+  low_percentile: 2.0
+  high_percentile: 98.0
+
+modality:
+  # Heuristic cascade of section 4.1.2, in order: metadata tags (authoritative),
+  # then the sigma-nought dB test, then the speckle signature, then band count.
+  #
+  # The speckle signature is computed per band and reduced by median, never
+  # pooled across bands: pooling channels with different radiometric ranges
+  # inflates the coefficient of variation and makes a 13-band multispectral
+  # stack look heavy-tailed.
+  #
+  # Reference: single-look SAR amplitude is exponentially distributed, giving
+  # cv = 1.0 and skew = 2.0. Multilooking and speckle filtering both pull those
+  # down, which is what the ambiguous band below is for.
+  speckle_cv_min: 0.9
+  speckle_skew_min: 1.0
+  # Between the ambiguous floor and the SAR thresholds the answer is "unknown",
+  # which routes to the ask-the-user branch of 4.1.2 rather than a guess.
+  ambiguous_cv_min: 0.6
+  ambiguous_skew_min: 0.6
+  # Terrain-corrected sigma-nought arrives already in dB and is therefore mostly
+  # negative — the speckle test cannot see it, because that test needs positive
+  # amplitudes. The ISRO eval pairs are expected to arrive in this state (4.2).
+  db_min_negative_fraction: 0.3
+  db_plausible_range: [-60.0, 30.0]
+  # The range test is evaluated on these percentiles, not on min/max. Real
+  # sigma-nought carries a thin tail of near-zero backscatter that reaches -70 dB
+  # or lower, and a hard min/max gate would reject a legitimate SAR scene on the
+  # strength of a handful of pixels.
+  db_sample_percentiles: [1.0, 99.0]
+  # Guards against reading a normalised index raster (NDVI is float in [-1, 1],
+  # roughly 40% negative) as dB SAR. Calm water sits at -25 to -20 dB, so real
+  # sigma-nought always reaches well below this.
+  db_must_reach_below: -5.0
+
+bands:
+  # Applied only when band descriptions are absent or too sparse to be usable,
+  # and only to optical input. Cartosat-2S MX is B,G,R,NIR (section 4.1.4).
+  # A description that contradicts the assumed order disables the assumption
+  # rather than overriding it — a wrong band map silently corrupts every index.
+  assumed_orders:
+    3: [blue, green, red]
+    4: [blue, green, red, nir]
+
+# ---------------------------------------------------------------------------
+# Consumed by P2 (section 4.2) and P4 (section 4.4). Frozen here now because
+# item 4 gates the phase; the modules themselves are Phase 1 work.
+# ---------------------------------------------------------------------------
+
+sar:
+  chain:
+    - apply_orbit_file
+    - calibrate_sigma0
+    - multilook
+    - speckle_filter_refined_lee
+    - terrain_correction
+    - db_conversion
+    - percentile_stretch
+    - model_input_stack
+  # Re-correcting already-corrected data degrades it (4.2 step 5).
+  skip_terrain_correction_if_pregeoreferenced: true
+  # Fraction of dual-pol training samples converted to the single-pol stack so
+  # the model has genuinely seen 1-channel SAR before the hidden set shows it
+  # one (4.2). The single-pol stack is a first-class citizen, not an error path.
+  pol_dropout_rate: 0.25
+  # Section 4.2: these WARN, they never block. A hard assert tuned on C-band
+  # would refuse a legitimate X-band scene from the graded hidden set.
+  # C-band VV is the calibrated reference table from the plan. X and L are
+  # deliberately null — nothing is tuned yet, and inventing thresholds here
+  # would freeze a guess. Null means "inherit C-band and warn"; X gets tuned on
+  # SpaceNet 6 Capella data in Phase 2 (C31), L when an L-band source lands.
+  sanity_ranges_db:
+    C:
+      calm_water: [-25.0, -20.0]
+      smooth_bare_soil: [-15.0, -12.0]
+      rough_soil_crops: [-12.0, -8.0]
+      forest: [-8.0, -6.0]
+      urban: [-5.0, 5.0]
+    X: null
+    L: null
+
+tiling:
+  # Overlap tiles to avoid boundary artifacts (section 4.4 step 2).
+  tile_overlap_fraction: 0.10
+  # TODO (geospatial, before P4 lands): the plan names max_pixels as a frozen
+  # Phase 0 value but does not give a number. It must be measured against the
+  # prep SLA of 5 min/scene on the named demo machine, not guessed here.
+  max_pixels: null

@@ -1,0 +1,164 @@
+# ---------------------------------------------------------------
+# SatQuery AI — .gitignore
+# Rules marked [LICENCE] exist to keep restricted imagery and
+# mislicensed artifacts out of a public government deliverable.
+# Read docs/README.md and CREDITS.md before relaxing any of them.
+# ---------------------------------------------------------------
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# --- Test / tooling caches ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------
+# SECRETS — never commit
+# ---------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.*
+credentials.*
+kaggle.json
+.kaggle/
+.netrc
+wandb/
+.wandb/
+*token*.json
+
+# ---------------------------------------------------------------
+# DATA — [LICENCE] staged imagery never enters the repo
+# The manifest-first rule (master plan §2.2) means imagery is
+# downloaded from its source, not redistributed by us.
+# ---------------------------------------------------------------
+# Anchored to the repo root so training/data/ (source code) is NOT caught.
+/data/
+/datasets/
+/staging/
+*.tif
+*.tiff
+*.jp2
+*.SAFE/
+*.nc
+*.hdf
+*.h5
+*.lmdb
+*.mdb
+
+# [LICENCE] HRSCD 2006 imagery is NON-REDISTRIBUTABLE (C60).
+# It must come from IGN directly and must never appear in a repo,
+# a demo, or a shipped artifact.
+**/HRSCD/**
+**/hrscd/**
+**/*2006*.tif
+
+# [LICENCE] VRSBench / DOTA-derived imagery is academic-only and
+# must never enter training, the repo, or the public demo (C20).
+**/VRSBench/**
+**/vrsbench/**
+
+# [LICENCE] Dropped sources — purged from all manifests (C56).
+# Present here so a stray download cannot be committed by accident.
+**/LEVIR*/**
+**/SECOND/**
+**/QAG-360K/**
+
+# Generated timing fixtures. The 21 PNGs are CONSTANT BLACK dummies
+# for shape-only timing — never training data. Regenerate with
+# training/data/extract_ben_micro.py.
+# NOTE: dataset-metadata.json in here declares CC0-1.0, which is
+# WRONG for CDLA-Permissive-derived annotations. Fix before any
+# upload. See TEAM_CONTEXT.md mistake #6.
+ben-micro-split/
+
+# ---------------------------------------------------------------
+# MODEL ARTIFACTS
+# Checkpoints go to the private HF repo (guard rail 2), not here.
+# ---------------------------------------------------------------
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+*.gguf
+checkpoints/
+outputs/
+runs/
+lightning_logs/
+adapters/
+hf_cache/
+.cache/
+
+# ---------------------------------------------------------------
+# LOGS
+# logs/*.md are curated measurement reports — those are TRACKED.
+# Raw run output is not.
+# ---------------------------------------------------------------
+*.log
+!logs/phase_0_timing_report.log
+logs/**/*.jsonl
+logs/tmp/
+
+# ---------------------------------------------------------------
+# HOUSEKEEPING
+# ---------------------------------------------------------------
+_to_delete/
+*.zip
+*.tar
+*.tar.gz
+*.7z
+tmp/
+scratch/
+
+# --- Frontend (when the app lands) ---
+node_modules/
+.next/
+.nuxt/
+.svelte-kit/
+.turbo/
+*.local
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*

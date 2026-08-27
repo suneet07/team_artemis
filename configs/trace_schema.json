@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "satquery/trace_schema-v2.json",
+  "title": "SatQuery Execution Trace",
+  "description": "Graded observable execution trace (master plan sections 4.5.5). v2 changes: schema_version field required; inputs[] gains modality_source, computable_indices, bit_depth_source and stretch_bounds; compatibility gains an ingest block carrying the P1 CompatibilityReport; permitted_parameters items may carry defaults_applied; outputs may carry a structured refusal. Changes require a schema version bump and team sign-off.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "query_id", "timestamp", "query_text", "graded"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "query_id": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "string" },
+    "query_text": { "type": "string" },
+    "graded": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_selected",
+        "tools_invoked",
+        "permitted_parameters",
+        "parameter_check",
+        "outputs"
+      ],
+      "properties": {
+        "task_selected": {
+          "enum": [
+            "single_vqa",
+            "single_caption",
+            "single_grounding",
+            "change_description",
+            "change_vqa",
+            "change_map",
+            "crossmodal_extraction",
+            "crossmodal_vqa"
+          ]
+        },
+        "tools_invoked": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "permitted_parameters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tool", "params", "within_manifest"],
+            "properties": {
+              "tool": { "type": "string", "minLength": 1 },
+              "params": { "type": "object" },
+              "within_manifest": { "type": "boolean" },
+              "defaults_applied": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        },
+        "parameter_check": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["passed", "rejected"],
+          "properties": {
+            "passed": { "type": "boolean" },
+            "rejected": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "answer": { "type": ["string", "null"] },
+            "masks": { "type": "array", "items": { "type": "string" } },
+            "area_km2": { "type": "number" },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "refusal": { "$ref": "#/$defs/Refusal" }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    "router_path": { "enum": ["rules", "llm"] },
+    "inputs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/InputRecord" }
+    },
+    "compatibility": { "$ref": "#/$defs/Compatibility" },
+    "routing_notes": { "type": "array", "items": { "type": "string" } },
+    "steps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/StepRecord" }
+    },
+    "agreement": { "$ref": "#/$defs/Agreement" },
+    "fusion": { "$ref": "#/$defs/Fusion" },
+    "evidence": { "type": "array", "items": { "type": "string" } },
+    "warnings": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "Refusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason", "category"],
+      "properties": {
+        "reason": { "type": "string", "minLength": 1 },
+        "category": {
+          "enum": [
+            "parameter_gate",
+            "validator",
+            "modality_limitation",
+            "missing_input",
+            "unsupported_class"
+          ]
+        }
+      }
+    },
+    "InputRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "modality"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "modality": { "enum": ["optical", "sar", "unknown"] },
+        "modality_source": {
+          "enum": ["declared", "sensor_tag", "intensity_signature", "band_count"]
+        },
+        "computable_indices": { "type": "array", "items": { "type": "string" } },
+        "native_gsd_m": { "type": "number", "exclusiveMinimum": 0 },
+        "pixel_size_m": { "type": "number", "exclusiveMinimum": 0 },
+        "crs": { "type": "string" },
+        "bands": { "type": "array", "items": { "type": "string" } },
+        "swir_available": { "type": "boolean" },
+        "bit_depth": { "type": "integer", "enum": [8, 12, 16, 32] },
+        "bit_depth_source": { "type": "string" },
+        "stretch_bounds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" }
+        },
+        "nodata_frac": { "type": "number", "minimum": 0, "maximum": 1 },
+        "polarisations": { "type": "array", "items": { "type": "string" } },
+        "sar_band": { "enum": ["C", "X", "L", "S", "P", null] }
+      }
+    },
+    "Compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "coregistered": { "type": "boolean" },
+        "rmse_px": { "type": ["number", "null"] },
+        "correction_applied": { "type": "boolean" },
+        "method": { "type": ["string", "null"] },
+        "common_crs": { "type": ["string", "null"] },
+        "checks_passed": { "type": "array", "items": { "type": "string" } },
+        "ingest": { "$ref": "#/$defs/IngestChecks" }
+      }
+    },
+    "IngestChecks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "format_ok": { "type": "boolean" },
+        "crs_valid": { "type": "boolean" },
+        "georeferenced_required_for_masks": { "type": "boolean" },
+        "modality": { "enum": ["optical", "sar", "unknown"] },
+        "modality_source": {
+          "enum": ["declared", "sensor_tag", "intensity_signature", "band_count"]
+        },
+        "bands_present": { "type": "array", "items": { "type": "string" } },
+        "computable_indices": { "type": "array", "items": { "type": "string" } },
+        "nodata_frac": { "type": "number", "minimum": 0, "maximum": 1 },
+        "bit_depth": { "type": "integer", "enum": [8, 12, 16, 32] },
+        "bit_depth_source": { "type": "string" },
+        "pixel_size_m": { "type": ["number", "null"] },
+        "native_gsd_m": { "type": ["number", "null"] },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "StepRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool", "params"],
+      "properties": {
+        "tool": { "type": "string", "minLength": 1 },
+        "params": { "type": "object" },
+        "param_source": { "type": "string" },
+        "outputs": { "type": "object", "additionalProperties": true },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "latency_ms": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "Agreement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "iou": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "verdict": { "type": ["string", "null"] },
+        "disagreement_cause": { "type": ["string", "null"] }
+      }
+    },
+    "Fusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model": { "type": "string" },
+        "answer": { "type": ["string", "null"] },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

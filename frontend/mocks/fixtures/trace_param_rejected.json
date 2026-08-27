@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "query_id": "qr_9c02de51",
+  "timestamp": "2026-08-27T09:26:40Z",
+  "query_text": "Show me built-up areas using NDBI",
+  "graded": {
+    "task_selected": "single_vqa",
+    "tools_invoked": [],
+    "permitted_parameters": [
+      {"tool": "spectral_index", "params": {"index": "NDBI", "threshold_value": 47}, "within_manifest": false}
+    ],
+    "parameter_check": {
+      "passed": false,
+      "rejected": [
+        "spectral_index.index=NDBI requires bands [swir, nir]; source has no SWIR band",
+        "spectral_index.threshold_value=47 outside declared range [-1.0, 1.0]"
+      ]
+    },
+    "outputs": {
+      "answer": null,
+      "masks": [],
+      "refusal": {
+        "reason": "NDBI needs a SWIR band and this sensor has none, and the requested threshold was outside the permitted range. Built-up extent can still be estimated from SAR backscatter or texture — ask again with a SAR scene in the bundle.",
+        "category": "parameter_gate"
+      }
+    }
+  },
+  "router_path": "rules",
+  "inputs": [
+    {"file": "cartosat_mx.tif", "modality": "optical", "modality_source": "sensor_tag",
+     "computable_indices": ["NDVI", "NDWI"], "crs": "EPSG:32644",
+     "bands": ["blue", "green", "red", "nir"], "swir_available": false, "nodata_frac": 0.02}
+  ],
+  "routing_notes": ["NDBI blocked by BandInventory (D3); no SAR scene available to reroute to"],
+  "steps": [],
+  "evidence": [],
+  "warnings": ["NDBI unavailable: source lacks SWIR band"]
+}

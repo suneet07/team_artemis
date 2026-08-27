@@ -1,0 +1,5 @@
+{
+  "status": "ok", "version": "0.4.1", "trace_schema_version": 2,
+  "serving": "vllm", "gpu": true, "offline_mode": false,
+  "adapters_loaded": ["rs_vqa@v2", "change_vqa@v1"], "demo_bundles_warm": 3
+}

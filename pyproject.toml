@@ -1,0 +1,57 @@
+[project]
+name = "satquery"
+version = "0.1.0"
+description = "SatQuery AI: agentic satellite-imagery query system (SIH26167)"
+requires-python = ">=3.11"
+dependencies = [
+    "jsonschema>=4.21",
+    "pyyaml>=6.0",
+    "numpy>=2.0",
+    "rasterio>=1.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+# Training / timing harness only. Deliberately NOT in [dev]: CI installs dev and
+# runs `ruff check . && pytest -q` on a CPU runner, and pulling torch there would
+# add minutes to every PR for code CI cannot exercise.
+# Install with: pip install -e ".[train]"
+# Co-registration (P3). AROSICS builds from source against the GDAL native
+# library and needs `gdal-config`, which stock CI runners do not have -- keeping
+# it in base deps turns every `pip install -e ".[dev]"` red. Nothing imports it
+# yet (P3 is an empty stub). Install with: pip install -e ".[coreg]"
+# [LICENCE] The >=1.0.0 pin is a control, not a preference: pre-1.0 releases
+# were GPL-3.0 (master plan C58). Do not relax it.
+coreg = [
+    "arosics>=1.0.0",
+]
+
+train = [
+    "torch>=2.4",
+    "lightning>=2.4",
+    "torchvision>=0.19",
+    "transformers>=4.57",
+    "peft>=0.13",
+    "accelerate>=0.34",
+    "pillow>=10.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["satquery*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
