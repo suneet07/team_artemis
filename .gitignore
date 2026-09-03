@@ -162,3 +162,8 @@ node_modules/
 npm-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Impeccable review captures and build artifacts
+.impeccable/review/
+frontend/dist/
+frontend/*.tsbuildinfo

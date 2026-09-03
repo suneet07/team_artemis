@@ -1,0 +1,36 @@
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
+import "./styles/theme.css";
+import { App } from "./App";
+import { USE_MOCKS } from "./api/client";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5_000,
+    },
+  },
+});
+
+async function bootstrap() {
+  if (USE_MOCKS) {
+    const { startMocks } = await import("../mocks/browser");
+    await startMocks();
+  }
+
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </StrictMode>,
+  );
+}
+
+void bootstrap();
