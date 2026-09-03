@@ -1,0 +1,468 @@
+@import "tailwindcss";
+
+/* Self-hosted. No CDN — the venue has no internet.
+   Archivo carries a width axis (62–125): engraved plate caps at the wide end,
+   dense equipment labels at the narrow end, one family throughout.
+   Azeret Mono is used only where the world uses monospace in life —
+   measurement, parameters, identifiers, coordinates. */
+@import "@fontsource-variable/archivo/standard.css";
+@import "@fontsource-variable/azeret-mono/index.css";
+
+@theme {
+  /* ── panel: the instrument enclosure ────────────────────────────────
+     The scene is a bright, fluorescent convention hall, a laptop read at
+     an angle for eight minutes. A dark UI mirrors the room. The panel is
+     light; only the imagery window is dark, the way it is on real
+     equipment. */
+  --color-panel-0: #ecefe9;
+  --color-panel-1: #f5f7f2;
+  --color-panel-2: #fbfcf9;
+  --color-panel-sunk: #e2e6dd;
+
+  /* ── plate: brushed anodised aluminium, the identity chrome ───────── */
+  --color-plate-0: #c3c8bd;
+  --color-plate-1: #d2d6cb;
+  --color-plate-2: #aeb4a7;
+  --color-plate-edge: #8f968a;
+
+  /* ── rule: engraved and printed lines ─────────────────────────────── */
+  --color-rule-hair: #cdd1c6;
+  --color-rule: #b2b8aa;
+  --color-rule-heavy: #7e857a;
+
+  /* ── ink: silkscreen on panel ─────────────────────────────────────── */
+  --color-ink-0: #131819;
+  --color-ink-1: #3c4543;
+  --color-ink-2: #5a6360;
+  --color-ink-3: #7d8681;
+
+  /* ── window: the imagery instrument, set into the panel ───────────── */
+  --color-window-0: #0a0f11;
+  --color-window-1: #121a1c;
+  --color-window-2: #1d2729;
+  --color-window-ink: #cfd8d5;
+  --color-window-ink-2: #8f9b98;
+
+  /* ── signal: stencil vermilion. Attention, hazard, refusal, rejected
+     parameters, the measured-SLA marks. Deliberately far from every
+     evidence-layer colour the backend sends (blues, cyans, greens), so a
+     mask and a warning can never be confused. ─────────────────────── */
+  --color-signal: #dc4a1e;
+  --color-signal-ink: #ab3512;
+  --color-signal-wash: #fbe9e3;
+
+  /* ── pass: verified, within manifest, coregistered ────────────────── */
+  --color-pass: #2f6b4a;
+  --color-pass-ink: #235339;
+  --color-pass-wash: #e4efe7;
+
+  /* ── caution: warnings that are not failures ──────────────────────── */
+  --color-caution: #8a6410;
+  --color-caution-wash: #f6efdc;
+
+  /* ── advisory: refusals are answers, so they read informational ───── */
+  --color-advisory: #1f5670;
+  --color-advisory-wash: #e5eef2;
+
+  --font-display: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Azeret Mono Variable", ui-monospace, "Cascadia Mono", monospace;
+
+  --radius-plate: 2px;
+  --radius-window: 3px;
+
+  --ease-print: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Base
+   ──────────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light;
+  --armature: 0; /* registration overlay, toggled from the chrome */
+}
+
+* {
+  border-color: var(--color-rule-hair);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-panel-0);
+  color: var(--color-ink-0);
+  font-family: var(--font-sans);
+  font-variation-settings: "wdth" 100;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* The surfaces the browser draws for us still belong to the design. */
+::selection {
+  background: var(--color-signal);
+  color: #fff;
+}
+
+:where(input, textarea) {
+  caret-color: var(--color-signal);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-rule) transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-rule);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-rule-heavy);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.on-window ::-webkit-scrollbar-thumb {
+  background: var(--color-window-2);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.on-window {
+  scrollbar-color: var(--color-window-2) transparent;
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Type roles
+   ──────────────────────────────────────────────────────────────────── */
+
+/* Engraved plate lettering — the widest cut of the family, the way a
+   nameplate is set. Used for identity and for section headings only. */
+.t-plate {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 116, "wght" 620;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.05;
+}
+
+/* The stencilled equipment code: narrow, small, everywhere a zone,
+   field, or control needs naming. This is the label voice of the world. */
+.t-code {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 79, "wght" 640;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--color-ink-2);
+}
+
+.t-code-sm {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 79, "wght" 640;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+/* Measurement. Monospace here is not costume — every one of these is a
+   number, an identifier, a parameter, or a coordinate. */
+.t-data {
+  font-family: var(--font-mono);
+  font-variation-settings: "wght" 400;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  letter-spacing: -0.02em;
+}
+
+.t-data-strong {
+  font-family: var(--font-mono);
+  font-variation-settings: "wght" 600;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  letter-spacing: -0.02em;
+}
+
+.t-doc {
+  font-family: var(--font-sans);
+  font-variation-settings: "wdth" 100, "wght" 400;
+  line-height: 1.6;
+  max-width: 68ch;
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Materials
+   ──────────────────────────────────────────────────────────────────── */
+
+/* Brushed anodised plate. The brush direction is vertical, the way a
+   milled faceplate is finished, with a soft top-to-bottom light fall. */
+.m-plate {
+  background-color: var(--color-plate-0);
+  background-image:
+    linear-gradient(
+      180deg,
+      rgb(255 255 255 / 0.5) 0%,
+      rgb(255 255 255 / 0.08) 38%,
+      rgb(0 0 0 / 0.05) 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgb(255 255 255 / 0.16) 0px,
+      rgb(255 255 255 / 0.16) 1px,
+      transparent 1px,
+      transparent 3px,
+      rgb(0 0 0 / 0.035) 3px,
+      rgb(0 0 0 / 0.035) 4px,
+      transparent 4px,
+      transparent 7px
+    );
+  border: 1px solid var(--color-plate-edge);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.55),
+    inset 0 -1px 0 rgb(0 0 0 / 0.09);
+}
+
+/* Engraved lettering: cut into the plate, light catching the lower lip. */
+.m-engraved {
+  color: #262c26;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.62);
+}
+
+/* A sheet of the operations document, resting on the panel. */
+.m-sheet {
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-rule-hair);
+  box-shadow:
+    0 1px 1px rgb(19 24 25 / 0.03),
+    0 6px 16px -10px rgb(19 24 25 / 0.16);
+}
+
+/* A recess milled into the panel — inputs, wells, the drop bay. */
+.m-sunk {
+  background: var(--color-panel-sunk);
+  border: 1px solid var(--color-rule);
+  box-shadow:
+    inset 0 2px 3px -1px rgb(19 24 25 / 0.1),
+    inset 0 -1px 0 rgb(255 255 255 / 0.7);
+}
+
+/* The imagery window, set into the panel behind glass. */
+.m-window {
+  background: var(--color-window-0);
+  border: 1px solid var(--color-rule-heavy);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.55),
+    inset 0 2px 14px rgb(0 0 0 / 0.5),
+    0 1px 0 rgb(255 255 255 / 0.5);
+}
+
+/* Hazard striping. Reserved for states that genuinely warn: degraded
+   serving, rejected parameters, failed preparation. Never decorative. */
+.m-hazard {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--color-signal) 0px,
+    var(--color-signal) 7px,
+    #1a1a18 7px,
+    #1a1a18 14px
+  );
+}
+
+.m-hazard-soft {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgb(220 74 30 / 0.14) 0px,
+    rgb(220 74 30 / 0.14) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+/* Perforated edge of a printed record — used on refusal and trace slips. */
+.m-perforated {
+  --perf: var(--color-rule);
+  background-image: radial-gradient(
+    circle at 2px 50%,
+    var(--perf) 0 1.1px,
+    transparent 1.2px
+  );
+  background-size: 4px 7px;
+  background-repeat: repeat-y;
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Registration armature — a real state, not decoration.
+   Reveals the layout grid and, on the map, the tiling partition.
+   ──────────────────────────────────────────────────────────────────── */
+
+[data-armature="on"] .armature-field {
+  position: relative;
+}
+[data-armature="on"] .armature-field::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgb(220 74 30 / 0.22) 0px,
+      rgb(220 74 30 / 0.22) 1px,
+      transparent 1px,
+      transparent 8px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      rgb(220 74 30 / 0.14) 0px,
+      rgb(220 74 30 / 0.14) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Motion — one authored moment.
+   The line printer: the trace prints itself, row by row, as the stream
+   arrives. Everything else holds still.
+   ──────────────────────────────────────────────────────────────────── */
+
+@keyframes print-row {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-3px);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+}
+
+.print-row {
+  animation: print-row 420ms var(--ease-print) both;
+}
+
+@keyframes carriage {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.carriage::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  width: 25%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(220 74 30 / 0.5),
+    transparent
+  );
+  animation: carriage 1.15s var(--ease-print) infinite;
+}
+
+@keyframes pulse-mark {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.pulse-mark {
+  animation: pulse-mark 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .print-row,
+  .carriage::after,
+  .pulse-mark {
+    animation: none !important;
+  }
+  .print-row {
+    clip-path: none;
+    transform: none;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Print — the PDF cut-list fallback. Ctrl+P on a query view must
+   produce the same content as the generated report.
+   ──────────────────────────────────────────────────────────────────── */
+
+@media print {
+  @page {
+    margin: 16mm 14mm;
+  }
+  body {
+    background: #fff;
+    font-size: 10.5pt;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .m-sheet,
+  .m-plate,
+  .m-sunk {
+    box-shadow: none !important;
+    background: #fff !important;
+    border-color: #999 !important;
+  }
+  .m-window {
+    box-shadow: none !important;
+    border-color: #999 !important;
+  }
+  .print-break {
+    break-inside: avoid;
+  }
+}
+
+.print-only {
+  display: none;
+}
+
+/* MapLibre's own chrome, brought into the panel's language. */
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-scale {
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  letter-spacing: -0.02em;
+}
+.maplibregl-ctrl-scale {
+  background: rgb(10 15 17 / 0.72) !important;
+  border-color: var(--color-window-ink-2) !important;
+  color: var(--color-window-ink) !important;
+  border-width: 0 1.5px 1.5px 1.5px !important;
+  border-radius: 0 !important;
+  padding: 1px 5px 2px !important;
+}
+.maplibregl-canvas:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: -2px;
+}
