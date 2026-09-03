@@ -5,8 +5,8 @@ The console a judge actually touches. Built against the frozen contract in
 exists.
 
 See [`FRONTEND_PLAN.md`](FRONTEND_PLAN.md) for the work package,
-[`../PRODUCT.md`](../PRODUCT.md) for product truth, and
-[`../DESIGN.md`](../DESIGN.md) for the visual system.
+[`PRODUCT.md`](PRODUCT.md) for product truth, and
+[`DESIGN.md`](DESIGN.md) for the visual system.
 
 ---
 
