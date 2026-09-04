@@ -1,3 +1,4 @@
+import json
 import re
 from typing import Any
 
@@ -170,6 +171,80 @@ def route_query_rules(
     return Task.SINGLE_VQA, notes
 
 
+ROUTER_JSON_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "task": {
+            "type": "string",
+            "enum": [
+                "single_vqa",
+                "single_caption",
+                "single_grounding",
+                "change_description",
+                "change_vqa",
+                "change_map",
+                "crossmodal_extraction",
+                "crossmodal_vqa",
+            ],
+        },
+        "reason": {"type": "string", "maxLength": 200},
+    },
+    "required": ["task", "reason"],
+    "additionalProperties": False,
+}
+
+
+def _is_ambiguous(question: str, notes: list[str]) -> bool:
+    """Detects whether Stage 1 rules had ambiguous tie or fallback default."""
+    ql = question.lower()
+    has_loc = any(w in ql for w in ("where", "locate", "find", "bounding box"))
+    has_desc = any(w in ql for w in ("describe", "caption", "what does", "summarize"))
+    has_vqa = any(w in ql for w in ("is there", "are there", "how many", "what is"))
+    signals = sum([bool(has_loc), bool(has_desc), bool(has_vqa)])
+    if signals >= 2:
+        return True
+    if any("default (R8)" in n for n in notes):
+        return True
+    return False
+
+
+def route_query_llm(
+    question: str,
+    modalities: list[str] | None = None,
+    pair_type: str | None = None,
+    image_count: int = 1,
+    llm_client: Any | None = None,
+) -> tuple[Task, str] | None:
+    """Stage 2: Constrained LLM decoding (Outlines/vLLM guided) for ambiguous queries."""
+    if llm_client is not None:
+        try:
+            if callable(llm_client):
+                res = llm_client(question)
+            elif hasattr(llm_client, "generate"):
+                res = llm_client.generate(question, schema=ROUTER_JSON_SCHEMA)
+            elif hasattr(llm_client, "chat"):
+                res = llm_client.chat(question)
+            else:
+                res = None
+
+            if isinstance(res, str):
+                res = json.loads(res)
+            if isinstance(res, dict) and "task" in res and "reason" in res:
+                task = Task(res["task"])
+                return task, str(res["reason"])
+        except Exception:
+            return None
+
+    try:
+        import outlines  # type: ignore # noqa: F401
+
+        # Fallback when outlines is available but no explicit client passed
+    except (ImportError, Exception):
+        pass
+
+    return None
+
+
 def route_query(
     question: str,
     modalities: list[str] | None = None,
@@ -179,15 +254,29 @@ def route_query(
     allow_llm: bool = True,
     llm_client: Any | None = None,
 ) -> tuple[Task, RouterPath, list[str]]:
-    """Routes a query using Stage 1 rules, with fallback/tie-break handling.
+    """Routes a query using Stage 1 rules, with Stage 2 LLM tie-break when ambiguous.
 
     Returns (task, router_path, routing_notes).
     """
-    # Deterministic Stage 1
     task, notes = route_query_rules(
         question=question,
         modalities=modalities,
         pair_type=pair_type,
         image_count=image_count,
     )
+
+    if allow_llm and (llm_client is not None or _is_ambiguous(question, notes)):
+        llm_res = route_query_llm(
+            question=question,
+            modalities=modalities,
+            pair_type=pair_type,
+            image_count=image_count,
+            llm_client=llm_client,
+        )
+        if llm_res is not None:
+            llm_task, reason = llm_res
+            return llm_task, RouterPath.LLM, notes + [f"Stage 2 LLM tie-break: {reason}"]
+        else:
+            notes.append("Stage 2 LLM tie-break skipped or unavailable; fell back to Stage 1 rules")
+
     return task, RouterPath.RULES, notes

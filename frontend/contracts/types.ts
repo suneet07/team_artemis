@@ -415,7 +415,7 @@ export interface ToolManifest {
   name: string;
   description: string;
   version: number;
-  required_modalities: ("optical" | "sar")[];
+  required_modalities: ("optical" | "sar" | "any" | "pair")[];
   confidence_source?: "learned_logprob" | "threshold_statistics" | "heuristic" | "deterministic_fallback";
   low_confidence_proposer?: boolean;
   expected_latency_ms?: number;

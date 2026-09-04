@@ -476,6 +476,34 @@ def fusion_node(state: AgentState) -> dict[str, Any]:
             and results["object_box_fallback"].get("count") is not None
         ):
             cnt = results["object_box_fallback"].get("count", 0)
+            if cnt == 0:
+                refusal = create_refusal(
+                    category="unsupported_class",
+                    reason=(
+                        "Grounding target class is outside trained vocabulary and "
+                        "fallback proposer found no candidate features (V9)."
+                    ),
+                    action="ask_different_question",
+                    label="Ask a different question",
+                    suggested_questions=[
+                        "Where are the buildings in this scene?",
+                        "Locate water bodies.",
+                    ],
+                )
+                trace.add_warning(f"V9 refusal: {refusal['reason']}")
+                warnings_list = list(state.get("warnings") or [])
+                warnings_list.append(refusal["reason"])
+                elapsed_ms = int((time.perf_counter() - start_t) * 1000)
+                timings = dict(state.get("timings") or {})
+                timings["fusion"] = elapsed_ms
+                return {
+                    "refusal": refusal,
+                    "validation_ok": False,
+                    "fused_answer": f"Refused: {refusal['reason']}",
+                    "trace": trace,
+                    "warnings": warnings_list,
+                    "timings": timings,
+                }
             fused_answer = f"Proposed {cnt} candidate bounding boxes using morphological priors."
         else:
             if any("MODEL_UNAVAILABLE" in w for w in (state.get("warnings") or [])):
@@ -591,6 +619,16 @@ def emit_node(state: AgentState) -> dict[str, Any]:
             refusal=trace_refusal,
             extra={"confidence_basis": confidence_basis},
         )
+    elif state.get("all_tools_failed"):
+        query_state = "failed"
+        answer = state.get("fused_answer") or "All planned tools failed."
+        confidence = 0.0
+        confidence_basis = "heuristic"
+        trace.set_outputs(
+            answer=answer,
+            confidence=0.0,
+            extra={"confidence_basis": confidence_basis},
+        )
     else:
         query_state = "succeeded"
         answer = state.get("fused_answer") or "Query processed successfully."
@@ -615,7 +653,7 @@ def emit_node(state: AgentState) -> dict[str, Any]:
             extra={"confidence_basis": confidence_basis},
         )
 
-    if not refusal:
+    if not refusal and query_state != "failed":
         trace.set_fusion(
             model="qwen3vl-4b-instruct",
             answer=answer,
@@ -642,7 +680,7 @@ def emit_node(state: AgentState) -> dict[str, Any]:
         trace_dict = trace.write_json(trace_file)
 
     if emit:
-        if not refusal:
+        if not refusal and query_state != "failed":
             emit(
                 "fusion",
                 {
@@ -801,8 +839,8 @@ def run_query(
             confidence=0.0,
             confidence_basis="heuristic",
             latency_ms=0,
-            refusal={"reason": str(exc), "category": "validator"},
-            failures=[str(exc)],
+            refusal=None,
+            failures=[{"step": "pipeline", "error": str(exc)}],
             evidence=[],
             warnings=[f"Unhandled error: {exc}"],
             trace=trace_dict,
@@ -810,6 +848,8 @@ def run_query(
 
     trace_dict = final_state.get("trace_dict") or {}
     query_state = final_state.get("query_state", "succeeded")
+    if final_state.get("all_tools_failed") and query_state != "refused":
+        query_state = "failed"
 
     return QueryResult(
         query_id=final_state["query_id"],
