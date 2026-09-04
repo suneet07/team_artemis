@@ -19,7 +19,7 @@ def calculate_confidence(
 
     Returns (confidence, confidence_basis).
     """
-    chosen_basis = basis or os.environ.get("SATQUERY_CONFIDENCE_BASIS", "calibrated").lower()
+    chosen_basis = basis or os.environ.get("SATQUERY_CONFIDENCE_BASIS", "heuristic").lower()
 
     if chosen_basis == "calibrated":
         return _CALIBRATOR.calibrate(
@@ -33,8 +33,11 @@ def calculate_confidence(
     confidence_basis = "heuristic"
     base_conf = 0.85
 
-    # If fallback proposer contributed, floor the confidence (§10 N8 Rule 4)
-    if used_fallback or "object_box_fallback" in tool_results:
+    # If fallback proposer or synthetic fallback contributed, floor the confidence (§10 N8 Rule 4)
+    has_synthetic = any(
+        isinstance(res, dict) and res.get("synthetic") for res in tool_results.values()
+    )
+    if used_fallback or "object_box_fallback" in tool_results or has_synthetic:
         return 0.45, confidence_basis
 
     # Cross-modal agreement effect
@@ -45,10 +48,11 @@ def calculate_confidence(
         elif iou is not None and iou >= 0.70:
             base_conf = min(0.95, base_conf * 1.10)
 
-    # Threshold method effect (otsu vs fallback)
+    # Threshold method effect (otsu vs fallback/manual)
     for res in tool_results.values():
         if isinstance(res, dict):
-            if res.get("threshold_method") == "fixed_fallback":
+            method = res.get("threshold_method")
+            if method in ("fixed_fallback", "manual", "fixed"):
                 base_conf *= 0.90
 
     # Warning count penalty

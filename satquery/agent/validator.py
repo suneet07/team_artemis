@@ -86,7 +86,7 @@ def validate_query_compatibility(
                     f"but only {len(bundle.images)} image was provided."
                 ),
                 action=ACTION_ADD_2ND_IMAGE,
-                label=f"Add the {'sec' + 'ond'} acquisition",
+                label="Add the second acquisition",
                 suggested_questions=[
                     "What land cover types are present?",
                     "Where are the structures in this image?",

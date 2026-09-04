@@ -103,7 +103,16 @@ class ServingClient:
             except Exception:
                 pass
 
-        # Deterministic local fallback based on adapter and prompt
+        # Gated stub serving (§22 / C-3)
+        if os.environ.get("SATQUERY_STUB_SERVING", "0") != "1":
+            return ModelInferenceResult(
+                text="MODEL_UNAVAILABLE: Model serving offline or unreachable.",
+                confidence=0.0,
+                logprob=None,
+                serving_mode="unavailable",
+            )
+
+        # Deterministic local stub fallback based on adapter and prompt
         p_lower = prompt.lower()
         if "ground" in adapter or "caption" in adapter:
             if "aircraft" in p_lower:

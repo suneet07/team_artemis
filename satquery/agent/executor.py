@@ -262,44 +262,71 @@ def execute_plan(state: AgentState) -> dict[str, Any]:
                 pool.submit(_run_single_step, idx, step, context, registry, emit): (idx, step)
                 for idx, step in wave
             }
-            for fut in as_completed(future_to_step, timeout=max_timeout + 2.0):
-                try:
-                    idx, rec, step_assets, err = fut.result(timeout=max_timeout)
-                except Exception as ex:
-                    idx, step = future_to_step[fut]
-                    tool_name = step["tool"]
-                    err = f"Tool '{tool_name}' exceeded latency SLA or failed: {ex}"
-                    rec = {
-                        "tool": tool_name,
-                        "params": step["params"],
-                        "outputs": {},
-                        "latency_ms": int(max_timeout * 1000),
-                        "error": err,
-                    }
-                    step_assets = []
+            try:
+                for fut in as_completed(future_to_step, timeout=max_timeout + 2.0):
+                    try:
+                        idx, rec, step_assets, err = fut.result(timeout=max_timeout)
+                    except Exception as ex:
+                        idx, step = future_to_step[fut]
+                        tool_name = step["tool"]
+                        err = f"Tool '{tool_name}' exceeded latency SLA or failed: {ex}"
+                        rec = {
+                            "tool": tool_name,
+                            "params": step["params"],
+                            "outputs": {},
+                            "latency_ms": int(max_timeout * 1000),
+                            "error": err,
+                        }
+                        step_assets = []
 
-                tool_name = rec["tool"]
-                results[tool_name] = rec["outputs"]
-                assets.extend(step_assets)
+                    tool_name = rec["tool"]
+                    results[tool_name] = rec["outputs"]
+                    assets.extend(step_assets)
 
-                if err:
-                    warnings.append(err)
-                    trace.add_warning(err)
+                    if err:
+                        warnings.append(err)
+                        trace.add_warning(err)
 
-                # Determine confidence
-                conf = 0.90
-                if err:
-                    conf = 0.0
-                elif "confidence" in rec["outputs"]:
-                    conf = float(rec["outputs"]["confidence"])
+                    if rec["outputs"].get("synthetic"):
+                        synth_warn = (
+                            f"Tool '{tool_name}' used synthetic fallback array "
+                            "(source raster not accessible on disk)"
+                        )
+                        if synth_warn not in warnings:
+                            warnings.append(synth_warn)
+                            trace.add_warning(synth_warn)
+                        trace.add_routing_note(f"{tool_name}: used synthetic fallback array")
 
-                trace.add_step(
-                    tool=tool_name,
-                    params=rec["params"],
-                    outputs=rec["outputs"],
-                    confidence=conf,
-                    latency_ms=rec["latency_ms"],
-                )
+                    # Determine confidence
+                    conf = 0.90
+                    if err:
+                        conf = 0.0
+                    elif rec["outputs"].get("synthetic"):
+                        conf = 0.45
+                    elif "confidence" in rec["outputs"]:
+                        conf = float(rec["outputs"]["confidence"])
+
+                    trace.add_step(
+                        tool=tool_name,
+                        params=rec["params"],
+                        outputs=rec["outputs"],
+                        confidence=conf,
+                        latency_ms=rec["latency_ms"],
+                    )
+            except TimeoutError:
+                for fut, (_idx, step) in future_to_step.items():
+                    if not fut.done():
+                        tool_name = step["tool"]
+                        err = f"Tool '{tool_name}' timed out after {max_timeout + 2.0}s"
+                        warnings.append(err)
+                        trace.add_warning(err)
+                        trace.add_step(
+                            tool=tool_name,
+                            params=step["params"],
+                            outputs={},
+                            confidence=0.0,
+                            latency_ms=int((max_timeout + 2.0) * 1000),
+                        )
 
     elapsed_ms = int((time.perf_counter() - start_t) * 1000)
     timings = dict(state.get("timings") or {})

@@ -101,23 +101,11 @@ def route_query_rules(
         or image_count >= 2
     )
 
-    # If temporal signal exists or question explicitly asks about change/raster/map:
     explicit_map = any(
         k in ql for k in ("raster", "change mask", "highlighting the differences", "map of")
     )
-    if has_temporal or explicit_map:
-        desc_markers = [
-            "describe the changes",
-            "what changed",
-            "describe",
-            "how has",
-            "what differences",
-            "areas that have been modified",
-        ]
-        if any(m in ql for m in desc_markers):
-            notes.append("Routed to change_description via temporal description markers (R2)")
-            return Task.CHANGE_DESCRIPTION, notes
 
+    if has_temporal or explicit_map:
         map_markers = [
             "raster",
             "mask",
@@ -132,6 +120,18 @@ def route_query_rules(
         if any(m in ql for m in map_markers) or re.search(r"\barea\b", ql):
             notes.append("Routed to change_map via temporal + map/statistic markers (R1)")
             return Task.CHANGE_MAP, notes
+
+        desc_markers = [
+            "describe the changes",
+            "what changed",
+            "describe",
+            "how has",
+            "what differences",
+            "areas that have been modified",
+        ]
+        if any(m in ql for m in desc_markers):
+            notes.append("Routed to change_description via temporal description markers (R2)")
+            return Task.CHANGE_DESCRIPTION, notes
 
         notes.append("Routed to change_vqa via temporal question markers (R3)")
         return Task.CHANGE_VQA, notes

@@ -32,7 +32,9 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
                     diff_data = None
 
     y, x = np.ogrid[:100, :100]
+    is_synthetic = False
     if diff_data is None:
+        is_synthetic = True
         # Deterministic bi-temporal change simulation with multi-class zones
         # 1. Urban expansion in south-east
         urban_zone = (x > 60) & (y > 60)
@@ -89,7 +91,8 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
         mask_dir.mkdir(parents=True, exist_ok=True)
         mask_file = mask_dir / f"change_{mode}_mask.tif"
 
-        transform = from_origin(500000.0, 3000000.0, pixel_size_m, pixel_size_m)
+        top_y = float(change_mask.shape[0] * pixel_size_m)
+        transform = from_origin(0.0, top_y, pixel_size_m, pixel_size_m)
         with rasterio.open(
             mask_file,
             "w",
@@ -110,8 +113,14 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
         fallback_file.write_bytes(change_mask.tobytes())
         mask_uri = str(fallback_file)
 
-    return {
+    out_dict: dict[str, Any] = {
         "mask_uri": mask_uri,
         "change_ratio": change_ratio,
         "mode": mode,
     }
+    if is_synthetic:
+        out_dict["synthetic"] = True
+        out_dict["warning"] = (
+            "Source bitemporal rasters unavailable on disk; synthetic fallback used"
+        )
+    return out_dict

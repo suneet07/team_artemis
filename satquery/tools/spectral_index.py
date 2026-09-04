@@ -86,12 +86,18 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
     bands_data: dict[str, np.ndarray] | None = None
     pixel_size_m = 10.0
 
+    is_synthetic = False
+    src_transform = None
+    crs_str = "EPSG:32644"
+
     if context and "bundle" in context:
         bundle = context["bundle"]
         if bundle and getattr(bundle, "images", None):
             first_img = bundle.images[0]
             if first_img.pixel_size_m is not None:
                 pixel_size_m = float(first_img.pixel_size_m)
+            if first_img.crs:
+                crs_str = first_img.crs
             p = Path(first_img.path)
             if p.exists() and p.is_file():
                 try:
@@ -99,7 +105,9 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
 
                     with rasterio.open(p) as src:
                         data = src.read()
-                        # Map band index
+                        src_transform = src.transform
+                        if src.crs:
+                            crs_str = str(src.crs)
                         inv = getattr(bundle, "band_inventory", None)
                         if inv and inv.bands:
                             bands_data = {}
@@ -111,6 +119,7 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
 
     if bands_data is None:
         bands_data = _generate_synthetic_bands((100, 100))
+        is_synthetic = True
 
     # Compute requested normalized spectral index
     if index_name == "NDVI":
@@ -163,19 +172,20 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
 
     # Write real GeoTIFF mask file to disk
     import tempfile
+    mask_dir = Path(tempfile.gettempdir()) / "satquery_assets" / "masks"
+    mask_dir.mkdir(parents=True, exist_ok=True)
+    mask_file = mask_dir / f"{index_name.lower()}_mask.tif"
+
     try:
         import rasterio
         from rasterio.transform import from_origin
 
-        crs_str = "EPSG:32644"
-        if context and context.get("crs"):
-            crs_str = context["crs"]
+        if src_transform is not None:
+            transform = src_transform
+        else:
+            top_y = float(mask.shape[0] * pixel_size_m)
+            transform = from_origin(0.0, top_y, pixel_size_m, pixel_size_m)
 
-        mask_dir = Path(tempfile.gettempdir()) / "satquery_assets" / "masks"
-        mask_dir.mkdir(parents=True, exist_ok=True)
-        mask_file = mask_dir / f"{index_name.lower()}_mask.tif"
-
-        transform = from_origin(500000.0, 3000000.0, pixel_size_m, pixel_size_m)
         with rasterio.open(
             mask_file,
             "w",
@@ -190,16 +200,18 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
             dst.write(mask.astype(np.uint8), 1)
         mask_uri = str(mask_file)
     except Exception:
-        mask_dir = Path(tempfile.gettempdir()) / "satquery_assets" / "masks"
-        mask_dir.mkdir(parents=True, exist_ok=True)
         fallback_file = mask_dir / f"{index_name.lower()}_mask.tif"
         fallback_file.write_bytes(mask.tobytes())
         mask_uri = str(fallback_file)
 
-    return {
+    out_dict: dict[str, Any] = {
         "mask_uri": mask_uri,
         "area_km2": area_km2,
         "threshold_value": thresh,
         "threshold_method": chosen_method,
         "index": index_name,
     }
+    if is_synthetic:
+        out_dict["synthetic"] = True
+        out_dict["warning"] = "Source raster unavailable on disk; synthetic fallback used"
+    return out_dict

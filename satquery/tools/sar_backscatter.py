@@ -26,6 +26,9 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
 
     pixel_size_m = 10.0
     sar_data: np.ndarray | None = None
+    is_synthetic = False
+    src_transform = None
+    crs_str = "EPSG:32644"
 
     if context and "bundle" in context:
         bundle = context["bundle"]
@@ -34,6 +37,8 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
             img = sar_imgs[0] if sar_imgs else bundle.images[0]
             if img.pixel_size_m is not None:
                 pixel_size_m = float(img.pixel_size_m)
+            if img.crs:
+                crs_str = img.crs
             p = Path(img.path)
             if p.exists() and p.is_file():
                 try:
@@ -41,11 +46,15 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
 
                     with rasterio.open(p) as src:
                         sar_data = src.read(1).astype(np.float32)
+                        src_transform = src.transform
+                        if src.crs:
+                            crs_str = str(src.crs)
                 except Exception:
                     sar_data = None
 
     if sar_data is None:
         sar_data = _generate_synthetic_sar((100, 100), pol=pol)
+        is_synthetic = True
 
     # Otsu with bimodality gate on SAR backscatter
     otsu_val, ratio, f0, f1 = compute_otsu_threshold(sar_data)
@@ -75,19 +84,20 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
 
     # Write real GeoTIFF mask file to disk
     import tempfile
+    mask_dir = Path(tempfile.gettempdir()) / "satquery_assets" / "masks"
+    mask_dir.mkdir(parents=True, exist_ok=True)
+    mask_file = mask_dir / f"sar_{pol.lower()}_mask.tif"
+
     try:
         import rasterio
         from rasterio.transform import from_origin
 
-        crs_str = "EPSG:32644"
-        if context and context.get("crs"):
-            crs_str = context["crs"]
+        if src_transform is not None:
+            transform = src_transform
+        else:
+            top_y = float(mask.shape[0] * pixel_size_m)
+            transform = from_origin(0.0, top_y, pixel_size_m, pixel_size_m)
 
-        mask_dir = Path(tempfile.gettempdir()) / "satquery_assets" / "masks"
-        mask_dir.mkdir(parents=True, exist_ok=True)
-        mask_file = mask_dir / f"sar_{pol.lower()}_mask.tif"
-
-        transform = from_origin(500000.0, 3000000.0, pixel_size_m, pixel_size_m)
         with rasterio.open(
             mask_file,
             "w",
@@ -102,16 +112,18 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
             dst.write(mask.astype(np.uint8), 1)
         mask_uri = str(mask_file)
     except Exception:
-        mask_dir = Path(tempfile.gettempdir()) / "satquery_assets" / "masks"
-        mask_dir.mkdir(parents=True, exist_ok=True)
         fallback_file = mask_dir / f"sar_{pol.lower()}_mask.tif"
         fallback_file.write_bytes(mask.tobytes())
         mask_uri = str(fallback_file)
 
-    return {
+    out_dict: dict[str, Any] = {
         "mask_uri": mask_uri,
         "area_km2": area_km2,
         "threshold_db": thresh,
         "threshold_method": chosen_method,
         "pol": pol,
     }
+    if is_synthetic:
+        out_dict["synthetic"] = True
+        out_dict["warning"] = "Source raster unavailable on disk; synthetic fallback used"
+    return out_dict

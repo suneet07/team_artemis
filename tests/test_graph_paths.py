@@ -124,3 +124,28 @@ def test_graph_path_refusal_v8_change_map_no_crs():
     assert res.state == "refused"
     assert res.refusal["category"] == "validator"
     jsonschema.validate(instance=res.trace, schema=schema)
+
+
+def test_graph_path_single_caption_plans_learned_tool(monkeypatch):
+    monkeypatch.setenv("SATQUERY_STUB_SERVING", "1")
+    schema = _get_trace_schema()
+    bundle = _make_bundle(["optical"])
+    res = run_query(bundle, "Describe the contents of this satellite image.")
+    assert res.state == "succeeded"
+    assert res.trace["graded"]["task_selected"] == "single_caption"
+    assert res.trace["graded"]["tools_invoked"] == ["rs_ground_caption"]
+    assert "dummy_tool" not in res.trace["graded"]["tools_invoked"]
+    jsonschema.validate(instance=res.trace, schema=schema)
+
+
+def test_graph_path_synthetic_fallback_warns_and_floors_confidence():
+    schema = _get_trace_schema()
+    bundle = _make_bundle(["optical"])  # Non-existent raster path
+    res = run_query(bundle, "What is the water extent in this scene?")
+    assert res.state == "succeeded"
+    assert res.confidence_basis == "heuristic"
+    # When raster is not on disk, synthetic fallback triggers loud warnings
+    assert any("synthetic fallback array" in w for w in res.warnings)
+    assert any("used synthetic fallback array" in n for n in res.trace.get("routing_notes", []))
+    assert res.confidence == 0.45
+    jsonschema.validate(instance=res.trace, schema=schema)

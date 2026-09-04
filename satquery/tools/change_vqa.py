@@ -7,10 +7,27 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
     question = params.get("question", "")
     max_tokens = int(params.get("max_tokens", 64))
 
+    prompt = question
+    if context and "bundle" in context:
+        bundle = context["bundle"]
+        images = getattr(bundle, "images", [])
+        if images:
+            modalities = [img.modality for img in images]
+            gsds = [float(getattr(img, "pixel_size_m", 10.0) or 10.0) for img in images]
+            roles = [f"t{i}" for i in range(len(images))]
+            from satquery.agent.prompt import assemble_prompt
+            prompt = assemble_prompt(
+                images=images,
+                roles=roles,
+                modalities=modalities,
+                effective_gsd_m=gsds,
+                question=question,
+            )
+
     client = get_serving_client()
     res = client.infer(
         adapter="change_vqa@v1",
-        prompt=question,
+        prompt=prompt,
         max_tokens=max_tokens,
     )
 

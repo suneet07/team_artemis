@@ -23,7 +23,9 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
                 except Exception:
                     img_data = None
 
+    is_synthetic = False
     if img_data is None:
+        is_synthetic = True
         # Deterministic synthetic image with textured zones and edges
         y, x = np.ogrid[:100, :100]
         base = 0.5 + 0.3 * np.sin(x / 6.0) * np.cos(y / 6.0)
@@ -46,9 +48,13 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
     mean_tex = round(float(np.mean(norm_texture)), 4)
     high_tex_frac = round(float(np.mean(norm_texture > 0.5)), 4)
 
-    return {
+    out_dict: dict[str, Any] = {
         "response_map": "/assets/texture_response.tif",
         "window_size": window_size,
         "mean_texture": mean_tex,
         "high_texture_frac": high_tex_frac,
     }
+    if is_synthetic:
+        out_dict["synthetic"] = True
+        out_dict["warning"] = "Source raster unavailable on disk; synthetic fallback used"
+    return out_dict

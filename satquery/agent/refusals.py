@@ -8,8 +8,7 @@ RefusalCategory = Literal[
     "unsupported_class",
 ]
 
-_S = "sec" + "ond"
-ACTION_ADD_2ND_IMAGE = f"add_{_S}_image"
+ACTION_ADD_2ND_IMAGE = "add_second_image"
 
 RemedyAction = Literal[
     "add_optical",

@@ -89,4 +89,5 @@ def test_refusal_trace_matches_fixture_shape():
         assert gk in fix_data["graded"]
 
     assert trace["graded"]["outputs"]["refusal"]["category"] == "missing_input"
+    assert trace["graded"]["parameter_check"] == {"passed": True, "rejected": []}
     jsonschema.validate(instance=trace, schema=schema)

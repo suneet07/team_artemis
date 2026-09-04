@@ -90,6 +90,7 @@ def plan_query(
     replan_count: int = 0,
     gate_rejected: list[str] | None = None,
     registry: ToolRegistry | None = None,
+    previous_plan: list[dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Generates an ordered list of tool calls adhering to §10 N4 and §15.
 
@@ -127,16 +128,50 @@ def plan_query(
             notes.append("Dropped spectral_index: no computable indices available on replan")
             permitted = [t for t in permitted if t != "spectral_index"]
 
-        # Check for unknown parameters or out-of-range parameters
-        for r in gate_rejected:
-            unknown_m = re.search(r"unknown parameter '([^']+)'", r)
-            out_of_range_m = re.search(r"parameter '([^']+)'=[^ ]+ outside permitted range", r)
-            if unknown_m:
-                bad_key = unknown_m.group(1)
-                notes.append(f"Dropping unknown parameter '{bad_key}' during replan")
-            if out_of_range_m:
-                bad_param = out_of_range_m.group(1)
-                notes.append(f"Reverting out-of-range parameter '{bad_param}' to manifest default")
+        # Check for unknown parameters or out-of-range parameters from previous plan
+        if previous_plan:
+            modified_plan = []
+            made_changes = False
+            for step in previous_plan:
+                t_name = step["tool"]
+                new_params = dict(step.get("params", {}))
+                manifest = reg.get(t_name) if t_name in reg.names() else None
+
+                for r in gate_rejected:
+                    unknown_m = re.search(r"unknown parameter '([^']+)'", r)
+                    out_of_range_m = re.search(
+                        r"parameter '([^']+)'=[^ ]+ outside permitted range", r
+                    )
+                    if unknown_m:
+                        bad_key = unknown_m.group(1)
+                        if bad_key in new_params:
+                            del new_params[bad_key]
+                            notes.append(f"Dropping unknown parameter '{bad_key}' during replan")
+                            made_changes = True
+                    if out_of_range_m:
+                        bad_param = out_of_range_m.group(1)
+                        if bad_param in new_params:
+                            if manifest and bad_param in manifest.parameters:
+                                default_v = manifest.parameters[bad_param].default
+                                if default_v is not None:
+                                    new_params[bad_param] = default_v
+                                else:
+                                    del new_params[bad_param]
+                            else:
+                                del new_params[bad_param]
+                            notes.append(
+                                f"Reverting parameter '{bad_param}' to manifest default"
+                            )
+                            made_changes = True
+
+                modified_plan.append({
+                    "tool": t_name,
+                    "params": new_params,
+                    "depends_on": step.get("depends_on", []),
+                })
+
+            if made_changes:
+                return modified_plan, notes
 
         # If dummy_tool is being replanned
         if "dummy_tool" in permitted:
@@ -145,6 +180,24 @@ def plan_query(
     # Initial plan construction
     plan: list[dict[str, Any]] = []
 
+    # Single Caption
+    if task == Task.SINGLE_CAPTION:
+        if "rs_ground_caption" in permitted:
+            plan.append({
+                "tool": "rs_ground_caption",
+                "params": {"max_tokens": 128},
+                "depends_on": [],
+            })
+        elif "lulc_classifier" in permitted:
+            plan.append({
+                "tool": "lulc_classifier",
+                "params": {},
+                "depends_on": [],
+            })
+        elif "dummy_tool" in registered_names:
+            plan.append({"tool": "dummy_tool", "params": {"index": "ALPHA"}, "depends_on": []})
+        return plan, notes
+
     # Grounding task branch
     if task == Task.SINGLE_GROUNDING:
         has_in_vocab = any(vocab in ql for vocab in TRAINED_GROUNDING_VOCABULARY)
@@ -152,7 +205,7 @@ def plan_query(
             can_use_spectral = (
                 "spectral_index" in permitted
                 and "optical" in modalities
-                and bool(band_inv.computable_indices)
+                and bool(band_inv.computable_indices if band_inv else [])
             )
             if can_use_spectral:
                 idx = band_inv.computable_indices[0]
@@ -193,16 +246,17 @@ def plan_query(
 
     # Cross-modal extraction branch
     if task == Task.CROSSMODAL_EXTRACTION:
+        deps = []
         if "optical" in modalities and "spectral_index" in permitted:
-            # Pick computable index
-            if not band_inv.has_swir and "NDBI" in ql:
+            if not getattr(band_inv, "has_swir", True) and "NDBI" in ql:
                 notes.append(
                     "SWIR unavailable; NDBI skipped; using NDWI/SAR primary for built-up (D3)"
                 )
-            if "NDWI" in band_inv.computable_indices:
+            computables = getattr(band_inv, "computable_indices", [])
+            if "NDWI" in computables:
                 idx = "NDWI"
-            elif band_inv.computable_indices:
-                idx = band_inv.computable_indices[0]
+            elif computables:
+                idx = computables[0]
             else:
                 idx = "NDVI"
             plan.append({
@@ -210,11 +264,45 @@ def plan_query(
                 "params": {"index": idx, "threshold_method": "otsu"},
                 "depends_on": [],
             })
+            deps.append("spectral_index")
         if "sar" in modalities and "sar_backscatter" in permitted:
             plan.append({
                 "tool": "sar_backscatter",
                 "params": {"pol": "VV", "threshold_method": "otsu"},
                 "depends_on": [],
+            })
+            deps.append("sar_backscatter")
+        if "optsar_fusion" in permitted and len(deps) >= 2:
+            plan.append({
+                "tool": "optsar_fusion",
+                "params": {"question": question},
+                "depends_on": deps,
+            })
+        return plan, notes
+
+    # Cross-modal VQA branch
+    if task == Task.CROSSMODAL_VQA:
+        deps = []
+        if "optical" in modalities and "spectral_index" in permitted:
+            idx = "NDWI" if "NDWI" in getattr(band_inv, "computable_indices", []) else "NDVI"
+            plan.append({
+                "tool": "spectral_index",
+                "params": {"index": idx, "threshold_method": "otsu"},
+                "depends_on": [],
+            })
+            deps.append("spectral_index")
+        if "sar" in modalities and "sar_backscatter" in permitted:
+            plan.append({
+                "tool": "sar_backscatter",
+                "params": {"pol": "VV", "threshold_method": "otsu"},
+                "depends_on": [],
+            })
+            deps.append("sar_backscatter")
+        if "optsar_fusion" in permitted:
+            plan.append({
+                "tool": "optsar_fusion",
+                "params": {"question": question},
+                "depends_on": deps,
             })
         return plan, notes
 
@@ -226,18 +314,25 @@ def plan_query(
                 "params": {},
                 "depends_on": [],
             })
-            if task == Task.CHANGE_MAP and "change_stats" in permitted:
-                plan.append({
-                    "tool": "change_stats",
-                    "params": {},
-                    "depends_on": ["change_map"],
-                })
-        elif "dummy_tool" in registered_names:
+        if task in (Task.CHANGE_DESCRIPTION, Task.CHANGE_VQA) and "change_vqa" in permitted:
+            plan.append({
+                "tool": "change_vqa",
+                "params": {"question": question},
+                "depends_on": ["change_map"] if "change_map" in permitted else [],
+            })
+        elif task == Task.CHANGE_MAP and "change_stats" in permitted:
+            plan.append({
+                "tool": "change_stats",
+                "params": {},
+                "depends_on": ["change_map"] if "change_map" in permitted else [],
+            })
+        elif "dummy_tool" in registered_names and not plan:
             plan.append({"tool": "dummy_tool", "params": {"index": "ALPHA"}, "depends_on": []})
         return plan, notes
 
-    # Single VQA / Single Caption / Crossmodal VQA
-    if "optical" in modalities and "spectral_index" in permitted and band_inv.computable_indices:
+    # Single VQA
+    has_indices = bool(getattr(band_inv, "computable_indices", []))
+    if "optical" in modalities and "spectral_index" in permitted and has_indices:
         idx = band_inv.computable_indices[0]
         plan.append({
             "tool": "spectral_index",
@@ -248,6 +343,12 @@ def plan_query(
         plan.append({
             "tool": "sar_backscatter",
             "params": {"pol": "VV", "threshold_method": "otsu"},
+            "depends_on": [],
+        })
+    elif "rs_vqa" in permitted:
+        plan.append({
+            "tool": "rs_vqa",
+            "params": {"question": question},
             "depends_on": [],
         })
     elif "dummy_tool" in registered_names:
