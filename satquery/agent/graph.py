@@ -298,7 +298,7 @@ def parameter_gate_node(state: AgentState) -> dict[str, Any]:
 
     # Reset planned steps in trace if replanning
     if state.get("replan_count", 0) > 0:
-        trace._plan = []
+        trace._plan.clear()  # noqa: SLF001 — clear() on private list; use trace.get_planned_steps() to read
 
     for step in plan:
         tool_name = step["tool"]
@@ -330,7 +330,7 @@ def parameter_gate_node(state: AgentState) -> dict[str, Any]:
     emit = state.get("emit")
     if emit:
         emit("plan", {
-            "steps": getattr(trace, "_plan", []),
+            "steps": trace.get_planned_steps(),
             "parameter_check": {"passed": gate_passed, "rejected": all_rejected},
         })
 
