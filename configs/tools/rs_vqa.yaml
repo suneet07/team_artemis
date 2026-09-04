@@ -1,0 +1,25 @@
+name: rs_vqa
+description: Visual question answering on optical satellite imagery via learned VLM adapter.
+version: 1
+required_modalities: [optical]
+confidence_source: learned_logprob
+expected_latency_ms: 1200
+permitted_parameters:
+  question:
+    type: string
+    optional: true
+  max_tokens:
+    type: int
+    range: [1, 512]
+    default: 64
+    optional: true
+  temperature:
+    type: float
+    range: [0.0, 1.0]
+    default: 0.0
+    optional: true
+outputs:
+  answer:
+    type: text
+  confidence:
+    type: float

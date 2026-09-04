@@ -25,7 +25,27 @@ def cartosat_mx() -> BandInventory:
 
 
 def test_registry_loads_builtin_manifests(registry):
-    assert registry.names() == ["dummy_tool", "spectral_index"]
+    expected_tools = [
+        "centroid_prior",
+        "change_map",
+        "change_stats",
+        "change_vqa",
+        "coreg_check",
+        "dummy_tool",
+        "lulc_classifier",
+        "object_box_fallback",
+        "optsar_fusion",
+        "rs_ground_caption",
+        "rs_vqa",
+        "sar_backscatter",
+        "spectral_index",
+        "texture_seg",
+        "tile_scorer",
+    ]
+    for expected in expected_tools:
+        assert expected in registry.names()
+        manifest = registry.get(expected)
+        assert manifest.name == expected
 
 
 def test_valid_params_pass(dummy):

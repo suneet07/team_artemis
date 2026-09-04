@@ -1,0 +1,17 @@
+name: lulc_classifier
+description: Multi-label land use / land cover classification over image tiles.
+version: 1
+required_modalities: [optical]
+confidence_source: learned_logprob
+expected_latency_ms: 500
+permitted_parameters:
+  threshold:
+    type: float
+    range: [0.0, 1.0]
+    default: 0.5
+    optional: true
+outputs:
+  labels:
+    type: stats
+  confidence:
+    type: float

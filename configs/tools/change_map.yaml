@@ -1,0 +1,24 @@
+name: change_map
+description: Siamese change detection model generating full-scene binary or semantic change mask.
+version: 1
+required_modalities: [optical]
+confidence_source: learned_logprob
+expected_latency_ms: 2000
+permitted_parameters:
+  mode:
+    type: enum
+    values: [binary, semantic]
+    default: binary
+    optional: true
+  threshold:
+    type: float
+    range: [0.0, 1.0]
+    default: 0.5
+    optional: true
+outputs:
+  mask_uri:
+    type: geotiff
+    crs: source
+    resolution: full_scene
+  change_ratio:
+    type: float

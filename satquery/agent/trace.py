@@ -50,6 +50,7 @@ class TraceBuilder:
         if isinstance(router_path, RouterPath):
             router_path = router_path.value
         self._router_path = router_path
+        self._trace["router_path"] = router_path
         return self
 
     def set_inputs(self, inputs: list[dict[str, Any]]) -> "TraceBuilder":
@@ -184,6 +185,10 @@ class TraceBuilder:
             if key == "query_text":
                 ordered["graded"] = graded
                 ordered["steps"] = self._steps
+        if "evidence" not in ordered:
+            ordered["evidence"] = []
+        if "warnings" not in ordered:
+            ordered["warnings"] = []
         validate_trace(ordered)
         return ordered
 
