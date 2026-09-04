@@ -1,6 +1,8 @@
+import os
 import time
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
@@ -408,6 +410,12 @@ def fusion_node(state: AgentState) -> dict[str, Any]:
             context_meta=context_meta,
         )
         fused_answer = fusion_res.fused_answer
+        if "optsar_fusion" in results:
+            optsar_out = results["optsar_fusion"]
+            if isinstance(optsar_out, dict):
+                optsar_ans = optsar_out.get("answer")
+                if optsar_ans and not optsar_ans.startswith("MODEL_UNAVAILABLE"):
+                    fused_answer = f"{fused_answer} {optsar_ans}".strip()
         trace.set_agreement(
             iou=fusion_res.iou,
             verdict=fusion_res.verdict,
@@ -431,37 +439,54 @@ def fusion_node(state: AgentState) -> dict[str, Any]:
     else:
         agreement_dict = None
         # Single tool answer extraction
-        if "dummy_tool" in results:
-            fused_answer = results["dummy_tool"].get("answer")
-        elif "change_stats" in results:
-            fused_answer = results["change_stats"].get("answer") or "Change detection completed."
-        elif "change_map" in results:
+        if "dummy_tool" in results and results["dummy_tool"].get("answer"):
+            fused_answer = results["dummy_tool"]["answer"]
+        elif "change_stats" in results and results["change_stats"].get("answer"):
+            fused_answer = results["change_stats"]["answer"]
+        elif "change_map" in results and results["change_map"].get("change_ratio") is not None:
             ratio = results["change_map"].get("change_ratio", 0.0)
             fused_answer = (
                 f"Change map computed: change ratio is {ratio:.1%} across the analyzed scene."
             )
-        elif "change_vqa" in results:
+        elif "change_vqa" in results and results["change_vqa"].get("answer"):
+            fused_answer = results["change_vqa"]["answer"]
+        elif "rs_vqa" in results and results["rs_vqa"].get("answer"):
+            fused_answer = results["rs_vqa"]["answer"]
+        elif "rs_ground_caption" in results and (
+            results["rs_ground_caption"].get("answer")
+            or results["rs_ground_caption"].get("caption")
+        ):
             fused_answer = (
-                results["change_vqa"].get("answer") or "Bi-temporal change analysis completed."
+                results["rs_ground_caption"].get("answer")
+                or results["rs_ground_caption"].get("caption")
             )
-        elif "rs_vqa" in results:
-            fused_answer = (
-                results["rs_vqa"].get("answer") or "Visual question answering completed."
-            )
-        elif "rs_ground_caption" in results:
-            fused_answer = results["rs_ground_caption"].get("answer") or "Grounding completed."
-        elif "spectral_index" in results:
+        elif (
+            "spectral_index" in results and results["spectral_index"].get("area_km2") is not None
+        ):
             idx = results["spectral_index"].get("index", "Index")
             area = results["spectral_index"].get("area_km2", 0.0)
             fused_answer = f"Computed {idx} mask: target identified across {area:.2f} km²."
-        elif "sar_backscatter" in results:
+        elif (
+            "sar_backscatter" in results and results["sar_backscatter"].get("area_km2") is not None
+        ):
             area = results["sar_backscatter"].get("area_km2", 0.0)
             fused_answer = f"Calibrated SAR backscatter thresholding identified {area:.2f} km²."
-        elif "object_box_fallback" in results:
+        elif (
+            "object_box_fallback" in results
+            and results["object_box_fallback"].get("count") is not None
+        ):
             cnt = results["object_box_fallback"].get("count", 0)
             fused_answer = f"Proposed {cnt} candidate bounding boxes using morphological priors."
         else:
-            fused_answer = "Analysis completed successfully."
+            if any("MODEL_UNAVAILABLE" in w for w in (state.get("warnings") or [])):
+                fused_answer = "Model serving offline or unreachable."
+            else:
+                fused_answer = "Analysis completed successfully."
+
+    warnings_list = state.get("warnings") or []
+    if any("synthetic" in w.lower() for w in warnings_list):
+        if "(synthetic measurement)" not in fused_answer:
+            fused_answer = f"{fused_answer.rstrip('.')} (synthetic measurement)."
 
     elapsed_ms = int((time.perf_counter() - start_t) * 1000)
     timings = dict(state.get("timings") or {})
@@ -483,13 +508,23 @@ def confidence_node(state: AgentState) -> dict[str, Any]:
     tile_plan = state.get("tile_plan")
     used_fallback = "object_box_fallback" in results
 
-    conf, basis = calculate_confidence(
-        tool_results=results,
-        agreement=agreement,
-        warnings=warnings,
-        tile_plan=tile_plan,
-        used_fallback=used_fallback,
+    has_unavail = any("MODEL_UNAVAILABLE" in w for w in warnings)
+    has_valid_tool = any(
+        isinstance(r, dict)
+        and (r.get("mask_uri") or r.get("area_km2") is not None or r.get("boxes"))
+        for r in results.values()
     )
+    if has_unavail and not has_valid_tool:
+        conf = 0.0
+        basis = "heuristic"
+    else:
+        conf, basis = calculate_confidence(
+            tool_results=results,
+            agreement=agreement,
+            warnings=warnings,
+            tile_plan=tile_plan,
+            used_fallback=used_fallback,
+        )
 
     elapsed_ms = int((time.perf_counter() - start_t) * 1000)
     timings = dict(state.get("timings") or {})
@@ -580,7 +615,31 @@ def emit_node(state: AgentState) -> dict[str, Any]:
             extra={"confidence_basis": confidence_basis},
         )
 
-    trace_dict = trace.build()
+    if not refusal:
+        trace.set_fusion(
+            model="qwen3vl-4b-instruct",
+            answer=answer,
+            confidence=confidence if confidence is not None else 0.0,
+        )
+
+    trace_dir = Path(os.environ.get("SATQUERY_TRACES_DIR", "traces"))
+    trace_file = trace_dir / f"{state['query_id']}.json"
+
+    try:
+        trace_dict = trace.write_json(trace_file)
+    except Exception as ex:
+        # Minimal trace fallback per §10 N9 and Rule 11
+        if getattr(trace, "_task", None) is None:
+            trace.set_routing(Task.SINGLE_VQA, RouterPath.RULES)
+        if getattr(trace, "_parameter_check", None) is None:
+            trace.set_parameter_check(passed=False, rejected=[f"Pipeline failure: {ex}"])
+        trace.set_outputs(
+            answer=f"Pipeline failure: {ex}",
+            confidence=0.0,
+            extra={"confidence_basis": "heuristic"},
+        )
+        trace.add_warning(f"Trace build failed; emitting minimal trace: {ex}")
+        trace_dict = trace.write_json(trace_file)
 
     if emit:
         if not refusal:
@@ -712,7 +771,42 @@ def run_query(
     }
 
     app = get_compiled_graph()
-    final_state = app.invoke(initial_state)
+    try:
+        final_state = app.invoke(initial_state)
+    except Exception as exc:
+        qid = initial_state["query_id"]
+        trace = initial_state.get("trace") or TraceBuilder(question, query_id=qid)
+        if getattr(trace, "_task", None) is None:
+            trace.set_routing(Task.SINGLE_VQA, RouterPath.RULES)
+        if getattr(trace, "_parameter_check", None) is None:
+            trace.set_parameter_check(passed=False, rejected=[f"Unhandled error: {exc}"])
+        trace.set_outputs(
+            answer=f"Unhandled error: {exc}",
+            confidence=0.0,
+            extra={"confidence_basis": "heuristic"},
+        )
+        trace.add_warning(f"Unhandled query error: {exc}")
+        trace_dir = Path(os.environ.get("SATQUERY_TRACES_DIR", "traces"))
+        trace_file = trace_dir / f"{qid}.json"
+        try:
+            trace_dict = trace.write_json(trace_file)
+        except Exception:
+            trace_dict = trace.build()
+        return QueryResult(
+            query_id=qid,
+            bundle_id=bundle.bundle_id,
+            question=question,
+            state="failed",
+            answer=f"Unhandled error: {exc}",
+            confidence=0.0,
+            confidence_basis="heuristic",
+            latency_ms=0,
+            refusal={"reason": str(exc), "category": "validator"},
+            failures=[str(exc)],
+            evidence=[],
+            warnings=[f"Unhandled error: {exc}"],
+            trace=trace_dict,
+        )
 
     trace_dict = final_state.get("trace_dict") or {}
     query_state = final_state.get("query_state", "succeeded")

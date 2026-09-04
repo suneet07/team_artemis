@@ -107,3 +107,45 @@ def test_replan_drops_unknown_parameter_materially_differing():
     assert replanned != first_plan
     assert "thresh" not in replanned[0]["params"]
     assert any("Dropping unknown parameter 'thresh'" in n for n in notes)
+
+
+def test_replan_drops_or_resets_out_of_range_parameter():
+    inv = BandInventory(
+        bands={"green": 2, "nir": 4},
+        has_swir=False,
+        has_nir=True,
+        is_pan_only=False,
+        polarisations=[],
+        sar_band=None,
+        sensor_hint=None,
+        computable_indices=["NDWI"],
+    )
+    bundle = ImageBundle(
+        bundle_id="b_test",
+        images=[ImageRef(scene_id="opt", path="opt.tif", modality="optical")],
+        band_inventory=inv,
+        pair_type="single",
+    )
+
+    first_plan = [
+        {
+            "tool": "spectral_index",
+            "params": {"index": "NDWI", "threshold_value": 47},
+            "depends_on": [],
+        }
+    ]
+    rejection = ["parameter 'threshold_value'=47 outside permitted range [-1.0, 1.0]"]
+
+    replanned, notes = plan_query(
+        Task.SINGLE_VQA,
+        bundle,
+        "Extract water",
+        replan_count=1,
+        gate_rejected=rejection,
+        previous_plan=first_plan,
+    )
+
+    assert replanned != first_plan
+    assert "threshold_value" not in replanned[0]["params"]
+    assert any("threshold_value" in n for n in notes)
+

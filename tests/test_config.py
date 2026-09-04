@@ -14,6 +14,11 @@ def test_shipped_contract_loads():
     assert cfg.ingest.overview_max_side == 512
     assert (cfg.radiometry.low_percentile, cfg.radiometry.high_percentile) == (2.0, 98.0)
     assert cfg.bands.assumed_orders[4] == ("blue", "green", "red", "nir")
+    assert cfg.agent.learned_tool_tile_budget == 4
+    assert cfg.agent.spectral_thresholds["NDWI"] == 0.20
+    assert cfg.agent.sar_threshold_db == -18.0
+    assert cfg.agent.rmse_threshold_px == 1.5
+
 
 
 def test_sar_and_tiling_contracts_are_frozen():

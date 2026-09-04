@@ -12,9 +12,9 @@
     "version": { "type": "integer", "minimum": 1, "default": 1 },
     "required_modalities": {
       "type": "array",
-      "minItems": 1,
-      "items": { "enum": ["optical", "sar"] }
+      "items": { "enum": ["optical", "sar", "any", "pair", "-"] }
     },
+
     "confidence_source": {
       "enum": ["learned_logprob", "threshold_statistics", "heuristic", "deterministic_fallback"]
     },

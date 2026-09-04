@@ -151,6 +151,8 @@ _to_delete/
 *.7z
 tmp/
 scratch/
+traces/
+
 
 # --- Frontend (when the app lands) ---
 node_modules/

@@ -31,7 +31,11 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
         max_tokens=max_tokens,
     )
 
+    if res.serving_mode == "unavailable" or res.text.startswith("MODEL_UNAVAILABLE"):
+        raise RuntimeError("MODEL_UNAVAILABLE: Model serving offline or unreachable.")
+
     return {
         "answer": res.text,
         "confidence": res.confidence,
     }
+

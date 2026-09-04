@@ -8,6 +8,7 @@ from satquery.agent.refusals import (
     create_refusal,
 )
 from satquery.agent.task_enum import Task
+from satquery.config import preprocessing_config
 
 COLOR_SPECTRAL_KEYWORDS = [
     "color",
@@ -97,9 +98,13 @@ def validate_query_compatibility(
     # V2: CRS / extent mismatch or coregistration failure
     if bundle.coreg is not None:
         rmse = bundle.coreg.rmse_px
-        if not bundle.coreg.coregistered or (rmse is not None and rmse > 1.5):
+        try:
+            max_rmse = preprocessing_config().agent.rmse_threshold_px
+        except Exception:
+            max_rmse = 1.5
+        if not bundle.coreg.coregistered or (rmse is not None and rmse > max_rmse):
             rmse_str = (
-                f"with RMSE {rmse:.2f} px (threshold: 1.50 px)"
+                f"with RMSE {rmse:.2f} px (threshold: {max_rmse:.2f} px)"
                 if rmse is not None
                 else "failed"
             )

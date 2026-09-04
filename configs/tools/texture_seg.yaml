@@ -1,7 +1,7 @@
 name: texture_seg
 description: Computes local texture statistics and edge density.
 version: 1
-required_modalities: [optical]
+required_modalities: [any]
 confidence_source: heuristic
 expected_latency_ms: 300
 permitted_parameters:

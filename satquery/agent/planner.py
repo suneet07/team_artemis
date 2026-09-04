@@ -151,17 +151,23 @@ def plan_query(
                     if out_of_range_m:
                         bad_param = out_of_range_m.group(1)
                         if bad_param in new_params:
-                            if manifest and bad_param in manifest.parameters:
-                                default_v = manifest.parameters[bad_param].default
-                                if default_v is not None:
-                                    new_params[bad_param] = default_v
+                            if manifest and bad_param in manifest.permitted_parameters:
+                                param_spec = manifest.permitted_parameters[bad_param]
+                                if param_spec.has_default and param_spec.default is not None:
+                                    new_params[bad_param] = param_spec.default
+                                    notes.append(
+                                        f"Reverting parameter '{bad_param}' to manifest default"
+                                    )
                                 else:
                                     del new_params[bad_param]
+                                    notes.append(
+                                        f"Dropping out-of-range parameter '{bad_param}'"
+                                    )
                             else:
                                 del new_params[bad_param]
-                            notes.append(
-                                f"Reverting parameter '{bad_param}' to manifest default"
-                            )
+                                notes.append(
+                                    f"Dropping out-of-range parameter '{bad_param}'"
+                                )
                             made_changes = True
 
                 modified_plan.append({
@@ -332,26 +338,67 @@ def plan_query(
 
     # Single VQA
     has_indices = bool(getattr(band_inv, "computable_indices", []))
-    if "optical" in modalities and "spectral_index" in permitted and has_indices:
-        idx = band_inv.computable_indices[0]
-        plan.append({
-            "tool": "spectral_index",
-            "params": {"index": idx, "threshold_method": "otsu"},
-            "depends_on": [],
-        })
-    elif "sar" in modalities and "sar_backscatter" in permitted:
-        plan.append({
-            "tool": "sar_backscatter",
-            "params": {"pol": "VV", "threshold_method": "otsu"},
-            "depends_on": [],
-        })
-    elif "rs_vqa" in permitted:
-        plan.append({
-            "tool": "rs_vqa",
-            "params": {"question": question},
-            "depends_on": [],
-        })
-    elif "dummy_tool" in registered_names:
+    spectral_keywords = [
+        "extent",
+        "index",
+        "ndvi",
+        "ndwi",
+        "mndwi",
+        "ndbi",
+        "water",
+        "vegetation",
+        "forest",
+        "dominat",
+        "area",
+        "coverage",
+        "fraction",
+        "mask",
+        "extract",
+    ]
+    is_spectral_or_measurement = any(kw in ql for kw in spectral_keywords)
+
+    if is_spectral_or_measurement:
+        if "optical" in modalities and "spectral_index" in permitted and has_indices:
+            idx = band_inv.computable_indices[0]
+            plan.append({
+                "tool": "spectral_index",
+                "params": {"index": idx, "threshold_method": "otsu"},
+                "depends_on": [],
+            })
+        elif "sar" in modalities and "sar_backscatter" in permitted:
+            plan.append({
+                "tool": "sar_backscatter",
+                "params": {"pol": "VV", "threshold_method": "otsu"},
+                "depends_on": [],
+            })
+        elif "rs_vqa" in permitted:
+            plan.append({
+                "tool": "rs_vqa",
+                "params": {"question": question},
+                "depends_on": [],
+            })
+    else:
+        if "rs_vqa" in permitted:
+            plan.append({
+                "tool": "rs_vqa",
+                "params": {"question": question},
+                "depends_on": [],
+            })
+        elif "optical" in modalities and "spectral_index" in permitted and has_indices:
+            idx = band_inv.computable_indices[0]
+            plan.append({
+                "tool": "spectral_index",
+                "params": {"index": idx, "threshold_method": "otsu"},
+                "depends_on": [],
+            })
+        elif "sar" in modalities and "sar_backscatter" in permitted:
+            plan.append({
+                "tool": "sar_backscatter",
+                "params": {"pol": "VV", "threshold_method": "otsu"},
+                "depends_on": [],
+            })
+
+    if not plan and "dummy_tool" in registered_names:
         plan.append({
             "tool": "dummy_tool",
             "params": {"index": "ALPHA"},
