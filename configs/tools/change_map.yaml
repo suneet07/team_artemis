@@ -1,7 +1,7 @@
 name: change_map
 description: Siamese change detection model generating full-scene binary or semantic change mask.
 version: 1
-required_modalities: [optical]
+required_modalities: [pair]
 confidence_source: learned_logprob
 expected_latency_ms: 2000
 permitted_parameters:

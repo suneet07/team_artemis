@@ -34,12 +34,22 @@ def check_parameters(
 
     provided_modalities = _normalise_modalities(modalities)
     if provided_modalities is not None:
-        missing = [m for m in manifest.required_modalities if m not in provided_modalities]
-        for required in missing:
-            rejected.append(
-                f"tool '{manifest.name}' requires modality '{required}' "
-                f"but the query context provides {sorted(provided_modalities)}"
-            )
+        for required in manifest.required_modalities:
+            if required in ("any", "-"):
+                continue
+            if required == "pair":
+                if not provided_modalities:
+                    rejected.append(
+                        f"tool '{manifest.name}' requires modality '{required}' "
+                        f"but the query context provides {sorted(provided_modalities)}"
+                    )
+                continue
+            if required not in provided_modalities:
+                rejected.append(
+                    f"tool '{manifest.name}' requires modality '{required}' "
+                    f"but the query context provides {sorted(provided_modalities)}"
+                )
+
 
     for name, value in params.items():
         spec = manifest.permitted_parameters.get(name)

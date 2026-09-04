@@ -110,3 +110,18 @@ tiling:
   # Phase 0 value but does not give a number. It must be measured against the
   # prep SLA of 5 min/scene on the named demo machine, not guessed here.
   max_pixels: null
+
+agent:
+  # Default tile budget for learned tools (§12 / §28)
+  learned_tool_tile_budget: 4
+  # Fixed physical fallback thresholds for spectral indices (§14.1)
+  spectral_thresholds:
+    NDWI: 0.20
+    MNDWI: 0.20
+    NDVI: 0.30
+    NDBI: 0.10
+  # Default calibrated SAR backscatter cutoff in dB (§14.1)
+  sar_threshold_db: -18.0
+  # Maximum permissible coregistration RMSE in pixels before refusal (§10 N1 / V2)
+  rmse_threshold_px: 1.5
+

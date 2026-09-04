@@ -1,8 +1,15 @@
 from typing import Any
 
+from satquery.config import preprocessing_config
+
 
 def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
-    max_rmse = float(params.get("max_rmse_px", 1.5))
+    try:
+        default_max_rmse = preprocessing_config().agent.rmse_threshold_px
+    except Exception:
+        default_max_rmse = 1.5
+    max_rmse = float(params.get("max_rmse_px", default_max_rmse))
+
     rmse = 0.45
     coreg_ok = True
 

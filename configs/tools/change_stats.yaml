@@ -1,7 +1,7 @@
 name: change_stats
 description: Computes exact per-class areas before/after/delta, change ratios, and extremes from change map.
 version: 1
-required_modalities: [optical]
+required_modalities: [-]
 confidence_source: heuristic
 expected_latency_ms: 150
 permitted_parameters:

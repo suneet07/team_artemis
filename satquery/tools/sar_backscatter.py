@@ -3,6 +3,7 @@ from typing import Any
 
 import numpy as np
 
+from satquery.config import preprocessing_config
 from satquery.tools.spectral_index import compute_otsu_threshold
 
 
@@ -59,18 +60,23 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
     # Otsu with bimodality gate on SAR backscatter
     otsu_val, ratio, f0, f1 = compute_otsu_threshold(sar_data)
 
+    try:
+        default_db = preprocessing_config().agent.sar_threshold_db
+    except Exception:
+        default_db = -18.0
+
     if manual_db is not None:
         thresh = float(manual_db)
         chosen_method = "manual"
     elif req_method == "fixed":
-        thresh = -18.0
+        thresh = default_db
         chosen_method = "fixed_fallback"
     else:
         if ratio >= 0.5 and f0 >= 0.05 and f1 >= 0.05:
             thresh = round(otsu_val, 2)
             chosen_method = "otsu"
         else:
-            thresh = -18.0
+            thresh = default_db
             chosen_method = "fixed_fallback"
 
     # Water threshold: pixels with sigma0 <= thresh (or built-up if looking for bright targets)

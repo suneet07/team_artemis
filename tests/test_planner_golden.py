@@ -78,3 +78,24 @@ def test_planner_crossmodal_extraction():
     tools = [s["tool"] for s in plan]
     assert "spectral_index" in tools
     assert "sar_backscatter" in tools
+
+
+def test_planner_single_vqa_reaches_rs_vqa():
+    bundle = _make_optical_bundle()
+    plan, notes = plan_query(
+        Task.SINGLE_VQA, bundle, "How many ships are docked in the harbour?"
+    )
+    tools = [s["tool"] for s in plan]
+    assert "rs_vqa" in tools
+    assert "spectral_index" not in tools
+
+
+def test_planner_single_vqa_spectral_query():
+    bundle = _make_optical_bundle()
+    plan, notes = plan_query(
+        Task.SINGLE_VQA, bundle, "What is the water extent in this scene?"
+    )
+    tools = [s["tool"] for s in plan]
+    assert "spectral_index" in tools
+    assert "rs_vqa" not in tools
+

@@ -36,10 +36,15 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
         max_tokens=max_tokens,
     )
 
-    default_boxes = [{"bbox_px": [100.0, 100.0, 200.0, 200.0], "class": "target", "score": 0.85}]
-    boxes = res.boxes or default_boxes
+    if res.serving_mode == "unavailable" or res.text.startswith("MODEL_UNAVAILABLE"):
+        raise RuntimeError("MODEL_UNAVAILABLE: Model serving offline or unreachable.")
+
+    boxes = res.boxes or []
 
     return {
         "boxes": boxes,
         "caption": res.text,
+        "answer": res.text,
+        "confidence": res.confidence,
     }
+

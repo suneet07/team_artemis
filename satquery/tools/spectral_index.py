@@ -3,6 +3,8 @@ from typing import Any
 
 import numpy as np
 
+from satquery.config import preprocessing_config
+
 
 def compute_otsu_threshold(data: np.ndarray) -> tuple[float, float, float, float]:
     """Computes Otsu threshold and bimodality metrics.
@@ -75,12 +77,16 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
     manual_val = params.get("threshold_value")
 
     # Fixed physical fallback thresholds (§14.1 / §4.6.2)
-    fixed_fallbacks = {
-        "NDWI": 0.20,
-        "MNDWI": 0.20,
-        "NDVI": 0.30,
-        "NDBI": 0.10,
-    }
+    try:
+        fixed_fallbacks = dict(preprocessing_config().agent.spectral_thresholds)
+    except Exception:
+        fixed_fallbacks = {
+            "NDWI": 0.20,
+            "MNDWI": 0.20,
+            "NDVI": 0.30,
+            "NDBI": 0.10,
+        }
+
 
     # Obtain band arrays (from raster file if present and readable, or deterministic synthetic)
     bands_data: dict[str, np.ndarray] | None = None
