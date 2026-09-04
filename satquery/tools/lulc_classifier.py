@@ -31,8 +31,10 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
                 except Exception:
                     bands_data = None
 
+    is_synthetic = False
     if bands_data is None:
         bands_data = _generate_synthetic_bands((100, 100))
+        is_synthetic = True
 
     nir = bands_data["nir"]
     red = bands_data["red"]
@@ -65,7 +67,11 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
     selected = [lbl for lbl in candidate_labels if lbl["confidence"] >= threshold]
     max_conf = max((lbl["confidence"] for lbl in selected), default=0.5)
 
-    return {
+    out_dict: dict[str, Any] = {
         "labels": selected,
         "confidence": max_conf,
     }
+    if is_synthetic:
+        out_dict["synthetic"] = True
+        out_dict["warning"] = "Source raster unavailable on disk; synthetic bands used"
+    return out_dict

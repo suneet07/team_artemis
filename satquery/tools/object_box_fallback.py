@@ -84,4 +84,6 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
     return {
         "boxes": boxes,
         "count": len(boxes),
+        "synthetic": True,
+        "method": "deterministic_fallback",
     }

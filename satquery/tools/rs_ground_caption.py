@@ -6,7 +6,26 @@ from satquery.serving.client import get_serving_client
 def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
     prompt = params.get("prompt", "")
     point_prior = params.get("point_prior")
-    if point_prior:
+    if not prompt and context and "bundle" in context:
+        prompt = context.get("question", "")
+
+    if context and "bundle" in context:
+        bundle = context["bundle"]
+        images = getattr(bundle, "images", [])
+        if images:
+            modalities = [img.modality for img in images]
+            gsds = [float(getattr(img, "pixel_size_m", 10.0) or 10.0) for img in images]
+            roles = ["single"] * len(images)
+            from satquery.agent.prompt import assemble_prompt
+            prompt = assemble_prompt(
+                images=images,
+                roles=roles,
+                modalities=modalities,
+                effective_gsd_m=gsds,
+                question=prompt,
+                point_prior=point_prior,
+            )
+    elif point_prior:
         prompt = f"{prompt} [point: {point_prior}]"
 
     max_tokens = int(params.get("max_tokens", 128))

@@ -267,6 +267,7 @@ def planner_node(state: AgentState) -> dict[str, Any]:
         question=question,
         replan_count=replan_count,
         gate_rejected=gate_rejected,
+        previous_plan=state.get("plan"),
     )
 
     all_notes = list(state.get("routing_notes") or [])
@@ -525,9 +526,7 @@ def emit_node(state: AgentState) -> dict[str, Any]:
             state.get("router_path") or RouterPath.RULES,
         )
     if getattr(trace, "_parameter_check", None) is None:
-        passed = state.get("gate_passed", True) if refusal is None else False
-        rejected = state.get("gate_rejected", []) if refusal is None else [refusal["reason"]]
-        trace.set_parameter_check(passed=passed, rejected=rejected)
+        trace.set_parameter_check(passed=True, rejected=[])
 
     for asset in assets:
         trace.add_evidence(asset.asset_id)

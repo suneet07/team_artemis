@@ -18,7 +18,9 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
                 break
 
     # Fallback synthetic mask (centered blob) if none in context
+    is_synthetic = False
     if mask is None:
+        is_synthetic = True
         y, x = np.ogrid[:100, :100]
         mask = (((x - 45) ** 2 + (y - 52) ** 2) < 400).astype(np.uint8)
 
@@ -26,10 +28,13 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
     labeled_mask, num_features = scipy.ndimage.label(mask > 0)
 
     if num_features == 0:
-        return {
+        out: dict[str, Any] = {
             "centroid": {"x": 0.5, "y": 0.5},
             "area_px": 0,
         }
+        if is_synthetic:
+            out["synthetic"] = True
+        return out
 
     # Count pixels per component (index 0 is background)
     counts = np.bincount(labeled_mask.ravel())
@@ -46,10 +51,13 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
         largest_area = int(counts[largest_label])
 
     if largest_area == 0:
-        return {
+        out = {
             "centroid": {"x": 0.5, "y": 0.5},
             "area_px": 0,
         }
+        if is_synthetic:
+            out["synthetic"] = True
+        return out
 
     com = scipy.ndimage.center_of_mass(mask, labeled_mask, largest_label)
     cy, cx = com  # row is y, col is x
@@ -57,7 +65,11 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
     norm_x = round(float(cx / max(1, width)), 4)
     norm_y = round(float(cy / max(1, height)), 4)
 
-    return {
+    out_dict: dict[str, Any] = {
         "centroid": {"x": norm_x, "y": norm_y},
         "area_px": largest_area,
     }
+    if is_synthetic:
+        out_dict["synthetic"] = True
+        out_dict["warning"] = "No upstream mask found; synthetic blob fallback used"
+    return out_dict
