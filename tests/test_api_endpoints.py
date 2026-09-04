@@ -106,3 +106,18 @@ def test_api_cancel_query():
     get_resp = client.get(f"/queries/{q_id}")
     assert get_resp.json()["state"] == "cancelled"
 
+
+def test_api_get_query_trace():
+    payload = {"question": "What is the vegetation extent?"}
+    resp = client.post("/bundles/b_test/queries", json=payload)
+    assert resp.status_code == 200
+    q_id = resp.json()["query_id"]
+
+    trace_resp = client.get(f"/queries/{q_id}/trace")
+    assert trace_resp.status_code == 200
+    data = trace_resp.json()
+    assert data["schema_version"] == 2
+    assert "graded" in data
+    assert data["query_id"] == q_id
+
+

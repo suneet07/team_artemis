@@ -140,6 +140,18 @@ def cancel_query_endpoint(query_id: str) -> dict[str, Any]:
     return {"status": "cancelled", "query_id": query_id}
 
 
+@app.get("/queries/{query_id}/trace")
+def get_query_trace_endpoint(query_id: str) -> dict[str, Any]:
+    if query_id in _QUERY_STORE and _QUERY_STORE[query_id].trace:
+        return _QUERY_STORE[query_id].trace
+    import os
+    trace_dir = Path(os.environ.get("SATQUERY_TRACES_DIR", "traces"))
+    trace_file = trace_dir / f"{query_id}.json"
+    if trace_file.exists():
+        return json.loads(trace_file.read_text(encoding="utf-8"))
+    raise HTTPException(status_code=404, detail=f"Trace for query '{query_id}' not found")
+
+
 async def _process_query_submission(
     bundle_id: str,
     question: str,
@@ -223,6 +235,16 @@ async def _process_query_submission(
                 "result": result_dict,
             }
             return JSONResponse(status_code=422, content=error_env)
+    elif result.state == "failed":
+        error_env = {
+            "error": {
+                "code": "INTERNAL",
+                "message": result.answer or "Query execution failed",
+                "details": {"failures": result.failures},
+            },
+            "result": result_dict,
+        }
+        return JSONResponse(status_code=500, content=error_env)
 
     return JSONResponse(status_code=200, content=result_dict)
 

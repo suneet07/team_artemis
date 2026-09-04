@@ -85,7 +85,22 @@ def _run_single_step(
     emit: EventEmitter | None,
 ) -> tuple[int, dict[str, Any], list[AssetRef], str | None]:
     tool_name = step["tool"]
-    params = step["params"]
+    params = dict(step["params"])
+
+    tile_plan = context.get("tile_plan")
+    if tile_plan and getattr(tile_plan, "is_tiled", False):
+        if tool_name in {"rs_vqa", "rs_ground_caption", "change_vqa", "optsar_fusion"}:
+            # Learned tool gets only budgeted selected tiles (Rule 14)
+            context["selected_tiles"] = tile_plan.learned_tiles
+        elif tool_name in {
+            "spectral_index",
+            "sar_backscatter",
+            "texture_seg",
+            "change_map",
+            "object_box_fallback",
+        }:
+            # Deterministic tool runs across all tiles (Rule 7)
+            context["tiles"] = tile_plan.deterministic_tiles
 
     if emit:
         emit("step_started", {"index": index, "tool": tool_name})
@@ -153,15 +168,18 @@ def _run_single_step(
                     file_bytes = len(mem_buf.getvalue())
             except Exception:
                 file_bytes = 1024
+        asset_id = str(uuid.uuid4())[:8]
         assets.append(
             AssetRef(
-                asset_id=str(uuid.uuid4())[:8],
+                asset_id=asset_id,
                 kind="mask_geotiff",
                 label=f"{tool_name} output mask",
                 produced_by=tool_name,
                 media_type="image/tiff",
                 bytes=file_bytes,
                 crs=context.get("crs", "EPSG:32644"),
+                tile_url_template=f"/assets/{asset_id}/tiles/{{z}}/{{x}}/{{y}}.png",
+                overlay_url=f"/assets/{asset_id}/overlay.png",
                 download_url=mask_path_str,
                 stats={"area_km2": outputs.get("area_km2", 0.0)},
             )
@@ -174,9 +192,10 @@ def _run_single_step(
         ]
         scene_crs = context.get("crs")
         if scene_crs:
+            asset_id = str(uuid.uuid4())[:8]
             assets.append(
                 AssetRef(
-                    asset_id=str(uuid.uuid4())[:8],
+                    asset_id=asset_id,
                     kind="bbox_geojson",
                     label=f"{tool_name} bounding boxes",
                     produced_by=tool_name,
@@ -188,15 +207,18 @@ def _run_single_step(
                 )
             )
     if "response_map" in outputs:
+        asset_id = str(uuid.uuid4())[:8]
         assets.append(
             AssetRef(
-                asset_id=str(uuid.uuid4())[:8],
+                asset_id=asset_id,
                 kind="mask_geotiff",
                 label=f"{tool_name} response map",
                 produced_by=tool_name,
                 media_type="image/tiff",
                 bytes=10240,
                 crs=context.get("crs", "EPSG:32644"),
+                tile_url_template=f"/assets/{asset_id}/tiles/{{z}}/{{x}}/{{y}}.png",
+                overlay_url=f"/assets/{asset_id}/overlay.png",
                 download_url=str(outputs["response_map"]),
             )
         )
@@ -233,6 +255,7 @@ def execute_plan(state: AgentState) -> dict[str, Any]:
     results: dict[str, Any] = {}
     mask_cache: dict[str, Any] = {}
 
+    tile_plan = state.get("tile_plan")
     context = {
         "bundle": bundle,
         "modalities": state.get("modalities"),
@@ -240,6 +263,7 @@ def execute_plan(state: AgentState) -> dict[str, Any]:
         "results": results,
         "mask_cache": mask_cache,
         "question": state.get("query_text", ""),
+        "tile_plan": tile_plan,
     }
 
     waves = compute_waves(plan)
@@ -332,10 +356,39 @@ def execute_plan(state: AgentState) -> dict[str, Any]:
     timings = dict(state.get("timings") or {})
     timings["executor"] = elapsed_ms
 
+    has_any_valid_output = False
+    for _t_name, out in results.items():
+        if isinstance(out, dict) and (
+            out.get("answer")
+            or out.get("mask_uri")
+            or out.get("boxes")
+            or out.get("count") is not None
+            or out.get("area_km2") is not None
+            or out.get("change_ratio") is not None
+            or out.get("mean_texture") is not None
+            or out.get("labels") is not None
+            or out.get("response_map")
+        ):
+            has_any_valid_output = True
+            break
+
+    all_tools_failed = bool(plan) and not has_any_valid_output
+    failures: list[dict[str, Any]] = list(state.get("failures") or [])
+    if all_tools_failed:
+        for step in plan:
+            t_name = step["tool"]
+            err_msg = next(
+                (w for w in warnings if f"Tool '{t_name}'" in w),
+                f"Tool '{t_name}' produced no output",
+            )
+            failures.append({"step": t_name, "error": err_msg})
+
     return {
         "results": results,
         "mask_cache": mask_cache,
         "assets": assets,
         "warnings": warnings,
         "timings": timings,
+        "all_tools_failed": all_tools_failed,
+        "failures": failures,
     }

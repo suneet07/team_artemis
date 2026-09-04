@@ -4,7 +4,7 @@
   "timestamp": "2026-08-27T09:20:11Z",
   "query_text": "What changed between the two dates?",
   "graded": {
-    "task_selected": "change_vqa",
+    "task_selected": "change_description",
     "tools_invoked": [],
     "permitted_parameters": [],
     "parameter_check": {"passed": true, "rejected": []},

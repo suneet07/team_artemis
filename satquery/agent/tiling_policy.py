@@ -57,17 +57,28 @@ def decide_tile_plan(
     total_count = bundle.tiles.tile_count
     budget = _get_learned_tile_budget(config_path)
 
-    # Filter/rank tiles
+    # Filter/rank tiles using tile_scorer
     if all_tiles and any("score" in t for t in all_tiles):
         method = "tile_scorer"
         sorted_tiles = sorted(all_tiles, key=lambda t: t.get("score", 0.0), reverse=True)
     else:
-        method = "fallback_variance"
-        sorted_tiles = sorted(
-            all_tiles,
-            key=lambda t: (t.get("valid_frac", 1.0), t.get("variance", 0.0)),
-            reverse=True,
-        )
+        try:
+            from satquery.tools import tile_scorer
+
+            scorer_res = tile_scorer.execute({"top_k": budget}, context={"bundle": bundle})
+            score_map = {s["tile_id"]: s["score"] for s in scorer_res.get("scores", [])}
+            for t in all_tiles:
+                tid = t.get("tile_id", str(t))
+                t["score"] = score_map.get(tid, 0.5)
+            method = "tile_scorer"
+            sorted_tiles = sorted(all_tiles, key=lambda t: t.get("score", 0.0), reverse=True)
+        except Exception:
+            method = "fallback_variance"
+            sorted_tiles = sorted(
+                all_tiles,
+                key=lambda t: (t.get("valid_frac", 1.0), t.get("variance", 0.0)),
+                reverse=True,
+            )
 
     selected_tiles = sorted_tiles[:budget]
     selected_count = len(selected_tiles)

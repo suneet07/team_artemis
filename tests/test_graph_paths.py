@@ -149,3 +149,28 @@ def test_graph_path_synthetic_fallback_warns_and_floors_confidence():
     assert any("used synthetic fallback array" in n for n in res.trace.get("routing_notes", []))
     assert res.confidence == 0.45
     jsonschema.validate(instance=res.trace, schema=schema)
+
+
+def test_graph_path_v9_unsupported_class_when_fallback_finds_nothing():
+    from unittest.mock import patch
+
+    schema = _get_trace_schema()
+    bundle = _make_bundle(["optical"])
+    with patch(
+        "satquery.tools.object_box_fallback.execute",
+        return_value={
+            "boxes": [],
+            "count": 0,
+            "synthetic": True,
+            "method": "deterministic_fallback",
+        },
+    ):
+        res = run_query(bundle, "Where is the submarine located in this scene?")
+
+    assert res.state == "refused"
+    assert res.refusal is not None
+    assert res.refusal["category"] == "unsupported_class"
+    assert res.refusal["remedy"]["action"] == "ask_different_question"
+    assert "suggested_questions" in res.refusal["remedy"]
+    jsonschema.validate(instance=res.trace, schema=schema)
+

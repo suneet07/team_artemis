@@ -73,13 +73,6 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
                 "score": 0.45,
                 "method": "deterministic_fallback",
             })
-        else:
-            boxes.append({
-                "bbox_px": [20.0, 20.0, 60.0, 60.0],
-                "class": target_class,
-                "score": 0.45,
-                "method": "deterministic_fallback",
-            })
 
     return {
         "boxes": boxes,

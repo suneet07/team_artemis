@@ -39,4 +39,5 @@ class AgentState(TypedDict, total=False):
     emit: Callable[[str, dict[str, Any]], None]
     timings: dict[str, int]
     query_state: str
+    all_tools_failed: bool
     trace_dict: dict[str, Any]

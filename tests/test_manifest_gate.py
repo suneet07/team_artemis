@@ -164,3 +164,17 @@ def test_duplicate_registration_raises(registry, dummy):
 def test_unknown_tool_lookup_raises(registry):
     with pytest.raises(KeyError):
         registry.get("does_not_exist")
+
+
+def test_pair_modality_enforced_single_image_rejected(registry):
+    change_tool = registry.get("change_map")
+    result = check_parameters(change_tool, {"mode": "semantic"}, modalities=["optical"])
+    assert not result.passed
+    assert any("requires a pair of images" in r for r in result.rejected)
+
+
+def test_pair_modality_pair_images_passed(registry):
+    change_tool = registry.get("change_map")
+    result = check_parameters(change_tool, {"mode": "semantic"}, modalities=["optical", "optical"])
+    assert result.passed
+
