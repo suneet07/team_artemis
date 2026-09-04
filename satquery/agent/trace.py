@@ -90,6 +90,13 @@ class TraceBuilder:
         self._tools_invoked = tools
         return self
 
+    def get_planned_steps(self) -> list[dict[str, Any]]:
+        """Returns a copy of the accumulated planned-step records.
+
+        Prefer this over accessing trace._plan directly from external callers.
+        """
+        return list(self._plan)
+
     def add_step(
         self,
         tool: str,

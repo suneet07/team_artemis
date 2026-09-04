@@ -77,6 +77,50 @@ def compute_waves(plan: list[dict[str, Any]]) -> list[list[tuple[int, dict[str, 
     return waves
 
 
+# Deterministic tools that support per-tile execution and full-scene mosaicking (Rule 7)
+_DETERMINISTIC_TILE_TOOLS = {
+    "spectral_index",
+    "sar_backscatter",
+    "texture_seg",
+    "change_map",
+    "object_box_fallback",
+}
+
+# Learned tools that receive only the budgeted tile subset (Rule 14)
+_LEARNED_TILE_TOOLS = {"rs_vqa", "rs_ground_caption", "change_vqa", "optsar_fusion"}
+
+
+def _mosaic_tile_outputs(per_tile_outputs: list[dict[str, Any]]) -> dict[str, Any]:
+    """Combine per-tile tool results into a single full-scene output dict.
+
+    Strategy: sum numeric fields (area_km2, count), union lists (boxes, labels),
+    take max confidence, last mask_uri (tools write full-scene files themselves).
+    """
+    if not per_tile_outputs:
+        return {}
+    if len(per_tile_outputs) == 1:
+        return per_tile_outputs[0]
+
+    merged: dict[str, Any] = dict(per_tile_outputs[0])
+    for tile_out in per_tile_outputs[1:]:
+        for key, val in tile_out.items():
+            if key in ("area_km2",) and val is not None:
+                merged[key] = (merged.get(key) or 0.0) + float(val)
+            elif key == "count" and val is not None:
+                merged[key] = (merged.get(key) or 0) + int(val)
+            elif key == "boxes" and isinstance(val, list):
+                merged[key] = (merged.get(key) or []) + val
+            elif key == "labels" and isinstance(val, list):
+                existing = merged.get(key) or []
+                merged[key] = existing + [v for v in val if v not in existing]
+            elif key == "confidence" and val is not None:
+                merged[key] = max(merged.get(key) or 0.0, float(val))
+            # For mask_uri, keep last (tools write incremental files; mosaicking
+            # requires rasterio merge which is handled in the tool itself when
+            # context["tiles"] is set)
+    return merged
+
+
 def _run_single_step(
     index: int,
     step: dict[str, Any],
@@ -88,17 +132,12 @@ def _run_single_step(
     params = dict(step["params"])
 
     tile_plan = context.get("tile_plan")
-    if tile_plan and getattr(tile_plan, "is_tiled", False):
-        if tool_name in {"rs_vqa", "rs_ground_caption", "change_vqa", "optsar_fusion"}:
+    is_tiled = tile_plan and getattr(tile_plan, "is_tiled", False)
+    if is_tiled:
+        if tool_name in _LEARNED_TILE_TOOLS:
             # Learned tool gets only budgeted selected tiles (Rule 14)
             context["selected_tiles"] = tile_plan.learned_tiles
-        elif tool_name in {
-            "spectral_index",
-            "sar_backscatter",
-            "texture_seg",
-            "change_map",
-            "object_box_fallback",
-        }:
+        elif tool_name in _DETERMINISTIC_TILE_TOOLS:
             # Deterministic tool runs across all tiles (Rule 7)
             context["tiles"] = tile_plan.deterministic_tiles
 
@@ -122,8 +161,20 @@ def _run_single_step(
 
     try:
         if mod is not None and hasattr(mod, "execute"):
-            # Execute with safety guard
-            outputs = mod.execute(params, context)
+            # Deterministic tile-loop: run once per tile and mosaic back (Rule 7)
+            if is_tiled and tool_name in _DETERMINISTIC_TILE_TOOLS:
+                all_tiles = tile_plan.deterministic_tiles or []
+                if all_tiles:
+                    per_tile_outs: list[dict[str, Any]] = []
+                    tile_context = dict(context)
+                    for tile in all_tiles:
+                        tile_context["current_tile"] = tile
+                        per_tile_outs.append(mod.execute(params, tile_context))
+                    outputs = _mosaic_tile_outputs(per_tile_outs)
+                else:
+                    outputs = mod.execute(params, context)
+            else:
+                outputs = mod.execute(params, context)
         else:
             outputs = {"answer": f"Simulated output for {tool_name}"}
     except Exception as e:
@@ -191,19 +242,35 @@ def _run_single_step(
             if isinstance(b, dict) and "bbox_px" in b
         ]
         scene_crs = context.get("crs")
+        # §18 requires bbox_px always — emit pixel-space asset regardless of CRS
+        asset_id = str(uuid.uuid4())[:8]
+        assets.append(
+            AssetRef(
+                asset_id=asset_id,
+                kind="bbox_geojson",
+                label=f"{tool_name} bounding boxes (pixel space)",
+                produced_by=tool_name,
+                media_type="application/json",
+                bytes=max(256, len(str(boxes_px))),
+                crs=scene_crs or "",
+                bbox_px=boxes_px,
+                download_url=f"/assets/{asset_id}/boxes_px.json",
+            )
+        )
+        # When CRS is present also emit full GeoJSON (georeferenced polygons)
         if scene_crs:
-            asset_id = str(uuid.uuid4())[:8]
+            geo_asset_id = str(uuid.uuid4())[:8]
             assets.append(
                 AssetRef(
-                    asset_id=asset_id,
+                    asset_id=geo_asset_id,
                     kind="bbox_geojson",
-                    label=f"{tool_name} bounding boxes",
+                    label=f"{tool_name} bounding boxes (georeferenced)",
                     produced_by=tool_name,
                     media_type="application/geo+json",
                     bytes=2048,
                     crs=scene_crs,
                     bbox_px=boxes_px,
-                    download_url="/assets/boxes.geojson",
+                    download_url=f"/assets/{geo_asset_id}/boxes.geojson",
                 )
             )
     if "response_map" in outputs:

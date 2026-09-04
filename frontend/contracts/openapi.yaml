@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SatQuery AI API
-  version: 1.0.0-frozen
+  version: 1.1.0-frozen
   description: >
     Frozen frontend contract for SatQuery AI (master plan v3.8, sections 4.8/4.10).
     Field-level shapes live in ./types.ts; trace objects follow configs/trace_schema.json

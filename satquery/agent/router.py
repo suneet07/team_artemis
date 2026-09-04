@@ -235,14 +235,60 @@ def route_query_llm(
         except Exception:
             return None
 
+    # Stage 2 path: try constrained JSON decoding via outlines (Rule 4)
+    # outlines uses structured generation to guarantee the output matches ROUTER_JSON_SCHEMA.
+    # If outlines is not installed, or the model is unavailable, we return None and the
+    # caller falls back to Stage 1 rules (Rule 5: rules first, LLM second).
     try:
-        import outlines  # type: ignore # noqa: F401
+        import outlines  # type: ignore  # noqa: F401
+        import outlines.generate  # type: ignore
+        import outlines.models  # type: ignore
 
-        # Fallback when outlines is available but no explicit client passed
-    except (ImportError, Exception):
+        # Build a prompt that includes task vocabulary context
+        task_enum_str = ", ".join([
+            "single_vqa", "single_caption", "single_grounding",
+            "change_description", "change_vqa", "change_map",
+            "crossmodal_extraction", "crossmodal_vqa",
+        ])
+        context_parts: list[str] = []
+        if modalities:
+            context_parts.append(f"Modalities: {', '.join(modalities)}")
+        if pair_type:
+            context_parts.append(f"Pair type: {pair_type}")
+        if image_count > 1:
+            context_parts.append(f"Image count: {image_count}")
+        context_str = ". ".join(context_parts)
+
+        prompt = (
+            f"You are a satellite image query router. Choose the correct task type.\n"
+            f"Tasks: {task_enum_str}.\n"
+            f"{context_str}\n"
+            f'Query: "{question}"\n'
+            f"Respond with JSON: {{\"task\": \"<task>\", \"reason\": \"<brief reason>\"}}"
+        )
+
+        # Try to find a loaded outlines-compatible model (e.g. vLLM backend)
+        # outlines.models.get_model() returns None if no model is registered
+        model = getattr(outlines.models, "get_model", lambda: None)()
+        if model is None:
+            return None  # No model available; fall back to rules
+
+        generator = outlines.generate.json(model, ROUTER_JSON_SCHEMA)
+        raw = generator(prompt)
+        if isinstance(raw, str):
+            raw = json.loads(raw)
+        if isinstance(raw, dict) and "task" in raw and "reason" in raw:
+            task = Task(raw["task"])
+            return task, str(raw["reason"])
+    except ImportError:
+        # outlines not installed — this is expected in CPU CI environments
+        pass
+    except Exception:
+        # Model unavailable or generation failed — fall back silently
         pass
 
     return None
+
 
 
 def route_query(

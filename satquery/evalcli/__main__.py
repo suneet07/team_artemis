@@ -292,7 +292,14 @@ def main() -> int:
     parser.add_argument("--query", "--question", dest="query", default=None)
     parser.add_argument("--images", "--image", dest="images", nargs="+", default=None)
     parser.add_argument("--bundle", default=None)
-    parser.add_argument("--out", "--output", dest="out", default=None)
+    parser.add_argument(
+        "--out", "--output", dest="out", default=None,
+        help="Output path: a .json file for consolidated output or a directory.",
+    )
+    parser.add_argument(
+        "--out-trace", dest="out_trace", default=None,
+        help="(§23) Write the trace JSON to this specific file path, separate from --out.",
+    )
     parser.add_argument("--allow-llm-router", type=str, default="true")
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--manifest", "--manifest-dir", dest="manifest_dir", default=None)
@@ -335,6 +342,12 @@ def main() -> int:
 
     if args.out:
         _write_outputs(res, args.out, args.query)
+
+    # §23: --out-trace writes the trace JSON to a dedicated path (separate from --out)
+    if args.out_trace:
+        trace_target = Path(args.out_trace)
+        trace_target.parent.mkdir(parents=True, exist_ok=True)
+        trace_target.write_text(json.dumps(res.trace, indent=2), encoding="utf-8")
 
     if not args.quiet:
         print(json.dumps(res.trace, indent=2))
