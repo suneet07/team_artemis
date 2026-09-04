@@ -1,0 +1,15 @@
+name: object_box_fallback
+description: Proposes bounding boxes for out-of-vocabulary nouns via classical morphological filters.
+version: 1
+required_modalities: [optical]
+confidence_source: deterministic_fallback
+low_confidence_proposer: true
+expected_latency_ms: 400
+permitted_parameters:
+  target_class:
+    type: enum
+    values: [bridge, tank, vehicle, harbour, runway, other]
+    default: other
+outputs:
+  boxes:
+    type: bbox_list

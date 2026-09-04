@@ -40,3 +40,29 @@ def test_routing_300_dataset_validity():
         tasks_found.add(gt["expected_task"])
         
     assert len(tasks_found) == len(Task), "Not all tasks are covered in the dataset"
+
+
+def test_routing_300_accuracy_rules_only():
+    from satquery.agent.router import route_query
+
+    dataset_path = Path(__file__).parent.parent / "training" / "eval" / "routing_300.jsonl"
+    records = []
+    with open(dataset_path, encoding="utf-8") as f:
+        for line in f:
+            records.append(json.loads(line))
+
+    correct = 0
+    for record in records:
+        ctx = record["input_context"]
+        modalities = ctx.get("modalities", [])
+        task, router_path, notes = route_query(
+            question=record["query_text"],
+            modalities=modalities,
+            image_count=len(modalities),
+        )
+        if task.value == record["ground_truth"]["expected_task"]:
+            correct += 1
+
+    accuracy = correct / len(records)
+    print(f"Rules-only accuracy: {accuracy * 100:.1f}% ({correct}/{len(records)})")
+    assert accuracy >= 0.80, f"Expected rules accuracy >= 80%, got {accuracy * 100:.1f}%"

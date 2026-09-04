@@ -1,0 +1,17 @@
+name: coreg_check
+description: Wraps co-registration checking between image pairs to verify spatial alignment in the trace.
+version: 1
+required_modalities: [optical]
+confidence_source: heuristic
+expected_latency_ms: 100
+permitted_parameters:
+  max_rmse_px:
+    type: float
+    range: [0.1, 10.0]
+    default: 1.5
+    optional: true
+outputs:
+  coregistered:
+    type: text
+  rmse_px:
+    type: float

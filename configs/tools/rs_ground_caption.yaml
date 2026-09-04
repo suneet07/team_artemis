@@ -1,0 +1,23 @@
+name: rs_ground_caption
+description: Visual grounding and dense captioning on satellite imagery via learned VLM adapter.
+version: 1
+required_modalities: [optical]
+confidence_source: learned_logprob
+expected_latency_ms: 1500
+permitted_parameters:
+  prompt:
+    type: string
+    optional: true
+  point_prior:
+    type: string
+    optional: true
+  max_tokens:
+    type: int
+    range: [1, 512]
+    default: 128
+    optional: true
+outputs:
+  boxes:
+    type: bbox_list
+  caption:
+    type: text

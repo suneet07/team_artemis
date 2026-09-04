@@ -1,0 +1,17 @@
+name: change_stats
+description: Computes exact per-class areas before/after/delta, change ratios, and extremes from change map.
+version: 1
+required_modalities: [optical]
+confidence_source: heuristic
+expected_latency_ms: 150
+permitted_parameters:
+  target_class:
+    type: enum
+    values: [all, urban, water, vegetation, bare]
+    default: all
+    optional: true
+outputs:
+  stats:
+    type: stats
+  area_delta_km2:
+    type: float

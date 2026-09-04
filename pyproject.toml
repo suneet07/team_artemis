@@ -15,6 +15,15 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.4",
 ]
+agent = [
+    "langgraph>=0.2",
+    "outlines>=0.1",
+]
+api = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "httpx>=0.27",
+]
 # Training / timing harness only. Deliberately NOT in [dev]: CI installs dev and
 # runs `ruff check . && pytest -q` on a CPU runner, and pulling torch there would
 # add minutes to every PR for code CI cannot exercise.
