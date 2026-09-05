@@ -38,6 +38,13 @@ class AgentState(TypedDict, total=False):
     trace: TraceBuilder
     emit: Callable[[str, dict[str, Any]], None]
     timings: dict[str, int]
+    cancel_check: Any
+    submitted_at: float | None
+    wall_start: float
+    total_latency_ms: int
+    cancelled: bool
+    budget_exhausted: bool
+    all_tools_failed: bool
     query_state: str
     all_tools_failed: bool
     trace_dict: dict[str, Any]

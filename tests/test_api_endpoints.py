@@ -93,18 +93,26 @@ def test_api_post_queries_frozen_endpoint():
     assert items[0]["bundle_id"] == "b_frozen_test"
 
 
-def test_api_cancel_query():
-    # Submit first
-    payload = {"question": "What is here?"}
-    resp = client.post("/bundles/b_test/queries", json=payload)
+def test_api_cancel_reports_the_real_state_of_a_finished_query():
+    """§24: cancellation is cooperative. A finished query cannot be un-finished.
+
+    This used to rewrite a completed result's state to "cancelled", which made
+    the endpoint look functional while doing nothing to a running query.
+    """
+    resp = client.post("/bundles/b_test/queries", json={"question": "What is here?"})
     q_id = resp.json()["query_id"]
+    actual_state = client.get(f"/queries/{q_id}").json()["state"]
 
     cancel_resp = client.post(f"/queries/{q_id}/cancel")
     assert cancel_resp.status_code == 200
-    assert cancel_resp.json()["status"] == "cancelled"
+    assert cancel_resp.json()["status"] == actual_state
 
-    get_resp = client.get(f"/queries/{q_id}")
-    assert get_resp.json()["state"] == "cancelled"
+    # The stored result is untouched -- no retroactive relabelling.
+    assert client.get(f"/queries/{q_id}").json()["state"] == actual_state
+
+
+def test_api_cancel_unknown_query_is_404():
+    assert client.post("/queries/does-not-exist/cancel").status_code == 404
 
 
 def test_api_get_query_trace():

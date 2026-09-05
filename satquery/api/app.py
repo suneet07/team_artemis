@@ -1,5 +1,7 @@
 import asyncio
 import json
+import threading
+import time
 import uuid
 from collections.abc import AsyncGenerator
 from dataclasses import asdict
@@ -31,6 +33,10 @@ app.add_middleware(
 # In-memory stores for bundles and queries
 _BUNDLE_STORE: dict[str, ImageBundle] = {}
 _QUERY_STORE: dict[str, QueryResult] = {}
+# §24: set while a query runs so the executor can stop at a wave boundary.
+# Present here rather than in the graph because cancellation is a transport
+# concern; the graph only consults the flag.
+_CANCEL_FLAGS: dict[str, threading.Event] = {}
 
 
 def register_bundle(bundle: ImageBundle) -> None:
@@ -133,11 +139,49 @@ def get_query_endpoint(query_id: str) -> dict[str, Any]:
 
 @app.post("/queries/{query_id}/cancel")
 def cancel_query_endpoint(query_id: str) -> dict[str, Any]:
-    if query_id not in _QUERY_STORE:
-        raise HTTPException(status_code=404, detail=f"Query '{query_id}' not found")
-    res = _QUERY_STORE[query_id]
-    res.state = "cancelled"
-    return {"status": "cancelled", "query_id": query_id}
+    """Request cancellation (§24). Cooperative: takes effect at the next wave."""
+    flag = _CANCEL_FLAGS.get(query_id)
+    if flag is not None:
+        flag.set()
+        return {"status": "cancelling", "query_id": query_id}
+    if query_id in _QUERY_STORE:
+        # Already finished; nothing left to stop.
+        return {"status": _QUERY_STORE[query_id].state, "query_id": query_id}
+    raise HTTPException(status_code=404, detail=f"Query '{query_id}' not found")
+
+
+
+def _find_asset(asset_id: str) -> Any | None:
+    """Locate a produced asset across completed queries."""
+    for result in _QUERY_STORE.values():
+        for asset in result.evidence or []:
+            if getattr(asset, "asset_id", None) == asset_id:
+                return asset
+    return None
+
+
+@app.get("/assets/{asset_id}")
+def get_asset_endpoint(asset_id: str) -> Response:
+    """Serve a produced asset by id (§18: download_url points here)."""
+    asset = _find_asset(asset_id)
+    if asset is None:
+        raise HTTPException(status_code=404, detail=f"Asset '{asset_id}' not found")
+    source = (asset.stats or {}).get("source_path") if asset.stats else None
+    if not source or not Path(source).is_file():
+        raise HTTPException(status_code=404, detail=f"Asset '{asset_id}' has no stored file")
+    return Response(
+        content=Path(source).read_bytes(),
+        media_type=asset.media_type or "application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{Path(source).name}"'},
+    )
+
+
+@app.get("/assets/{asset_id}/meta")
+def get_asset_meta_endpoint(asset_id: str) -> dict[str, Any]:
+    asset = _find_asset(asset_id)
+    if asset is None:
+        raise HTTPException(status_code=404, detail=f"Asset '{asset_id}' not found")
+    return asdict(asset)
 
 
 @app.get("/queries/{query_id}/trace")
@@ -160,6 +204,7 @@ async def _process_query_submission(
 ) -> Response:
     bundle = _get_or_create_bundle(bundle_id)
     query_id = str(uuid.uuid4())
+    submitted_at = time.perf_counter()
 
     is_sse = accept is not None and "text/event-stream" in accept
 
@@ -170,6 +215,9 @@ async def _process_query_submission(
         def sink(event: str, data: dict[str, Any]) -> None:
             loop.call_soon_threadsafe(queue.put_nowait, (event, data))
 
+        cancel_flag = threading.Event()
+        _CANCEL_FLAGS[query_id] = cancel_flag
+
         def worker() -> QueryResult:
             try:
                 res = run_query(
@@ -178,10 +226,13 @@ async def _process_query_submission(
                     query_id=query_id,
                     allow_llm_router=allow_llm_router,
                     emit=sink,
+                    cancel_check=cancel_flag,
+                    submitted_at=submitted_at,
                 )
                 _QUERY_STORE[query_id] = res
                 return res
             finally:
+                _CANCEL_FLAGS.pop(query_id, None)
                 loop.call_soon_threadsafe(queue.put_nowait, None)
 
         asyncio.create_task(asyncio.to_thread(worker))
@@ -208,12 +259,19 @@ async def _process_query_submission(
         )
 
     # Non-streaming JSON response
-    result = run_query(
-        bundle=bundle,
-        question=question,
-        query_id=query_id,
-        allow_llm_router=allow_llm_router,
-    )
+    sync_flag = threading.Event()
+    _CANCEL_FLAGS[query_id] = sync_flag
+    try:
+        result = run_query(
+            bundle=bundle,
+            question=question,
+            query_id=query_id,
+            allow_llm_router=allow_llm_router,
+            cancel_check=sync_flag,
+            submitted_at=submitted_at,
+        )
+    finally:
+        _CANCEL_FLAGS.pop(query_id, None)
     _QUERY_STORE[query_id] = result
 
     result_dict = asdict(result)

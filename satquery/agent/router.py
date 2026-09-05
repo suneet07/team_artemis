@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from typing import Any
 
@@ -208,6 +209,32 @@ def _is_ambiguous(question: str, notes: list[str]) -> bool:
     return False
 
 
+
+def _router_prompt(
+    question: str,
+    modalities: list[str] | None,
+    pair_type: str | None,
+    image_count: int,
+) -> str:
+    """Tie-break prompt. Output shape is enforced by the schema, not by asking."""
+    tasks = ", ".join(t.value for t in Task)
+    context_parts: list[str] = []
+    if modalities:
+        context_parts.append(f"Modalities: {', '.join(modalities)}")
+    if pair_type:
+        context_parts.append(f"Pair type: {pair_type}")
+    if image_count > 1:
+        context_parts.append(f"Image count: {image_count}")
+    return chr(10).join(
+        (
+            "You are a satellite image query router. Choose the correct task type.",
+            f"Tasks: {tasks}.",
+            ". ".join(context_parts),
+            f'Query: "{question}"',
+        )
+    )
+
+
 def route_query_llm(
     question: str,
     modalities: list[str] | None = None,
@@ -235,57 +262,39 @@ def route_query_llm(
         except Exception:
             return None
 
-    # Stage 2 path: try constrained JSON decoding via outlines (Rule 4)
-    # outlines uses structured generation to guarantee the output matches ROUTER_JSON_SCHEMA.
-    # If outlines is not installed, or the model is unavailable, we return None and the
-    # caller falls back to Stage 1 rules (Rule 5: rules first, LLM second).
+    # Stage 2: constrained JSON decoding (Rule 4 -- never regex free text).
+    # The model is named explicitly rather than discovered: there is no registry
+    # in Outlines to look one up from, and a silent None was previously making
+    # this branch look functional when it had never run.
+    model_spec = os.environ.get("SATQUERY_ROUTER_MODEL")
+    if not model_spec:
+        return None
     try:
-        import outlines  # type: ignore  # noqa: F401
-        import outlines.generate  # type: ignore
-        import outlines.models  # type: ignore
+        import outlines  # type: ignore
+    except ImportError:
+        # Expected on the CPU CI runner; `outlines` is in the `agent` extra.
+        return None
 
-        # Build a prompt that includes task vocabulary context
-        task_enum_str = ", ".join([
-            "single_vqa", "single_caption", "single_grounding",
-            "change_description", "change_vqa", "change_map",
-            "crossmodal_extraction", "crossmodal_vqa",
-        ])
-        context_parts: list[str] = []
-        if modalities:
-            context_parts.append(f"Modalities: {', '.join(modalities)}")
-        if pair_type:
-            context_parts.append(f"Pair type: {pair_type}")
-        if image_count > 1:
-            context_parts.append(f"Image count: {image_count}")
-        context_str = ". ".join(context_parts)
-
-        prompt = (
-            f"You are a satellite image query router. Choose the correct task type.\n"
-            f"Tasks: {task_enum_str}.\n"
-            f"{context_str}\n"
-            f'Query: "{question}"\n'
-            f"Respond with JSON: {{\"task\": \"<task>\", \"reason\": \"<brief reason>\"}}"
-        )
-
-        # Try to find a loaded outlines-compatible model (e.g. vLLM backend)
-        # outlines.models.get_model() returns None if no model is registered
-        model = getattr(outlines.models, "get_model", lambda: None)()
-        if model is None:
-            return None  # No model available; fall back to rules
-
+    try:
+        backend, _, model_id = model_spec.partition(":")
+        constructor = getattr(outlines.models, backend, None)
+        if constructor is None:
+            raise ValueError(
+                f"SATQUERY_ROUTER_MODEL backend {backend!r} is not an outlines.models "
+                "constructor (try 'vllm:<model>' or 'transformers:<model>')"
+            )
+        model = constructor(model_id)
         generator = outlines.generate.json(model, ROUTER_JSON_SCHEMA)
-        raw = generator(prompt)
+        raw = generator(_router_prompt(question, modalities, pair_type, image_count))
         if isinstance(raw, str):
             raw = json.loads(raw)
         if isinstance(raw, dict) and "task" in raw and "reason" in raw:
-            task = Task(raw["task"])
-            return task, str(raw["reason"])
-    except ImportError:
-        # outlines not installed — this is expected in CPU CI environments
-        pass
+            # Task() validates against the frozen enum; a value outside it raises
+            # rather than becoming control flow.
+            return Task(raw["task"]), str(raw["reason"])
     except Exception:
-        # Model unavailable or generation failed — fall back silently
-        pass
+        # §10 N2: on decoder error, fall back to rules and record it.
+        return None
 
     return None
 
