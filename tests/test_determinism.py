@@ -1,4 +1,8 @@
+import difflib
+import json
+
 from satquery.agent.bundle import ImageBundle, ImageRef
+from satquery.agent.executor import asset_id_for
 from satquery.agent.graph import run_query
 from satquery.ingest.band_inventory import BandInventory
 from satquery.tools import (
@@ -97,3 +101,53 @@ def test_e2e_query_determinism():
     trace1_steps = res1.trace["graded"]["permitted_parameters"]
     trace2_steps = res2.trace["graded"]["permitted_parameters"]
     assert trace1_steps == trace2_steps
+
+
+def _masked(trace: dict) -> str:
+    """The trace with the three fields §25 permits to vary removed."""
+    t = json.loads(json.dumps(trace))
+    t.pop("query_id", None)
+    t.pop("timestamp", None)
+    for step in t.get("steps", []):
+        step.pop("latency_ms", None)
+    return json.dumps(t, indent=1, sort_keys=True)
+
+
+def test_whole_trace_is_byte_identical_across_runs():
+    """§25: same bundle + same question => byte-identical trace, modulo id/ts/latency.
+
+    The criterion is about the *whole* trace, not the answer. This previously
+    passed while `evidence` carried a fresh uuid4 asset id on every run, because
+    nothing compared the two documents.
+    """
+    bundle = _make_test_bundle()
+    query = "What is the vegetation and water extent?"
+
+    first = _masked(run_query(bundle, query, query_id="fixed_q1").trace)
+    second = _masked(run_query(bundle, query, query_id="fixed_q2").trace)
+
+    if first != second:
+        diff = chr(10).join(
+            difflib.unified_diff(
+                first.splitlines(), second.splitlines(), "run1", "run2", lineterm="", n=1
+            )
+        )
+        raise AssertionError("trace differs between identical runs:" + chr(10) + diff)
+
+
+def test_asset_ids_are_derived_from_content_not_random():
+    """Asset ids reach the trace, so they must be reproducible."""
+    bundle = _make_test_bundle()
+    query = "What is the vegetation and water extent?"
+
+    ids1 = [a.asset_id for a in run_query(bundle, query).evidence]
+    ids2 = [a.asset_id for a in run_query(bundle, query).evidence]
+    assert ids1 and ids1 == ids2
+
+    # Distinct identities still get distinct ids.
+    assert asset_id_for("spectral_index", "mask_geotiff", "a.tif") != asset_id_for(
+        "spectral_index", "mask_geotiff", "b.tif"
+    )
+    assert asset_id_for("spectral_index", "mask_geotiff", "a.tif") != asset_id_for(
+        "sar_backscatter", "mask_geotiff", "a.tif"
+    )

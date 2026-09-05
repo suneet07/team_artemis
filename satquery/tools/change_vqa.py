@@ -1,6 +1,52 @@
 from typing import Any
 
-from satquery.serving.client import get_serving_client
+from satquery.serving.client import (
+    ADAPTER_VERSIONS,
+    get_serving_client,
+    qualified_adapter,
+)
+from satquery.tools import tiling_support
+
+
+def _raise_if_unavailable(res: Any) -> None:
+    """A missing model is a failed step, not an answer string (§20, F-3)."""
+    if res.serving_mode == "unavailable" or res.text.startswith("MODEL_UNAVAILABLE"):
+        raise RuntimeError("MODEL_UNAVAILABLE: Model serving offline or unreachable.")
+
+
+def _run_over_tiles(context, call):
+    """Run `call(tile)` once per budgeted tile and aggregate per §12.4.
+
+    Rule 14: a learned tool never sees more than `agent.learned_tool_tile_budget`
+    tiles. The executor puts the already-budgeted selection in
+    context["selected_tiles"]; this honours it rather than quietly using the
+    whole scene, and reports the coverage so §10 N8 can price the sample and the
+    answer can be qualified (§12.3).
+    """
+    tiles = (context or {}).get("selected_tiles") or []
+    if not tiles:
+        return None
+
+    # §12.4 free text: the answer comes from the single highest-scoring tile, so
+    # that is the only one worth streaming -- tokens from tiles whose answers are
+    # discarded would show the user text that never becomes the answer.
+    ranked = sorted(
+        tiles,
+        key=lambda t: float(t.get("score") or 0.0) if isinstance(t, dict) else 0.0,
+        reverse=True,
+    )
+    per_tile = []
+    for position, tile in enumerate(ranked):
+        out = call(tile, position == 0)
+        out["tile_score"] = float(tile.get("score") or 0.0) if isinstance(tile, dict) else 0.0
+        per_tile.append(out)
+
+    merged = tiling_support.aggregate_tile_answers(per_tile)
+    merged.pop("tile_score", None)
+    total = (context or {}).get("total_tile_count") or len(tiles)
+    merged["tiles_seen"] = len(tiles)
+    merged["tile_coverage_frac"] = round(len(tiles) / total, 4) if total else 1.0
+    return merged
 
 
 def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -24,17 +70,39 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
                 question=question,
             )
 
+    adapter = qualified_adapter("change_vqa", ADAPTER_VERSIONS["change_vqa"])
     client = get_serving_client()
+    on_token = (context or {}).get("on_token")
+
+    def _call(tile: dict[str, Any], stream: bool) -> dict[str, Any]:
+        r = client.infer(
+            adapter=adapter,
+            prompt=prompt + f" [tile: {tile.get('tile_id', '?')}]",
+            max_tokens=max_tokens,
+            stream=stream and on_token is not None,
+            on_token=on_token,
+        )
+        _raise_if_unavailable(r)
+        return {"answer": r.text, "confidence": r.confidence}
+
+    tiled = _run_over_tiles(context, _call)
+    if tiled is not None:
+        tiled["adapter"] = adapter
+        return tiled
+
     res = client.infer(
-        adapter="change_vqa@v1",
+        adapter=adapter,
         prompt=prompt,
         max_tokens=max_tokens,
+        stream=on_token is not None,
+        on_token=on_token,
     )
 
     if res.serving_mode == "unavailable" or res.text.startswith("MODEL_UNAVAILABLE"):
         raise RuntimeError("MODEL_UNAVAILABLE: Model serving offline or unreachable.")
 
     return {
+        "adapter": adapter,
         "answer": res.text,
         "confidence": res.confidence,
     }

@@ -1,6 +1,68 @@
 import os
+import threading
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
+
+# Rule 9: an adapter name always carries the base model it was trained against,
+# so a trace says which weights produced the answer -- not merely which LoRA
+# version. §29 Q7 (Qwen3-VL-4B vs Qwen3.5-2B) is still open, so the base is a
+# config value, not a constant: when the bake-off resolves, this is the one
+# place that changes and every trace follows.
+DEFAULT_BASE_MODEL = "qwen3vl-4b"
+
+
+ADAPTER_VERSIONS: dict[str, str] = {
+    "rs_vqa": "v2",
+    "rs_ground_caption": "v1",
+    "change_vqa": "v1",
+    "optsar_fusion": "v1",
+    "lulc_classifier": "v1",
+}
+
+
+def base_model() -> str:
+    """The base model adapters are trained against (env: SATQUERY_BASE_MODEL)."""
+    return os.environ.get("SATQUERY_BASE_MODEL", DEFAULT_BASE_MODEL)
+
+
+def qualified_adapter(tool_name: str, version: str) -> str:
+    """Build a Rule 9 adapter name, e.g. change_vqa@qwen3vl-4b-v2.
+
+    `version` is the adapter's own revision ("v2"); the base model is inserted
+    between it and the tool so the pair is always legible together.
+    """
+    version = version.lstrip("@")
+    return f"{tool_name}@{base_model()}-{version}"
+
+
+
+
+# §22: "Two concurrent queries needing different adapters will contend on swap.
+# Serialise learned-tool calls behind a single queue per adapter." One lock per
+# adapter, so different adapters still run concurrently but a single adapter is
+# never swapped out from under an in-flight request.
+_ADAPTER_LOCKS: dict[str, threading.Lock] = {}
+_LOCKS_GUARD = threading.Lock()
+
+
+def _adapter_lock(adapter: str) -> threading.Lock:
+    with _LOCKS_GUARD:
+        return _ADAPTER_LOCKS.setdefault(adapter, threading.Lock())
+
+
+def _emit_tokens(text: str, on_token: Callable[[str], None] | None) -> None:
+    """Replay a completed answer as tokens so the UI streams either way.
+
+    A real vLLM stream would call `on_token` as chunks arrive. The stub has the
+    whole string at once; splitting it keeps the §19 event sequence identical so
+    the frontend is not written against a shape only one backend produces.
+    """
+    if on_token is None or not text:
+        return
+    for word in text.split(" "):
+        on_token(word + " ")
 
 
 @dataclass
@@ -10,6 +72,7 @@ class ModelInferenceResult:
     logprob: float | None = None
     serving_mode: str = "local_fallback"
     boxes: list[dict[str, Any]] | None = None
+    latency_ms: int = 0
 
 
 class ServingClient:
@@ -26,6 +89,11 @@ class ServingClient:
 
     def is_healthy(self, ttl: float = 10.0) -> bool:
         if self._offline_mode:
+            return False
+        if os.environ.get("SATQUERY_STUB_SERVING") == "1":
+            # Stub mode is a deliberate choice, not a fallback. Probing a port
+            # nobody is listening on costs ~1s per call on Windows and every
+            # learned step pays it against the 20 s budget (§25).
             return False
         import time
 
@@ -55,12 +123,13 @@ class ServingClient:
             "serving": "vllm" if healthy else "local_fallback",
             "gpu": False,
             "offline_mode": self._offline_mode or not healthy,
-            "adapters_loaded": [
-                "rs_vqa@v2",
-                "rs_ground_caption@v1",
-                "change_vqa@v1",
-                "optsar_fusion@v1",
-                "lulc_classifier@v1",
+            "base_model": base_model(),
+            # The adapters this build would request. Whether they are trained and
+            # resident is a separate question -- `serving` above says whether any
+            # model is reachable at all.
+            "adapters_loaded": [] if not healthy else [
+                qualified_adapter(name, ver)
+                for name, ver in ADAPTER_VERSIONS.items()
             ],
             "demo_bundles_warm": 3,
         }
@@ -72,6 +141,31 @@ class ServingClient:
         images: list[Any] | None = None,
         max_tokens: int = 64,
         temperature: float = 0.0,
+        *,
+        stream: bool = False,
+        on_token: Callable[[str], None] | None = None,
+    ) -> ModelInferenceResult:
+        """Run one adapter. §22.
+
+        `on_token` is called with each chunk as it arrives so the executor can
+        forward §19's `token` event; it is a no-op in headless mode because the
+        emitter is. Adapter swaps are serialised per §22 -- see `_ADAPTER_LOCKS`.
+        """
+        started = time.monotonic()
+        with _adapter_lock(adapter):
+            result = self._infer_locked(adapter, prompt, images, max_tokens, temperature)
+        result.latency_ms = int((time.monotonic() - started) * 1000)
+        if stream and result.serving_mode != "unavailable":
+            _emit_tokens(result.text, on_token)
+        return result
+
+    def _infer_locked(
+        self,
+        adapter: str,
+        prompt: str,
+        images: list[Any] | None,
+        max_tokens: int,
+        temperature: float,
     ) -> ModelInferenceResult:
         # If real vLLM server is running, attempt query
         if not self._offline_mode and self.is_healthy():

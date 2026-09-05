@@ -21,6 +21,7 @@ from satquery.agent.trace import TraceBuilder
 from satquery.agent.validator import validate_query_compatibility
 from satquery.confidence.calculator import calculate_confidence
 from satquery.fusion.reconcile import reconcile_crossmodal
+from satquery.serving.client import base_model
 from satquery.tools.registry import ToolRegistry, check_parameters, effective_params
 
 
@@ -41,15 +42,37 @@ class QueryResult:
     trace: dict[str, Any] = field(default_factory=dict)
 
 
+def _fusion_model_name(results: dict[str, Any]) -> str:
+    """Model string for the trace and the fusion event (§17).
+
+    Names the base model, plus the learned adapter when one contributed, so the
+    trace records what actually produced the answer rather than a bare product
+    name.
+    """
+    base = base_model()
+    for out in results.values():
+        if isinstance(out, dict) and out.get("adapter"):
+            # §17 writes this as base+tool@version; the adapter already carries
+            # the base (Rule 9), so drop it from the suffix rather than repeat it.
+            adapter = str(out["adapter"]).replace(f"@{base}-", "@", 1)
+            return f"{base}+{adapter}"
+    return base
+
+
 def ingest_node(state: AgentState) -> dict[str, Any]:
     start_t = time.perf_counter()
+    # N1 step 6: start the wall clock. Node timings measure work; only this
+    # measures what the user waited, which is what the 20 s SLA is about.
+    wall_start = state.get("wall_start") or start_t
+    submitted_at = state.get("submitted_at")
+    queued_ms = int((wall_start - submitted_at) * 1000) if submitted_at else 0
     query_id = state.get("query_id") or str(uuid.uuid4())
     question = state.get("query_text", "")
     bundle = state.get("bundle")
 
     emit = state.get("emit")
     if emit:
-        emit("accepted", {"query_id": query_id, "queued_ms": 0})
+        emit("accepted", {"query_id": query_id, "queued_ms": max(0, queued_ms)})
 
     trace = state.get("trace") or TraceBuilder(query_text=question, query_id=query_id)
     warnings: list[str] = list(state.get("warnings") or [])
@@ -72,6 +95,7 @@ def ingest_node(state: AgentState) -> dict[str, Any]:
         timings["ingest"] = elapsed_ms
         return {
             "query_id": query_id,
+            "wall_start": wall_start,
             "refusal": refusal,
             "validation_ok": False,
             "warnings": warnings,
@@ -133,6 +157,7 @@ def ingest_node(state: AgentState) -> dict[str, Any]:
 
     return {
         "query_id": query_id,
+        "wall_start": wall_start,
         "bundle": bundle,
         "band_inventory": bundle.band_inventory,
         "modalities": [img.modality for img in bundle.images],
@@ -595,7 +620,12 @@ def emit_node(state: AgentState) -> dict[str, Any]:
         trace.add_evidence(asset.asset_id)
 
     timings = state.get("timings") or {}
-    total_latency_ms = sum(timings.values())
+    wall_start = state.get("wall_start")
+    # Wall clock, not the sum of node timings: waves run concurrently, so the
+    # sum overstates a parallel query and understates one that waited on I/O.
+    total_latency_ms = (
+        int((time.perf_counter() - wall_start) * 1000) if wall_start else sum(timings.values())
+    )
 
     if total_latency_ms > 20000:
         warning_msg = f"Global latency budget exceeded: {total_latency_ms} ms > 20000 ms"
@@ -617,6 +647,16 @@ def emit_node(state: AgentState) -> dict[str, Any]:
             answer=answer,
             confidence=confidence,
             refusal=trace_refusal,
+            extra={"confidence_basis": confidence_basis},
+        )
+    elif state.get("cancelled"):
+        query_state = "cancelled"
+        answer = state.get("fused_answer") or "Query cancelled."
+        confidence = state.get("confidence") or 0.0
+        confidence_basis = state.get("confidence_basis") or "heuristic"
+        trace.set_outputs(
+            answer=answer,
+            confidence=confidence,
             extra={"confidence_basis": confidence_basis},
         )
     elif state.get("all_tools_failed"):
@@ -655,7 +695,7 @@ def emit_node(state: AgentState) -> dict[str, Any]:
 
     if not refusal and query_state != "failed":
         trace.set_fusion(
-            model="qwen3vl-4b-instruct",
+            model=_fusion_model_name(state.get("results") or {}),
             answer=answer,
             confidence=confidence if confidence is not None else 0.0,
         )
@@ -684,7 +724,7 @@ def emit_node(state: AgentState) -> dict[str, Any]:
             emit(
                 "fusion",
                 {
-                    "model": "qwen3vl-4b-instruct",
+                    "model": _fusion_model_name(state.get("results") or {}),
                     "answer": answer,
                     "confidence": confidence if confidence is not None else 0.0,
                     "confidence_basis": confidence_basis or "heuristic",
@@ -703,6 +743,7 @@ def emit_node(state: AgentState) -> dict[str, Any]:
     return {
         "trace_dict": trace_dict,
         "query_state": query_state,
+        "total_latency_ms": total_latency_ms,
         "fused_answer": answer,
         "confidence": confidence,
         "confidence_basis": confidence_basis,
@@ -783,7 +824,15 @@ def run_query(
     query_id: str | None = None,
     allow_llm_router: bool = True,
     emit: EventSink | None = None,
+    cancel_check: Any | None = None,
+    submitted_at: float | None = None,
 ) -> QueryResult:
+    """Run one query. §9.
+
+    `cancel_check` is a callable or an Event the executor consults at wave
+    boundaries (§24); `submitted_at` is a `time.perf_counter()` stamp from when
+    the job was accepted, so `queued_ms` reports the real wait.
+    """
     emitter = create_emitter(emit)
     initial_state: AgentState = {
         "query_id": query_id or str(uuid.uuid4()),
@@ -793,6 +842,9 @@ def run_query(
         "modalities": [img.modality for img in bundle.images],
         "pair_type": bundle.pair_type,
         "allow_llm_router": allow_llm_router,
+        "cancel_check": cancel_check,
+        "submitted_at": submitted_at,
+        "wall_start": time.perf_counter(),
         "routing_notes": [],
         "validation_ok": True,
         "refusal": None,
@@ -848,7 +900,9 @@ def run_query(
 
     trace_dict = final_state.get("trace_dict") or {}
     query_state = final_state.get("query_state", "succeeded")
-    if final_state.get("all_tools_failed") and query_state != "refused":
+    if final_state.get("cancelled"):
+        query_state = "cancelled"
+    elif final_state.get("all_tools_failed") and query_state != "refused":
         query_state = "failed"
 
     return QueryResult(
@@ -859,7 +913,8 @@ def run_query(
         answer=final_state.get("fused_answer"),
         confidence=final_state.get("confidence"),
         confidence_basis=final_state.get("confidence_basis"),
-        latency_ms=sum((final_state.get("timings") or {}).values()),
+        latency_ms=final_state.get("total_latency_ms")
+        or sum((final_state.get("timings") or {}).values()),
         refusal=final_state.get("refusal"),
         failures=final_state.get("failures", []),
         evidence=final_state.get("assets", []),

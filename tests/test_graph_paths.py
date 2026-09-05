@@ -6,6 +6,7 @@ from satquery.agent.bundle import CoregReport, ImageBundle, ImageRef
 from satquery.agent.graph import run_query
 from satquery.ingest.band_inventory import BandInventory
 from satquery.paths import TRACE_SCHEMA_PATH
+from satquery.serving.client import base_model, qualified_adapter
 
 
 def _get_trace_schema():
@@ -133,8 +134,12 @@ def test_graph_path_single_caption_plans_learned_tool(monkeypatch):
     res = run_query(bundle, "Describe the contents of this satellite image.")
     assert res.state == "succeeded"
     assert res.trace["graded"]["task_selected"] == "single_caption"
-    assert res.trace["graded"]["tools_invoked"] == ["rs_ground_caption"]
-    assert "dummy_tool" not in res.trace["graded"]["tools_invoked"]
+    # Rule 9: tools_invoked names the adapter, base model included.
+    invoked = res.trace["graded"]["tools_invoked"]
+    assert invoked == [qualified_adapter("rs_ground_caption", "v1")]
+    assert invoked[0].startswith("rs_ground_caption@")
+    assert base_model() in invoked[0]
+    assert "dummy_tool" not in invoked
     jsonschema.validate(instance=res.trace, schema=schema)
 
 
