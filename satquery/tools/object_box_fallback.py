@@ -3,6 +3,11 @@ from typing import Any
 import numpy as np
 import scipy.ndimage
 
+from satquery.tools import tiling_support
+
+# This tool honours context["current_tile"] (see tiling_support).
+SUPPORTS_TILING = True
+
 
 def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
     target_class = params.get("target_class", "other").lower()
@@ -25,6 +30,13 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
             # Generic feature
             feature = (x > 30) & (x < 65) & (y > 35) & (y < 60)
         texture_map = feature.astype(np.float32)
+
+    # Restrict detection to the current tile, and remember the offset so boxes
+    # can be translated back to whole-scene pixel coordinates (§12.4, §18).
+    _scene_shape = texture_map.shape[:2]
+    _window = tiling_support.window_of(context, _scene_shape)
+    texture_map = tiling_support.crop(texture_map, _window)
+    _row_off, _col_off = (_window[0], _window[1]) if _window else (0, 0)
 
     # Morphological opening to remove isolated noise
     binary_cand = (texture_map > 0.4).astype(np.uint8)
@@ -54,7 +66,12 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
             continue
 
         boxes.append({
-            "bbox_px": [float(xmin), float(ymin), float(xmax), float(ymax)],
+            "bbox_px": [
+                float(xmin + _col_off),
+                float(ymin + _row_off),
+                float(xmax + _col_off),
+                float(ymax + _row_off),
+            ],
             "class": target_class,
             "score": 0.45,
             "method": "deterministic_fallback",
@@ -68,15 +85,23 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
             ymin, ymax = int(np.min(nonzero_y)), int(np.max(nonzero_y))
             xmin, xmax = int(np.min(nonzero_x)), int(np.max(nonzero_x))
             boxes.append({
-                "bbox_px": [float(xmin), float(ymin), float(xmax), float(ymax)],
+                "bbox_px": [
+                    float(xmin + _col_off),
+                    float(ymin + _row_off),
+                    float(xmax + _col_off),
+                    float(ymax + _row_off),
+                ],
                 "class": target_class,
                 "score": 0.45,
                 "method": "deterministic_fallback",
             })
 
-    return {
+    out: dict[str, Any] = {
         "boxes": boxes,
         "count": len(boxes),
         "synthetic": True,
         "method": "deterministic_fallback",
     }
+    if _window is not None:
+        out.update(tiling_support.tile_report(_window, _scene_shape))
+    return out

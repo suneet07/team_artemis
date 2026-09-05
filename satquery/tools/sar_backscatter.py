@@ -4,7 +4,11 @@ from typing import Any
 import numpy as np
 
 from satquery.config import preprocessing_config
+from satquery.tools import tiling_support
 from satquery.tools.spectral_index import compute_otsu_threshold
+
+# This tool honours context["current_tile"] (see tiling_support).
+SUPPORTS_TILING = True
 
 
 def _generate_synthetic_sar(shape: tuple[int, int] = (100, 100), pol: str = "VV") -> np.ndarray:
@@ -57,6 +61,9 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
         sar_data = _generate_synthetic_sar((100, 100), pol=pol)
         is_synthetic = True
 
+    _scene_shape = sar_data.shape[:2]
+    _window = tiling_support.window_of(context, _scene_shape)
+
     # Otsu with bimodality gate on SAR backscatter
     otsu_val, ratio, f0, f1 = compute_otsu_threshold(sar_data)
 
@@ -79,6 +86,9 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
             thresh = default_db
             chosen_method = "fixed_fallback"
 
+    # Scene-level threshold, per-tile masking -- see the note in spectral_index.
+    sar_data = tiling_support.crop(sar_data, _window)
+
     # Water threshold: pixels with sigma0 <= thresh (or built-up if looking for bright targets)
     mask = (sar_data <= thresh).astype(np.uint8)
     area_px = int(np.sum(mask))
@@ -87,6 +97,20 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
     if context is not None:
         mask_cache = context.setdefault("mask_cache", {})
         mask_cache["sar_backscatter"] = mask
+
+    if _window is not None:
+        # Tiled run: the executor mosaics tile masks and derives area once (Rule 7).
+        return {
+            "_mask_array": mask,
+            "threshold_db": thresh,
+            "threshold_method": chosen_method,
+            "pol": pol,
+            "_pixel_size_m": pixel_size_m,
+            "_crs": crs_str if src_transform is not None else None,
+            "_src_transform": src_transform,
+            **tiling_support.tile_report(_window, _scene_shape),
+            **({"synthetic": True} if is_synthetic else {}),
+        }
 
     # Write real GeoTIFF mask file to disk
     import tempfile

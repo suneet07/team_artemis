@@ -3,6 +3,11 @@ from typing import Any
 
 import numpy as np
 
+from satquery.tools import tiling_support
+
+# This tool honours context["current_tile"] (see tiling_support).
+SUPPORTS_TILING = True
+
 
 def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
     mode = params.get("mode", "binary")
@@ -50,6 +55,14 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
         change_prob[water_change_zone] = 0.65
         diff_data = change_prob
 
+    # Restrict computation to the current tile (Rule 7).
+    _scene_shape = diff_data.shape[:2]
+    _window = tiling_support.window_of(context, _scene_shape)
+    diff_data = tiling_support.crop(diff_data, _window)
+    if _window is not None:
+        row0, col0, row1, col1 = _window
+        y, x = np.ogrid[row0:row1, col0:col1]
+
     # Binary change detection
     change_mask = (diff_data >= threshold).astype(np.uint8)
 
@@ -65,6 +78,18 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
         change_mask = semantic_mask
 
     change_ratio = round(float(np.mean(change_mask > 0)), 4)
+
+    if _window is not None:
+        # Tiled run: change_ratio is a scene-level fraction; the executor
+        # recomputes it from the mosaicked mask rather than averaging tiles.
+        if context is not None:
+            context.setdefault("mask_cache", {})["change_map"] = change_mask
+        return {
+            "_mask_array": change_mask,
+            "mode": mode,
+            **tiling_support.tile_report(_window, _scene_shape),
+            **({"synthetic": True} if is_synthetic else {}),
+        }
 
     if context is not None:
         mask_cache = context.setdefault("mask_cache", {})

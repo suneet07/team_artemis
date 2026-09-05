@@ -4,6 +4,10 @@ from typing import Any
 import numpy as np
 
 from satquery.config import preprocessing_config
+from satquery.tools import tiling_support
+
+# This tool honours context["current_tile"] (see tiling_support).
+SUPPORTS_TILING = True
 
 
 def compute_otsu_threshold(data: np.ndarray) -> tuple[float, float, float, float]:
@@ -127,6 +131,9 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
         bands_data = _generate_synthetic_bands((100, 100))
         is_synthetic = True
 
+    _scene_shape = next(iter(bands_data.values())).shape[:2]
+    _window = tiling_support.window_of(context, _scene_shape)
+
     # Compute requested normalized spectral index
     if index_name == "NDVI":
         num = bands_data["nir"] - bands_data["red"]
@@ -165,6 +172,13 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
             thresh = fixed_fallbacks.get(index_name, 0.20)
             chosen_method = "fixed_fallback"
 
+    # The threshold is a scene-level decision, so it is derived above from the
+    # whole index array and only the masking is per-tile. Otsu assumes a bimodal
+    # histogram; re-deriving it from a tile that is 95% land would return a
+    # confident, meaningless cut and make the mosaic disagree with the scene
+    # (§14.1). Crop only now.
+    index_arr = tiling_support.crop(index_arr, _window)
+
     # Compute binary mask & area
     mask = (index_arr >= thresh).astype(np.uint8)
     area_px = int(np.sum(mask))
@@ -175,6 +189,24 @@ def execute(params: dict[str, Any], context: dict[str, Any] | None = None) -> di
         mask_cache = context.setdefault("mask_cache", {})
         mask_cache["spectral_index"] = mask
         mask_cache[index_name] = mask
+
+    if _window is not None:
+        # Tiled run: hand the tile mask to the executor, which mosaics every tile
+        # into one full-scene GeoTIFF and derives area from that (Rule 7). Writing
+        # a per-tile file here would leave the last tile masquerading as the scene,
+        # and returning a per-tile area would let the executor sum overlapping
+        # pixels twice.
+        return {
+            "_mask_array": mask,
+            "threshold_value": thresh,
+            "threshold_method": chosen_method,
+            "index": index_name,
+            "_pixel_size_m": pixel_size_m,
+            "_crs": crs_str if src_transform is not None else None,
+            "_src_transform": src_transform,
+            **tiling_support.tile_report(_window, _scene_shape),
+            **({"synthetic": True} if is_synthetic else {}),
+        }
 
     # Write real GeoTIFF mask file to disk
     import tempfile
