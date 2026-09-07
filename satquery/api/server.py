@@ -49,6 +49,30 @@ __all__ = ["build_app"]
 #: What the frontend's ``VITE_API_BASE`` defaults to.
 API_PREFIX = "/api/v1"
 
+#: Ceiling on a single upload. Defaults to the 4 GB the frontend already
+#: advertises in `client.ts`, so no upload that worked before is refused now;
+#: the point is that the ceiling exists on the side that can enforce it.
+MAX_UPLOAD_BYTES = int(os.environ.get("SATQUERY_MAX_UPLOAD_BYTES", 4 * 1024**3))
+_UPLOAD_CHUNK_BYTES = 4 * 1024 * 1024
+
+#: Browser origins allowed to call this API. `*` keeps the public demo working
+#: for anyone opening the link, which is what it is for. Set this to the
+#: deployed frontend's origin to narrow it -- comma-separated, no spaces.
+ALLOWED_ORIGINS = [
+    o for o in os.environ.get("SATQUERY_ALLOWED_ORIGINS", "*").split(",") if o
+]
+
+#: Optional shared key. Unset -- the default -- leaves the API open, which is
+#: what a public demo needs. Set it and every route except the health checks
+#: requires a matching `X-Api-Key`, which is the header the frontend has always
+#: sent from `VITE_API_KEY`.
+#:
+#: A key in `VITE_API_KEY` is baked into the built bundle and is therefore
+#: public: it stops a stranger who has only the API URL, not someone who has
+#: opened the site. That is the whole of what it buys.
+API_KEY = os.environ.get("SATQUERY_API_KEY") or None
+_UNAUTHENTICATED_PATHS = frozenset({"/health", f"{API_PREFIX}/meta/health"})
+
 #: Human labels for the task enum. The enum is the source of which tasks exist;
 #: this only supplies wording, and a task missing here still appears.
 TASK_LABELS: dict[str, tuple[str, str, list[str]]] = {
@@ -838,10 +862,33 @@ def build_app(
     app = FastAPI(title="SatQuery AI", version="0.4.1")
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=ALLOWED_ORIGINS,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    if API_KEY is not None:
+
+        @app.middleware("http")
+        async def require_api_key(request, call_next):
+            # Preflight carries no custom headers by definition, so demanding
+            # the key here would block every cross-origin call before the real
+            # request was ever made.
+            if request.method == "OPTIONS" or request.url.path in _UNAUTHENTICATED_PATHS:
+                return await call_next(request)
+            if request.headers.get("X-Api-Key") != API_KEY:
+                from fastapi.responses import JSONResponse
+
+                return JSONResponse(
+                    status_code=401,
+                    content={
+                        "error": {
+                            "code": "UNAUTHENTICATED",
+                            "message": "This deployment requires a valid X-Api-Key header.",
+                        }
+                    },
+                )
+            return await call_next(request)
 
     #: Queries are held in memory. The contract has the frontend poll
     #: ``/queries/{id}`` after posting, so the result has to outlive the request
@@ -926,7 +973,29 @@ def build_app(
     async def create_scene(file: UploadFile) -> dict[str, Any]:
         scene_id_hint = Path(file.filename or "scene.tif").name
         target = uploads / f"up_{uuid.uuid4().hex[:8]}_{scene_id_hint}"
-        target.write_bytes(await file.read())
+        # Streamed in chunks against a ceiling rather than read whole. The
+        # endpoint is unauthenticated, so `await file.read()` put an entire
+        # upload of any size into the container's memory before anything
+        # looked at it -- one large POST was enough to take the process down.
+        # The frontend's own 4 GB limit is advisory; a limit that only exists
+        # in the client is not a limit.
+        written = 0
+        try:
+            with target.open("wb") as handle:
+                while chunk := await file.read(_UPLOAD_CHUNK_BYTES):
+                    written += len(chunk)
+                    if written > MAX_UPLOAD_BYTES:
+                        raise HTTPException(
+                            status_code=413,
+                            detail=(
+                                f"upload exceeds the {MAX_UPLOAD_BYTES} byte limit; "
+                                "raise SATQUERY_MAX_UPLOAD_BYTES to accept more"
+                            ),
+                        )
+                    handle.write(chunk)
+        except BaseException:
+            target.unlink(missing_ok=True)
+            raise
         record = _register_scene(target, file.filename or target.name)
         return {k: v for k, v in record.items() if k not in ("path", "preview_path")}
 

@@ -157,8 +157,15 @@ def build_app():
     def image(path: str):
         # Confined to the image root: a browser must not be able to read
         # arbitrary files off the Volume by asking for ../../something.
-        target = (IMAGE_ROOT / path).resolve()
-        if not str(target).startswith(str(IMAGE_ROOT.resolve())):
+        # `startswith` on the resolved string was the wrong test: with a root
+        # of `/data` it also admits `/data_backup` and `/database`, because a
+        # sibling whose name merely extends the root shares the prefix.
+        # `is_relative_to` compares path components, which is the question
+        # actually being asked. Same guard as `gallery_preview` in
+        # `satquery/api/server.py`.
+        root = IMAGE_ROOT.resolve()
+        target = (root / path).resolve()
+        if not target.is_relative_to(root):
             raise HTTPException(status_code=400, detail="path outside the image root")
         if not target.exists():
             raise HTTPException(status_code=404, detail="no such image")

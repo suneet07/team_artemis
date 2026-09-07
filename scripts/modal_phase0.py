@@ -2421,6 +2421,13 @@ ask_image = _with_repo(
     # demo does not pay the ~90 s weight load between questions, short enough
     # that forgetting the tab open does not bill overnight.
     scaledown_window=5 * MINUTES,
+    # The web endpoint is public and unauthenticated, which is what makes it a
+    # demo anyone can open. Uncapped, that also means anonymous traffic can
+    # spawn L4 containers without limit and bill for every one. `Api` below was
+    # already capped for a state-sharing reason; this cap is purely about
+    # spend. One container serves a demo; a queue is the correct response to
+    # more load than that, not a bigger bill.
+    max_containers=1,
 )
 class Ask:
     """The adapter behind a web page, for asking it about your own imagery.

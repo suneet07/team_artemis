@@ -2,6 +2,7 @@ import os
 import subprocess
 import tempfile
 import warnings
+from xml.sax.saxutils import escape as xml_escape
 
 import numpy as np
 import rasterio
@@ -116,10 +117,14 @@ class SARNormaliser:
         else:
             template = SAR_GRAPH_TEMPLATE_WITH_TC
 
-        # Replace variables
-        graph_xml = template.replace("${sourceFile}", input_path).replace(
-            "${targetFile}", output_path
-        )
+        # Replace variables. Escaped, because these land inside XML element
+        # text: a path containing `&` or `<` would otherwise produce a graph
+        # SNAP cannot parse, and one containing a closing tag could rewrite the
+        # processing chain around it. Filenames reaching here can come from an
+        # upload.
+        graph_xml = template.replace(
+            "${sourceFile}", xml_escape(input_path)
+        ).replace("${targetFile}", xml_escape(output_path))
 
         with tempfile.NamedTemporaryFile("w", suffix=".xml", delete=False) as f:
             f.write(graph_xml)
