@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import "./styles/theme.css";
 import { App } from "./App";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { USE_MOCKS } from "./api/client";
 
 const queryClient = new QueryClient({
@@ -36,7 +37,9 @@ async function bootstrap() {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <App />
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>
         </BrowserRouter>
       </QueryClientProvider>
     </StrictMode>,

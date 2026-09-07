@@ -63,7 +63,14 @@ export function ImageViewer({ scene }: { scene: Scene }) {
       x: event.clientX - transform.x,
       y: event.clientY - transform.y,
     };
-    (event.target as HTMLElement).setPointerCapture(event.pointerId);
+    // currentTarget, not target: the child under the cursor can unmount mid-drag
+    // (a box overlay re-rendering), and capture on a removed node is lost --
+    // which stranded `dragging.current` set with no pointerup to clear it.
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Capture is an optimisation; dragging still works without it.
+    }
   };
 
   const onPointerMove = (event: ReactPointerEvent) => {
@@ -78,11 +85,19 @@ export function ImageViewer({ scene }: { scene: Scene }) {
         y: Math.round(localY * ratio),
       });
     }
-    if (!dragging.current) return;
+    // Read the origin once, here, rather than inside the updater. React runs
+    // the updater during the render phase, not at call time -- so a pointerup
+    // arriving in between ran `endDrag`, `dragging.current` was null, and the
+    // non-null assertion threw *during render*. With no error boundary above
+    // it, React unmounts the whole tree: the screen went blank the moment you
+    // dragged an image and released at the wrong instant.
+    const origin = dragging.current;
+    if (!origin) return;
+    const { clientX, clientY } = event;
     setTransform((current) => ({
       ...current,
-      x: event.clientX - dragging.current!.x,
-      y: event.clientY - dragging.current!.y,
+      x: clientX - origin.x,
+      y: clientY - origin.y,
     }));
   };
 

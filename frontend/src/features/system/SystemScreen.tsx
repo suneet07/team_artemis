@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { API_BASE, ENABLE_BASEMAP, USE_MOCKS } from "@/api/client";
+import { ENABLE_BASEMAP, USE_MOCKS } from "@/api/client";
 import { useDisagreementCauses, useHealth, useTasks, useTools } from "@/api/meta";
 import {
   Field,
@@ -194,9 +194,6 @@ export function SystemScreen() {
         <section className="m-sheet">
           <ZoneHeader code="S7·B" title="This client" />
           <div className="px-4 py-1">
-            <FieldRow label="API BASE">
-              <span className="t-data text-ink-0">{API_BASE}</span>
-            </FieldRow>
             <FieldRow label="DATA SOURCE">
               {USE_MOCKS ? (
                 <span className="flex flex-wrap items-center gap-2">
