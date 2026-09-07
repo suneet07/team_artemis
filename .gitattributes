@@ -1,0 +1,6 @@
+# The routing evaluation set is compared byte-for-byte against a freshly
+# generated copy (tests/test_routing_eval.py::test_generation_is_deterministic),
+# and generate_routing_300.py writes it with newline="\n". Without this, a
+# checkout under core.autocrlf=true rewrites it to CRLF and the test fails on
+# a clean Windows clone while passing for anyone whose copy git never touched.
+*.jsonl text eol=lf
