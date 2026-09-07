@@ -1,0 +1,13 @@
+{
+ "manifest": "/data/manifests/change_vqa_train.jsonl",
+ "split": "val",
+ "rows": 2012,
+ "by_type": {
+  "change_compare": 400,
+  "change_count": 400,
+  "change_magnitude": 400,
+  "change_where": 400,
+  "change_presence": 376,
+  "change_direction": 36
+ }
+}

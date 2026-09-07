@@ -1,0 +1,36 @@
+{
+  "model": "BIFOLD-BigEarthNetv2-0/resnet50-s1-v0.2.0",
+  "arm": "sar",
+  "band_order": {
+    "s1": "vh_vv",
+    "s2": "configilm"
+  },
+  "at_0.5": {
+    "accuracy": 0.7495,
+    "scored": 6000,
+    "per_question_type": {
+      "landcover_forest_sar": 0.7823,
+      "landcover_presence_sar": 0.69
+    },
+    "majority_answer_floor": 0.5012
+  },
+  "best_threshold": 0.3,
+  "at_best_threshold": {
+    "accuracy": 0.7647,
+    "scored": 6000,
+    "per_question_type": {
+      "landcover_forest_sar": 0.788,
+      "landcover_presence_sar": 0.7223
+    },
+    "majority_answer_floor": 0.5012
+  },
+  "sweep": {
+    "0.2": 0.7623,
+    "0.3": 0.7647,
+    "0.4": 0.7577,
+    "0.5": 0.7495,
+    "0.6": 0.7317,
+    "0.7": 0.7055
+  },
+  "note": "at_0.5 is the honest out-of-the-box number. at_best_threshold is swept on this same split and is therefore optimistic; quote it only with the sweep beside it."
+}

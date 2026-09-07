@@ -497,12 +497,12 @@ NDVI · NDWI · MNDWI · NDBI · Otsu thresholding **[v3] + bimodality gate** ·
 ```python
 @dataclass
 class ImageBundle:
-    images: list[ImageRef]          # normalised rasters on a common grid
-    band_inventory: BandInventory   # drives routing — see §4.1.4
-    pair_type: Literal["single","crossmodal","bitemporal"]
+    images: list[ImageRef]  # normalised rasters on a common grid
+    band_inventory: BandInventory  # drives routing — see §4.1.4
+    pair_type: Literal["single", "crossmodal", "bitemporal"]
     coreg: CoregReport | None
     tiles: TileIndex | None
-    provenance: list[ProvenanceStep] # every transform, for the trace
+    provenance: list[ProvenanceStep]  # every transform, for the trace
 ```
 
 ---
@@ -539,12 +539,12 @@ These differ after resampling and judges notice teams that conflate them.
 ```python
 @dataclass
 class BandInventory:
-    bands: dict[str, int]        # {"blue":1,"green":2,"red":3,"nir":4}
+    bands: dict[str, int]  # {"blue":1,"green":2,"red":3,"nir":4}
     has_swir: bool
     has_nir: bool
-    is_pan_only: bool            # [v3] single broadband optical channel
-    polarisations: list[str]     # ["VV","VH"] | ["HH"] | ...
-    sar_band: str | None         # [v3] "C" | "X" | "L" | None/unknown
+    is_pan_only: bool  # [v3] single broadband optical channel
+    polarisations: list[str]  # ["VV","VH"] | ["HH"] | ...
+    sar_band: str | None  # [v3] "C" | "X" | "L" | None/unknown
     sensor_hint: str | None
     computable_indices: list[str]  # derived
 ```
@@ -931,11 +931,11 @@ Two independent decisions, then reconcile. *(Not feature-level: EarthMind's own 
 
 ```python
 DISAGREEMENT_RULES = [
-  ("sar_water_optical_not", "cloud_over_water",     "sar"),
-  ("sar_dark_optical_soil", "wet_smooth_soil",      "optical"),
-  ("sar_dark_terrain_slope","radar_shadow",         "optical"),
-  ("sar_bright_over_water", "wind_roughened_surface","optical"),
-  ("sar_dark_arid_region",  "dry_smooth_sand",      "optical"),
+    ("sar_water_optical_not", "cloud_over_water", "sar"),
+    ("sar_dark_optical_soil", "wet_smooth_soil", "optical"),
+    ("sar_dark_terrain_slope", "radar_shadow", "optical"),
+    ("sar_bright_over_water", "wind_roughened_surface", "optical"),
+    ("sar_dark_arid_region", "dry_smooth_sand", "optical"),
 ]
 ```
 
@@ -1182,6 +1182,84 @@ Per adapter, 4B base, 60–80k samples, 1 epoch. **Pre-measurement estimates —
 | `rs_ground_caption` | 12 h | ~40% of cost is image size. Uncuttable (C17) |
 | **Scheduled total** | **31 h** | |
 | **Reserve** | **19 h** | Reruns, one failed config, one grounding re-do |
+
+### Measured, 2026-08-29 (C41 — replaces the estimates above)
+
+Two points measured on an **A100-80GB, FlashAttention-2, gradient checkpointing
+60/60 active**, through the real trainer and the real collator:
+
+| Input | Vision tokens/sample | Throughput |
+|---|---|---|
+| 120 px x 3 composites (BEN chips) | 42 | **5.05 samples/s** |
+| 512 px x 3 composites (benchmark chips) | 768 | **2.33 samples/s** |
+
+`max_pixels` is a cap and the vision tower never upsamples, so token cost tracks
+the *chip*, not the cap. That is an 18x difference in vision sequence and a
+**2.25x difference in cost per sample** — checkpointing and the fixed text and
+optimiser costs absorb the rest.
+
+Three points measured, because the cost is **not linear in tokens**. A model
+fitted to the first two under-predicted the third by 33%: attention is
+superlinear, and `change_vqa` sits at the far end of the range.
+
+| Input | Vision tokens | s/sample @ mb4 | samples/s |
+|---|---|---|---|
+| 120 px x 3 (BEN) | 42 | 0.198 | 5.05 |
+| 512 px x 3 (benchmark) | 768 | 0.445 | 2.25 |
+| 512 px x 3 x 2 dates (change) | 1536 | 0.942 | 1.06 |
+
+### Per adapter, 1 epoch — measured
+
+| Adapter | Input | Tokens | 60k | 80k | v3.5 estimate |
+|---|---|---|---|---|---|
+| `rs_vqa` | 256 px x 3 | 192 | **4.2 h** | 5.5 h | 4 h ✅ |
+| `change_vqa` | 512 px x 3 **x 2 dates** | 1536 | **15.7 h** | 20.9 h | 6 h ❌ |
+| `optsar_fusion` | 512 px x 3 + SAR | 1024 | **10.2 h** | 13.6 h | 6 h ❌ |
+| `rs_ground_caption` | 512 px x **2** | 512 | **6.0 h** | 8.0 h | 12 h ✅ |
+| **Training total** | | | **36.0 h** | **48.0 h** | 28 h |
+| **+ overhead** | | | **39.0 h** | **51.0 h** | 31 h |
+| **Reserve of 50 h** | | | **11.0 h** | **-1.0 h** | 19 h |
+
+**Two corrections the estimates got backwards.**
+
+`rs_ground_caption` was called the monster at 12 h, "uncuttable". It is the
+**second cheapest at 6 h**, because Cartosat has no SWIR and it therefore only
+ever gets **two** composites.
+
+`change_vqa` is the real monster at **15.7 h against 6 h estimated**. It is
+bi-temporal: 2 dates x 3 composites is **six images and 1,536 vision tokens per
+sample**, double anything else in the project.
+
+**At the top of the plan's own stated sample range the budget does not fit.**
+80k samples per adapter is 51 h against a 50 h grant — before a single rerun.
+At 60k it fits with 11 h of reserve rather than 19. The 60/40 ratio the plan
+calls "the point" is already 78/22 at 60k and negative at 80k.
+
+**C22 now has a measured price.** Dropping `change_vqa` from three composites to
+two takes it from 1,536 to 1,024 tokens: **15.7 h to 10.2 h, a 5.5 h saving on
+that adapter alone**, with more on `rs_vqa` and `optsar_fusion`. The plan
+estimated the three-composite decision at 5-8 h of the 50 and that estimate
+holds up — which makes the two-vs-three ablation the highest-value hour in
+Phase 0, not a nice-to-have.
+
+**Batch size — saturation arrives long before the memory ceiling.** At 768
+tokens the full ladder fits, with no OOM even at micro-batch 32:
+
+| micro-batch | peak VRAM | samples/s |
+|---|---|---|
+| 1 | 10.61 GB | 1.48 |
+| 4 | 16.24 GB | 2.25 |
+| 8 | 23.74 GB | 2.33 |
+| 16 | 38.75 GB | 2.41 |
+| 32 | 68.78 GB | 2.53 |
+
+Batch 32 spends 4.2x the memory of batch 4 for **12.6%** more throughput and
+leaves no headroom for a longer sample. The GPU is compute-saturated by batch 4.
+**Run micro-batch 8** — 92% of peak throughput at a third of the memory — and
+use `grad_accum` for a larger effective batch, which costs no memory at all.
+"Maximise utilisation" is the wrong instinct here and the ladder is the evidence.
+
+Reports: `logs/phase0_batch_saturation.md`, `logs/hour_burndown.jsonl`.
 
 Roughly 60/40 planned work to recovery. **That ratio is the point.** 50 hours is enough for one clean pass *plus* the reruns you will actually need; it would not be enough for one pass plus reruns if the schedule consumed 45 of them. Nobody's first training run is their last.
 
@@ -1535,13 +1613,26 @@ When an ISRO judge asks "what's yours and what isn't" — and they will — you 
 
 # Appendix — Phase 0 checklist
 
-- [ ] `trace_schema.json` frozen
-- [ ] `task_enum.py` frozen
-- [ ] **300-query routing eval set built** (same sitting as the enum)
-- [ ] **Every ⚠ licence resolved; substitutes named where needed**
+> **Status 2026-08-29.** Ticks below are verified against the repo, not claimed.
+> Two items are partial and deliberately left unticked:
+>
+> * *Patch-ID manifest built* — the manifest and the fetch path work and 21 real
+>   patches are staged, but the private Kaggle Dataset is not published.
+> * *Router zero-shot measured* — the rules arm scores 100% on 285 unambiguous
+>   queries; the LLM and hybrid arms need a model and have not run.
+>
+> Work with no box: the reBEN grid convention was verified
+> (`col_row_from_northwest`, not the assumed `row_col`), the Copernicus fetch
+> path was built and 500 canonical rows produced from real Sentinel-2, and the
+> four Phase 0 harnesses replaced a scaffold that could not fail.
+
+- [x] `trace_schema.json` frozen
+- [x] `task_enum.py` frozen
+- [x] **300-query routing eval set built** (same sitting as the enum)
+- [x] **Every ⚠ licence resolved; substitutes named where needed**
 - [ ] **Submission/packaging spec obtained (or most-restrictive assumption documented)**
-- [ ] `preprocessing.yaml` frozen and versioned — **incl. single-pol SAR stack, pol-dropout, per-band threshold + sanity tables (warning-only)**
-- [ ] **Tool manifest format defined as an enforceable schema** — permitted names, ranges/enums, band prerequisites
+- [x] `preprocessing.yaml` frozen and versioned — **incl. single-pol SAR stack, pol-dropout, per-band threshold + sanity tables (warning-only)**
+- [x] **Tool manifest format defined as an enforceable schema** — permitted names, ranges/enums, band prerequisites
 - [ ] **Dummy trace carries a populated `graded` block and a passing `parameter_check`**
 - [ ] **Team briefed: grounding and mask outputs are graded on the hidden set and are never cut**
 - [x] **[v3.3] Object-grounding review COMPLETE — all candidates rejected; G3 scoped to region grounding (C32)**
@@ -1551,22 +1642,22 @@ When an ISRO judge asks "what's yours and what isn't" — and they will — you 
 - [ ] **[v3.4] OpenEarthMap-SAR downloaded from Zenodo and staged (C37); manual-label subset identified**
 - [ ] **[v3.4] Umbra SAR band confirmed from the open-data catalogue (X-band?) (C37)**
 - [x] **[v3.8] LICENCE VERIFICATION COMPLETE — all items resolved, records in CREDITS (C53–C58)**
-- [ ] **[v3.8] AROSICS pinned to >=1.0.0 in requirements (C58)** — pre-1.0 was GPL-3.0
+- [x] **[v3.8] AROSICS pinned to >=1.0.0 in requirements (C58)** — pre-1.0 was GPL-3.0
 - [ ] **[v3.8] TinyCD / ChangeFormer checkpoints blocklisted in CI; CD backbone switched to TorchGeo MIT weights (C55)**
-- [ ] **[v3.8] LEVIR / SECOND / LEVIR-MCI / QAG-360K purged from ALL manifests, including `change_map` (C56)**
+- [x] **[v3.8] LEVIR / SECOND / LEVIR-MCI / QAG-360K purged from ALL manifests, including `change_map` (C56)**
 - [ ] **[C59] SpaceNet 7 / MUDS downloaded from AWS Open Data and staged; footprint-differencing pipeline built**
 - [ ] **[C60] HRSCD staged — 2012 from DataPort, 2006 direct from IGN; train-only flag set, split licence in CREDITS**
 - [ ] **[C61] DynamicEarthNet licence sent to the verification job — NOT staged until it clears**
 - [ ] **[C59] SpaceNet 7 tracking IDs wired into `change_stats` validation (counting / ratio question types)**
-- [ ] **[v3.6] Provenance chain recorded in CREDITS for EVERY manifest dataset (C45)** — hard gate on manifest build
-- [ ] **[v3.6] BEN.txt annotation-layer licence VERIFIED, not assumed (C50)** — do this first; it is the primary source
-- [ ] **[v3.6] RSVQA-LR annotation layer, pretrained-weight licences, AROSICS licence family checked (C50)**
-- [ ] **[v3.6] SARLANG-1M filtered to SpaceNet6 + OEM-SAR portions only; DFC2023 and SARDet-100K excluded (C47)**
+- [x] **[v3.6] Provenance chain recorded in CREDITS for EVERY manifest dataset (C45)** — hard gate on manifest build
+- [x] **[v3.6] BEN.txt annotation-layer licence VERIFIED, not assumed (C50)** — do this first; it is the primary source
+- [x] **[v3.6] RSVQA-LR annotation layer, pretrained-weight licences, AROSICS licence family checked (C50)**
+- [x] **[v3.6] SARLANG-1M filtered to SpaceNet6 + OEM-SAR portions only; DFC2023 and SARDet-100K excluded (C47)**
 - [ ] **[v3.6] OSCD + S1 extension downloaded (C49)**
 - [ ] **[v3.6] Self-generated Sentinel change-pair pipeline built over Indian AOIs (C46)** — reuses holdout v0 machinery
-- [ ] **[v3.4] xView3 remains excluded; recorded in CREDITS with the reason (C38)**
-- [ ] **[v3.3] SARLANG-1M per-subset licence check (C35)** — SpaceNet6 / DFC2023 / OpenEarthMap-SAR / SARDet-100K
-- [ ] **[v3.3] ../../CREDITS.md records the C33 LEVIR rule explicitly** — `change_map` masks only, never shipped weights
+- [x] **[v3.4] xView3 remains excluded; recorded in CREDITS with the reason (C38)**
+- [x] **[v3.3] SARLANG-1M per-subset licence check (C35)** — SpaceNet6 / DFC2023 / OpenEarthMap-SAR / SARDet-100K
+- [x] **[v3.3] ../../CREDITS.md records the C33 LEVIR rule explicitly** — `change_map` masks only, never shipped weights
 - [ ] **[v3.2] RSVQA-HR licence verified and staged**
 - [ ] **[v3.2] Staging split into 3–4 datasets in priority order; priority-1 set live**
 - [ ] **[v3.2] Synthetic GeoTIFF fixtures in CI** — multi-band, 12-bit, unusual CRS, nodata regions, single-pol SAR
@@ -1579,9 +1670,9 @@ When an ISRO judge asks "what's yours and what isn't" — and they will — you 
 - [ ] Zero-shot baselines recorded (both candidate bases, 3 benchmarks)
 - [ ] **D2 zero-shot ablation run; D2 framing decided**
 - [ ] **Router zero-shot accuracy measured (rules / LLM / hybrid)**
-- [ ] Base model committed
-- [ ] **[v3.5] 200-step timing measured on the A100; §5.5 budget table re-derived from real numbers (C41)**
-- [ ] **[v3.5] bf16 + FlashAttention-2 confirmed working; QLoRA dropped; batch size tuned to saturation**
+- [x] Base model committed — **Qwen3-VL-4B-Instruct, decided 2026-08-29; Qwen3.5-2B dropped**
+- [x] **[v3.5] 200-step timing measured on the A100; §5.5 budget table re-derived from real numbers (C41)**
+- [x] **[v3.5] bf16 + FlashAttention-2 confirmed working; QLoRA dropped; batch size tuned to saturation**
 - [ ] **[v3.5] Two- vs three-composite ablation run before committing to C22 (C43)**
 - [ ] **[v3.5] Hour burn-down tracker live; integration lead owns weekly update (C44)**
 - [ ] *(fallback only)* 200-step timing on T4; triage-ladder rung applied within 48 h
@@ -1589,4 +1680,4 @@ When an ISRO judge asks "what's yours and what isn't" — and they will — you 
 - [ ] Bhoonidhi access requested (Day 1) **and India holdout v0 assembly started from open data**
 - [ ] W&B project live; own-session checkpoint resume tested
 - [ ] **Per-person-per-account training policy acknowledged by the team**
-- [ ] `../../CREDITS.md` started
+- [x] `../../CREDITS.md` started

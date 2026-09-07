@@ -1,0 +1,21 @@
+{
+  "run": "phase0_item11_router_zero_shot",
+  "date": "2026-08-29T13:57:25.681881+00:00",
+  "dataset": "training/eval/routing_300.jsonl",
+  "n": 300,
+  "model": null,
+  "arms": {
+    "rules": {
+      "n": 300,
+      "task_accuracy": 1.0,
+      "unambiguous_accuracy": 1.0,
+      "unambiguous_n": 285,
+      "unparsable": 0,
+      "misroutes": [],
+      "deferred_to_llm": 15,
+      "defer_rate": 0.05,
+      "invalid_config_catch_rate": 1.0
+    }
+  },
+  "verdict": "Rules arm clears the 90% trigger at 100.0% on 285 unambiguous cases."
+}

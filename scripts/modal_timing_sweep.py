@@ -122,9 +122,7 @@ def _run_harness(args: list[str], write_report: bool) -> str:
 
     out = Path(REMOTE_OUT)
     if not out.exists():
-        raise RuntimeError(
-            f"sweep exited with code {proc.returncode} and wrote no report"
-        )
+        raise RuntimeError(f"sweep exited with code {proc.returncode} and wrote no report")
     return out.read_text(encoding="utf-8")
 
 
@@ -175,10 +173,14 @@ def main(
     full 12-cell sweep.
     """
     args = [
-        "--steps", str(steps),
-        "--warmup-steps", str(warmup_steps),
-        "--micro-batch", str(micro_batch),
-        "--grad-accum", str(grad_accum),
+        "--steps",
+        str(steps),
+        "--warmup-steps",
+        str(warmup_steps),
+        "--micro-batch",
+        str(micro_batch),
+        "--grad-accum",
+        str(grad_accum),
     ]
     if max_pixels:
         args += ["--max-pixels", str(max_pixels)]

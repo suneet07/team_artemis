@@ -1,15 +1,11 @@
 name: centroid_prior
-description: Computes connected components on a mask and returns the normalized centroid.
+description: Connected-component centroid of the largest component of a preceding mask, normalised to (x, y) in [0, 1]. Handed to the grounding adapter inside the prompt as a spatial prior (D2).
 version: 1
-required_modalities: [optical]
+required_modalities: [optical, sar]
+modality_mode: any
 confidence_source: heuristic
-expected_latency_ms: 100
-permitted_parameters:
-  min_area_px:
-    type: int
-    range: [1, 10000]
-    default: 10
-    optional: true
+expected_latency_ms: 40
+permitted_parameters: {}
 outputs:
-  centroid:
+  point_prior:
     type: stats

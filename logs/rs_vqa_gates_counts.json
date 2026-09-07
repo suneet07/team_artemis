@@ -1,0 +1,110 @@
+{
+  "run": "phase0_item9_bakeoff",
+  "date": "2026-08-30T20:39:48.373251+00:00",
+  "adapter": "/data/checkpoints/rs_vqa/adapter",
+  "composites": 3,
+  "ablate_images": "none",
+  "models": {
+    "Qwen/Qwen3-VL-4B-Instruct": {
+      "ben": {
+        "samples": 6843,
+        "overall_accuracy": 0.7508,
+        "average_accuracy": 0.7502,
+        "per_type": {
+          "binary_adjacency": {
+            "n": 2171,
+            "accuracy": 0.7158
+          },
+          "binary_area": {
+            "n": 1119,
+            "accuracy": 0.8177
+          },
+          "binary_count": {
+            "n": 1064,
+            "accuracy": 0.7763
+          },
+          "binary_presence": {
+            "n": 1177,
+            "accuracy": 0.7613
+          },
+          "mcq_adjacency": {
+            "n": 463,
+            "accuracy": 0.7646
+          },
+          "mcq_area": {
+            "n": 314,
+            "accuracy": 0.6051
+          },
+          "mcq_count": {
+            "n": 234,
+            "accuracy": 0.6368
+          },
+          "mcq_presence": {
+            "n": 266,
+            "accuracy": 0.8459
+          },
+          "mcq_relative_pos": {
+            "n": 35,
+            "accuracy": 0.8286
+          }
+        },
+        "caveat": "Scored with the in-repo comparator, NOT the official benchmark scorer. Valid for run-to-run comparison; not quotable as a benchmark result (master plan section 6.4, C8).",
+        "instruction_following": 1.0,
+        "unparsable": 0
+      },
+      "rsvqa_lr": {
+        "samples": 10004,
+        "overall_accuracy": 0.8116,
+        "average_accuracy": 0.8307,
+        "per_type": {
+          "comp": {
+            "n": 4002,
+            "accuracy": 0.9163
+          },
+          "count": {
+            "n": 2947,
+            "accuracy": 0.5623
+          },
+          "presence": {
+            "n": 2955,
+            "accuracy": 0.9144
+          },
+          "rural_urban": {
+            "n": 100,
+            "accuracy": 0.93
+          }
+        },
+        "caveat": "Scored with the in-repo comparator, NOT the official benchmark scorer. Valid for run-to-run comparison; not quotable as a benchmark result (master plan section 6.4, C8).",
+        "instruction_following": 1.0,
+        "unparsable": 0
+      },
+      "rsvqa_hr": {
+        "samples": 3600,
+        "overall_accuracy": 0.85,
+        "average_accuracy": 0.8506,
+        "per_type": {
+          "area": {
+            "n": 518,
+            "accuracy": 0.8764
+          },
+          "comp": {
+            "n": 1194,
+            "accuracy": 0.8953
+          },
+          "count": {
+            "n": 955,
+            "accuracy": 0.7058
+          },
+          "presence": {
+            "n": 933,
+            "accuracy": 0.925
+          }
+        },
+        "caveat": "Scored with the in-repo comparator, NOT the official benchmark scorer. Valid for run-to-run comparison; not quotable as a benchmark result (master plan section 6.4, C8).",
+        "instruction_following": 1.0,
+        "unparsable": 0
+      }
+    }
+  },
+  "caveat": "Scored with the in-repo comparator, NOT the official benchmark scorer. Valid for run-to-run comparison; not quotable as a benchmark result (master plan section 6.4, C8)."
+}

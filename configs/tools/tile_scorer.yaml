@@ -1,15 +1,15 @@
 name: tile_scorer
-description: Evaluates and ranks candidate image tiles by cloud-free score, edge density, and informational entropy.
+description: P4 tiling and query relevance exposed as a tool. Partitions a scene into overlapping geo-indexed tiles plus a global overview and selects the top-k worth processing.
 version: 1
-required_modalities: []
+required_modalities: [optical, sar]
+modality_mode: any
 confidence_source: heuristic
-expected_latency_ms: 100
+expected_latency_ms: 900
 permitted_parameters:
   top_k:
     type: int
-    range: [1, 20]
-    default: 4
+    range: [1, 32]
     optional: true
 outputs:
-  scores:
+  selected:
     type: stats

@@ -1,40 +1,52 @@
-"""Answer formatting utilities matching official evaluation scorer formats."""
-from typing import Any
+"""Per-benchmark answer formatting (master plan section 6.4).
+
+*"The water body covers approximately 3.4 km²" scores zero where the scorer wants
+"yes". Format compliance is worth more points than a better model, and it costs
+two days.*
+
+The three helpers here are the thin API the rest of the agent uses. The closed
+vocabularies, the CDVQA ratio buckets and the RSVQA area buckets live in
+:mod:`satquery.evalcli.formatter`, which is where the unit tests pin them
+against each benchmark's published examples.
+
+The substring bug this replaces was not cosmetic: ``format_yes_no`` matched
+``"no"`` anywhere in the string, so "there is a road to the **no**rth", "**no**ne
+of the fields", "we can**no**t tell" and "we k**no**w" all scored ``no``. On a
+binary VQA benchmark that is a silent, systematic wrong answer on exactly the
+descriptive phrasings a captioning-tuned model produces.
+"""
+
+import re
+
+from satquery.evalcli.formatter import format_ratio
+from satquery.evalcli.formatter import format_yes_no as _yes_no
+
+__all__ = ["format_class_name", "format_number", "format_ratio", "format_yes_no"]
 
 
-def format_change_answer(stats: dict[str, Any]) -> str:
-    """Formats change_stats output into the official evaluation string."""
-    target_class = stats.get("target_class", "all")
-    area_before_raw = stats.get("area_before_km2")
-    delta = float(stats.get("area_delta_km2", 0.0))
-    ratio = float(stats.get("change_ratio", 0.0))
+def format_yes_no(answer: str) -> str:
+    """Constrain an arbitrary string to a canonical 'yes' or 'no'.
 
-    delta_sign = "+" if delta >= 0 else ""
-    pct = ratio * 100.0
+    Negation is tested before affirmation and on word boundaries: "there are no
+    buildings" contains "there are", and a first-match scan gets it backwards.
+    """
+    return _yes_no(answer).text
 
-    class_title = target_class.capitalize() if target_class != "all" else "Total"
 
-    if area_before_raw is not None:
-        area_before = float(area_before_raw)
-        area_after = float(stats.get("area_after_km2", area_before + delta))
-        parts = [
-            f"Change detection analysis: {class_title} area changed from {area_before:.2f} km² to "
-            f"{area_after:.2f} km² (delta: {delta_sign}{delta:.2f} km², change ratio: {pct:.1f}%)."
-        ]
-    else:
-        parts = [
-            f"Change detection analysis: {class_title} area changed by "
-            f"{delta_sign}{delta:.2f} km² (change ratio: {pct:.1f}%, "
-            "baseline area before change: unknown)."
-        ]
+def format_number(answer: str) -> str:
+    """Extract the first number, preserving decimals."""
+    match = re.search(r"[-+]?\d*\.\d+|\d+", answer)
+    return match.group(0) if match else "0"
 
-    breakdown = stats.get("class_breakdown")
-    if breakdown and isinstance(breakdown, dict):
-        class_parts = []
-        for c_name, c_delta in sorted(breakdown.items(), key=lambda x: abs(x[1]), reverse=True):
-            sign = "+" if c_delta >= 0 else ""
-            class_parts.append(f"{c_name}: {sign}{c_delta:.2f} km²")
-        if class_parts:
-            parts.append(f"Breakdown by class: {', '.join(class_parts)}.")
 
-    return " ".join(parts)
+def format_class_name(answer: str, allowed_classes: list[str]) -> str:
+    """Map to the nearest canonical class name.
+
+    Longest candidate first, so "no change" wins over "no" -- the CDVQA class
+    list contains both, and matching in declaration order returned the wrong one.
+    """
+    lowered = answer.lower()
+    for candidate in sorted(allowed_classes, key=len, reverse=True):
+        if candidate.lower() in lowered:
+            return candidate
+    return answer.strip()

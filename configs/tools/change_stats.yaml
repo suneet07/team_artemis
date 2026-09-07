@@ -1,17 +1,13 @@
 name: change_stats
-description: Computes exact per-class areas before/after/delta, change ratios, and extremes from change map.
-version: 1
-required_modalities: []
-confidence_source: heuristic
-expected_latency_ms: 150
-permitted_parameters:
-  target_class:
-    type: enum
-    values: [all, urban, water, vegetation, bare]
-    default: all
-    optional: true
+description: Exact per-class area before/after/delta, scene change ratio, per-class change ratio, and largest/smallest change by class, computed arithmetically from a semantic change map (D4).
+version: 2
+required_modalities: [optical, sar]
+modality_mode: any
+confidence_source: deterministic_arithmetic
+expected_latency_ms: 60
+permitted_parameters: {}
 outputs:
-  stats:
-    type: stats
-  area_delta_km2:
+  change_ratio:
     type: float
+  per_class:
+    type: stats

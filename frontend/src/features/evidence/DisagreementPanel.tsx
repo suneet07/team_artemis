@@ -104,15 +104,40 @@ export function DisagreementPanel({
   const trusted =
     agreement.winning_modality ?? cause?.trusted_modality ?? null;
 
-  // The two masks that disagreed: matched by the tool that produced them.
-  const opticalAsset = evidence.find(
-    (asset) => asset.produced_by === "spectral_index",
-  );
-  const sarAsset = evidence.find(
-    (asset) =>
-      asset.produced_by === "sar_backscatter" &&
-      /water|flood/i.test(asset.label),
-  );
+  // The two masks that disagreed, matched by which modality produced them.
+  //
+  // Both halves of this used to be too narrow, and the panel showed "NO MASK"
+  // beside an answer that was reporting an agreed extent -- so the one screen
+  // whose job is to show the disagreement showed nothing on a real conflict:
+  //
+  //   optical: matched only `spectral_index`. The optical opinion comes from
+  //            `texture_seg` whenever the bands cannot compute an index, which
+  //            is every scene that arrives without band descriptions.
+  //   sar:     also required /water|flood/ in the label. Fusion runs on
+  //            whatever target was asked for, and a built-up query never
+  //            matched.
+  //
+  // Matched on the producing tool alone, then narrowed to the fused target when
+  // the label names it -- rather than the other way round, which is what made
+  // the common case fall through.
+  const OPTICAL_TOOLS = ["spectral_index", "texture_seg"];
+  const target = (agreement as { target?: string | null }).target;
+
+  const pick = (tools: string[]) => {
+    const candidates = evidence.filter(
+      (asset) => tools.includes(asset.produced_by) && asset.overlay_url,
+    );
+    if (target) {
+      const onTarget = candidates.find((asset) =>
+        new RegExp(target, "i").test(asset.label),
+      );
+      if (onTarget) return onTarget;
+    }
+    return candidates[0];
+  };
+
+  const opticalAsset = pick(OPTICAL_TOOLS);
+  const sarAsset = pick(["sar_backscatter"]);
 
   return (
     <section

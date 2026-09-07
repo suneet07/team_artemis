@@ -46,6 +46,18 @@ class TraceBuilder:
         self._outputs: dict[str, Any] = {}
 
     def set_routing(self, task: Task, router_path: RouterPath | str) -> "TraceBuilder":
+        """Record which path chose the task: the rule router or the LLM fallback.
+
+        Written into ``self._trace``, not only onto the builder. ``build()``
+        emits ``self._trace``; an attribute set beside it is checked for
+        presence and then dropped, which is what happened here -- every trace
+        validated as routed and every trace shipped ``router_path`` absent.
+
+        It matters because it is the honest account of *how* the task was
+        chosen. Section 4.5 measures rule-router accuracy against the LLM
+        fallback rate, and the frontend renders the field; a trace that omits
+        it cannot support either.
+        """
         self._task = task
         if isinstance(router_path, RouterPath):
             router_path = router_path.value
@@ -89,13 +101,6 @@ class TraceBuilder:
     def set_tools_invoked(self, tools: list[str]) -> "TraceBuilder":
         self._tools_invoked = tools
         return self
-
-    def get_planned_steps(self) -> list[dict[str, Any]]:
-        """Returns a copy of the accumulated planned-step records.
-
-        Prefer this over accessing trace._plan directly from external callers.
-        """
-        return list(self._plan)
 
     def add_step(
         self,
@@ -169,6 +174,15 @@ class TraceBuilder:
         self._trace.setdefault("warnings", []).append(warning)
         return self
 
+    @property
+    def warnings(self) -> list[str]:
+        """Warnings recorded so far; the confidence layer counts them (4.7.3)."""
+        return list(self._trace.get("warnings", []))
+
+    @property
+    def routing_notes(self) -> list[str]:
+        return list(self._trace.get("routing_notes", []))
+
     def build(self) -> dict[str, Any]:
         if self._task is None or self._router_path is None:
             raise ValueError("routing not set: call set_routing() before build()")
@@ -192,10 +206,6 @@ class TraceBuilder:
             if key == "query_text":
                 ordered["graded"] = graded
                 ordered["steps"] = self._steps
-        if "evidence" not in ordered:
-            ordered["evidence"] = []
-        if "warnings" not in ordered:
-            ordered["warnings"] = []
         validate_trace(ordered)
         return ordered
 

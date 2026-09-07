@@ -1,0 +1,71 @@
+{
+  "manifest": "/data/manifests/change_vqa_train.jsonl",
+  "rows": 51956,
+  "adapters": {
+    "change_vqa": 51956
+  },
+  "sources": {
+    "SpaceNet 7 / MUDS": 51956
+  },
+  "splits": {
+    "train": 43908,
+    "val": 8048
+  },
+  "images": {
+    "distinct_images": 1237,
+    "distinct_image_sets": 11983,
+    "rows_per_image_max": 188,
+    "rows_per_set_max": 13
+  },
+  "pixels": {
+    "images_checked": 400,
+    "missing": 0,
+    "blank": 0
+  },
+  "twins": {
+    "twins": 33685,
+    "complete": 18271,
+    "opposing": 16753,
+    "single": 15414
+  },
+  "question_types": {
+    "change_compare": {
+      "n": 15200,
+      "distinct_answers": 2,
+      "most_common": "second",
+      "share": 0.5
+    },
+    "change_count": {
+      "n": 14478,
+      "distinct_answers": 21,
+      "most_common": "0",
+      "share": 0.195
+    },
+    "change_direction": {
+      "n": 594,
+      "distinct_answers": 3,
+      "most_common": "unchanged",
+      "share": 0.333
+    },
+    "change_magnitude": {
+      "n": 6380,
+      "distinct_answers": 4,
+      "most_common": "many",
+      "share": 0.287
+    },
+    "change_presence": {
+      "n": 1896,
+      "distinct_answers": 2,
+      "most_common": "yes",
+      "share": 0.5
+    },
+    "change_where": {
+      "n": 13408,
+      "distinct_answers": 4,
+      "most_common": "west",
+      "share": 0.254
+    }
+  },
+  "errors": [],
+  "warnings": []
+}

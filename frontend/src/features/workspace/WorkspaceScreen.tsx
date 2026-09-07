@@ -78,7 +78,12 @@ export function WorkspaceScreen() {
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    /* Viewport-bounded on large screens. The shell is `min-h-dvh`, so a tall
+       child lengthens the whole page -- and the image viewer sizes to the
+       image's own aspect ratio, so a portrait screenshot pushed the chat box
+       hundreds of pixels below the fold. Panes scroll internally instead.
+       Small screens keep the stacked, scrolling layout, where that is right. */
+    <div className="flex min-h-0 flex-1 flex-col lg:h-[calc(100dvh-var(--identity-plate-h,44px))] lg:overflow-hidden">
       {/* ── bundle bar: the two SLAs stay on screen ─────────────────── */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-rule bg-panel-1 px-4 py-2 no-print">
         <Link

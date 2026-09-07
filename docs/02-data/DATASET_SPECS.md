@@ -148,3 +148,319 @@ This document serves as an exhaustive technical reference for all datasets integ
 > [!WARNING]
 > **Engineering Jump Scares:**
 > - **Linguistic Exploitation (Answer-Centric):** Because questions are procedurally generated from OSM templates, they contain rigid syntactic structures. Standard VQA models often bypass the visual encoder entirely and "guess" based on language priors. You must monitor test-set splits heavily to detect if the model is ignoring the image.
+
+---
+
+# Part B — Access & parsing log
+
+Part A above is derived from the source papers: what each dataset *says* it is.
+This part is derived from actually downloading and parsing them: what each
+dataset *turned out to be*, what the access path costs, and what went wrong.
+
+The two disagree often enough to be worth separating. Where a paper-derived
+claim in Part A is contradicted by a hands-on finding here, **this part wins**,
+and the contradiction is written down rather than quietly corrected — a spec
+that was wrong once will be believed again by the next reader.
+
+**Convention for new entries.** One section per dataset, added the first time
+anyone tries to parse it, extended every time. Record:
+
+1. **Source of truth** — the exact record/URL the files came from.
+2. **Files and real sizes** — measured, not quoted from a landing page.
+3. **Actual schema** — column names and row counts as loaded, not as documented.
+4. **Access path** — the sequence that worked, including any trick that avoided
+   a large download.
+5. **Gotchas** — each with the symptom it produces, so it is recognisable next
+   time rather than merely listed.
+6. **Open problems** — unresolved, with what was already ruled out.
+
+## B1. BigEarthNet v2.0 / reBEN — parsed 2026-08-29
+
+**Source of truth:** Zenodo record [10891137](https://zenodo.org/records/10891137).
+Licence CDLA-Permissive 1.0.
+
+### Files and real sizes (measured by HTTP HEAD, not quoted)
+
+| File | Size | Holds |
+|---|---|---|
+| `metadata.parquet` | 3.6 MB | labels, split, country — **no geometry** |
+| `metadata_for_patches_with_snow_cloud_or_shadow.parquet` | small | the excluded patches |
+| `Reference_Maps.tar.zst` | **282 MB** | per-patch georeferenced GeoTIFFs |
+| `BigEarthNet-S2.tar.zst` | **59 GiB** | the S2 patch imagery |
+| `BigEarthNet-S1.tar.zst` | ~51 GiB | the S1 patch imagery |
+
+### `metadata.parquet` actual schema
+
+480,038 rows. Columns, exactly:
+
+```
+patch_id, labels, split, country, s1_name, s2v1_name,
+contains_seasonal_snow, contains_cloud_or_shadow
+```
+
+**There is no geometry column of any kind** — no bounds, no CRS, no transform,
+no centroid. This contradicted the assumption written into
+`satquery/ingest/copernicus/patch_grid.py`, which named this file as the source
+of per-patch georeferencing for the grid-convention verify. It is not, and
+following that pointer costs an afternoon before the absence becomes obvious.
+
+Note also 480,038 rows against the 549,488 patches Part A quotes: the ~69k
+difference is the snow/cloud/shadow patches, which live in the *other* parquet.
+Anyone computing corpus size from this file alone will be short and will not
+be told.
+
+### Where the georeferencing actually lives
+
+`Reference_Maps.tar.zst`. Its members are per-patch GeoTIFFs carrying CRS and
+transform, which is authoritative dataset-supplied geometry.
+
+**Access trick — do not download 282 MB for one patch.** A single patch settles
+the grid convention, so `scripts/fetch_reben_reference_bounds.py` streams the
+archive with `tarfile` in `"r|"` mode over `compression.zstd` (Python 3.14+;
+falls back to the `zstandard` package) and stops at the first usable member.
+Costs a few MB.
+
+**The sampled patch must be off-diagonal.** Where the two trailing indices are
+equal, `row_col` and `col_row` produce identical bounds, so a diagonal patch is
+consistent with both conventions and proves nothing. The script skips them.
+
+**Verified sample:**
+
+```
+patch:  S2A_MSIL2A_20170613T101031_N9999_R022_T33UUP_26_57
+CRS:    EPSG:32633
+size:   120 x 120 px @ 10 m
+bounds: 331200.0  5330400.0  332400.0  5331600.0
+```
+
+Kept at `data/reben/reference_sample.tif` as evidence.
+
+### Gotchas
+
+- **`N9999` is a placeholder baseline.** reBEN overwrites the real processing
+  baseline in every patch id. A CDSE catalogue query filtering on the id
+  verbatim returns an empty list, which reads like a withdrawn product rather
+  than a malformed query. Match on mission, level, sensing time, orbit and tile
+  and **exclude the baseline field**. The patch above resolves to the live
+  product `S2A_MSIL2A_20170613T101031_N0500_R022_T33UUP_20231008T194656.SAFE`.
+- **Split disagreement.** `metadata.parquet` puts `..._26_57` in the **test**
+  split, but `ben-micro-split/train_metadata.jsonl` uses it as training data.
+  The micro-split's provenance needs checking before any number is reported off
+  it — this is the shape of a train/test leak.
+- **The repo's BEN chips are fabricated.** All 21 PNGs in
+  `ben-micro-split/images/` are pure black (`min 0 max 0 std 0.0`). They came
+  from a missing-image fallback and a loss curve was once read off them. Never
+  point a training or timing run at that directory.
+
+### CDSE `/vsis3/` access — what works
+
+- Two separate credential sets, not interchangeable: OIDC username/password for
+  the OData catalogue, and S3 access key/secret generated in the CDSE S3 keys
+  manager. The account password does not authenticate S3.
+- **`rasterio.Env` rejects AWS credentials as kwargs** — `EnvError: GDAL's AWS
+  config options can not be directly set. AWS credentials are handled
+  exclusively by boto3.` Passing them there fails at open time.
+- **`rasterio.session.AWSSession` needs boto3**, which this project does not
+  otherwise depend on and which would follow into the Modal image for one
+  endpoint. Symptom without it: `AttributeError: 'NoneType' object has no
+  attribute 'Session'`.
+- **What works instead:** set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and
+  `AWS_S3_ENDPOINT` in `os.environ` — GDAL's `/vsis3/` driver reads them there —
+  and pass only the non-credential options to `rasterio.Env`. Restore the
+  previous values afterwards so credentials do not outlive the read.
+- Endpoint is `eodata.dataspace.copernicus.eu`, **path-style**
+  (`AWS_VIRTUAL_HOSTING=FALSE`). Virtual hosting resolves `eodata.<endpoint>`
+  and 404s every band.
+
+### Grid convention — SETTLED 2026-08-29
+
+`col_row_from_northwest`. **Column first, row second**, counted from the tile's
+north-west corner.
+
+The module shipped with `row_col_from_northwest` as its placeholder, described
+in the code as "standard raster order, which is the most likely". **It was
+wrong.** Had the guard not blocked manifest emission, every patch would have
+been read at its transpose and carried another patch's CORINE labels, with loss,
+accuracy and the D1 agreement rate all staying plausible.
+
+Evidence, re-checkable:
+
+```
+patch:  S2A_MSIL2A_20170613T101031_N9999_R022_T33UUP_26_57
+bounds: 331200.0 5330400.0 332400.0 5331600.0   (EPSG:32633, from its reference map)
+tile:   origin (300000, 5400000) @ 10 m         (from the granule geotransform)
+
+(331200  - 300000)  / 10 = 3120 px = 26 x 120  -> first index is the COLUMN
+(5400000 - 5331600) / 10 = 6840 px = 57 x 120  -> second index is the ROW
+```
+
+Both exact, no tolerance slack, and the patch is off-diagonal so the two
+readings genuinely disagreed.
+
+A unit test (`test_window_is_a_whole_patch_on_the_ten_metre_grid`) had encoded
+the *guess* and was passing. A green test suite was not evidence here.
+
+### `/vsis3/` band paths — the wildcard trap
+
+`_band_url` used to return a glob:
+
+```
+/vsis3/eodata/.../GRANULE/*/IMG_DATA/R10m/*_B04_*.jp2
+```
+
+on the assumption that GDAL expands it. **GDAL does not.** `/vsis3/` treats the
+path as a literal object key, asks S3 for a key containing an asterisk, and gets
+nothing; with `GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR` it cannot list to resolve
+either, so it retries rather than erroring. Symptom: an open that hangs with no
+error message, indefinitely.
+
+The names cannot be constructed either — the granule subdirectory is
+`L2A_T33UUP_A010315_20170613T101608`, carrying the absolute orbit and datastrip
+sensing time, neither of which appears in the product name. It must be listed.
+
+**The OData Nodes API lists the SAFE tree and needs no authentication:**
+
+```
+GET {catalogue}/Products({id})/Nodes({product_name})/Nodes(GRANULE)/Nodes({granule_dir})/Nodes(IMG_DATA)/Nodes(R10m)/Nodes
+```
+
+`resolve_band_paths()` walks this and caches per product, so a granule group
+lists once. Measured cost: catalogue resolve ~18 s, three Nodes calls ~4 s,
+`rasterio.open` over `/vsis3/` **0.7 s** on a 10980x10980 JP2.
+
+**Band resolution must be chosen per band, never by listing order.** B02, B03
+and B04 are published at *both* 10 m and 20 m. A flat merge of the two directory
+listings lets whichever was walked last win — which silently resolved the
+visible bands to 20 m and would have halved the GSD of every true-colour
+composite with no error anywhere.
+
+### Debugging note
+
+Three separate "hangs" here were an artefact of piping the command through
+`| tail -N`: `tail` buffers the whole stream until EOF, so a working 23-second
+run and a genuinely stuck one both print nothing. Run these unbuffered
+(`python -u`, no pipe) when timing anything against CDSE.
+
+### Mixed native resolutions in one patch
+
+Each band is read as a window of *its own* native raster, so a 1200 m patch
+comes back as 120x120 for the 10 m bands and **60x60 for the 20 m bands**.
+`write_patch` stacked them directly and died with
+`ValueError: all input arrays must have the same shape` — for every patch, so
+this blocks the whole fetch rather than corrupting a few.
+
+A GeoTIFF holds one grid and one transform, so the 20 m bands are put on the
+10 m grid with nearest-neighbour: it replicates measured values instead of
+interpolating SWIR into numbers no sensor produced.
+
+**The upsampling must be recorded, not just performed.** After it, the raster's
+own pixel size says 10 m for all six bands, and GSD-conditioned prompting would
+tell the model a resolution B11 and B12 never had. The written tags therefore
+carry `grid_gsd_m`, `upsampled_bands`, `upsampled_from_gsd_m`, `resampling`, and
+a per-band `native_gsd_m`.
+
+### First real corpus — fetched 2026-08-29
+
+21/21 patches, 0 failures, one granule, **500 canonical rows**, 63 composites.
+Independent confirmation that the geometry is right: the written GeoTIFF's
+transform origin is `(331200.0, 5331600.0)`, which is exactly the bounds the
+reference map gave — the convention derived through the granule geotransform
+lands on the same ground as the dataset's own georeferencing.
+
+Sanity of the pixels, checked rather than assumed:
+
+```
+band B02 native=10m  min=1109 max=2792 mean=1366
+band B04 native=10m  min=1100 max=3326 mean=1475
+band B08 native=10m  min=2176 max=7829 mean=4554
+band B11 native=20m  min=1721 max=4262 mean=2929
+```
+
+Values sit in the L2A 10,000-scale range, and NIR (4554) far exceeds red (1475),
+which is the vegetation signature expected over Austria in June. Every composite
+has std > 49 — compare the fabricated `ben-micro-split/images/` PNGs at std 0.0.
+
+### Open problems
+
+- **Split disagreement — RESOLVED 2026-08-29, and it was real.** All **21** of
+  the micro-split's patches are in reBEN's **test** split, while
+  `ben-micro-split/train_metadata.jsonl` presents them as training data. The
+  first fetched corpus inherited that and labelled 500 canonical rows `train`.
+  Nothing was damaged — the only run against them was a timing smoke that
+  reports no accuracy — but training on them and then quoting a BEN.txt number
+  would have inflated it silently.
+
+  Fixed in two places: `build_ben_manifest.py` now checks the requested split
+  against `metadata.parquet` and **hard-stops** on disagreement (override is
+  explicit and must be justified), and `data/chips/canonical.jsonl` is
+  relabelled `test` with `split_source` recording why.
+
+  The general lesson for every other dataset in this file: **a split label that
+  ships with a derived subset is not evidence.** Check it against the original
+  release.
+
+## B2. RSVQA-LR — parsed 2026-08-29
+
+**Source of truth:** Zenodo record [6344334](https://zenodo.org/records/6344334).
+Licence **CC-BY-4.0**, read from the record's own metadata rather than the paper.
+
+### Files and real sizes
+
+| File | Size | Holds |
+|---|---|---|
+| `Images_LR.zip` | 90.6 MB | 772 tif images |
+| `all_questions.json` | 14.6 MB | **the question text, all splits together** |
+| `all_answers.json` | 8.7 MB | **the answer text, all splits together** |
+| `LR_split_<split>_questions.json` | 2.6–11.4 MB | membership flags only |
+
+Whole dataset is ~140 MB — it is the cheapest real benchmark in the project.
+
+### The trap: the split files contain no text
+
+`LR_split_test_questions.json` holds 33,212 rows shaped
+`{"id": N, "active": true|false}`. That is a **membership flag and nothing
+else**. The question and answer strings are only in `all_questions.json` and
+`all_answers.json`, which span every split. Reading the split file alone yields
+33,212 rows of nothing that still look like data.
+
+Correct join: take ids where `active` is true in the split file, then look the
+text up by `id` in `all_questions.json` and by `question_id` in
+`all_answers.json`.
+
+### Imagery
+
+256x256, **3-band uint8 RGB**, EPSG:3857, Sentinel-2 at 10 m (so 2,560 m a
+side). PIL opens them directly, so no conversion step is needed. Staged as
+shipped — eval preprocessing must match how the published numbers were made.
+
+### Question types are load-bearing
+
+Rows are typed `rural_urban`, `presence`, `count`, `comp`, and the reported
+metric is **average accuracy — the mean of per-type accuracies**, not overall
+accuracy. The types are severely unbalanced; on the staged test split:
+
+```
+comp          4002
+presence      2955
+count         2947
+rural_urban    100
+```
+
+A row that loses its `question_type` moves the headline number silently, and
+`rural_urban` at 100 rows carries the same weight in AA as `comp` at 4,002.
+
+### One image means one view
+
+RSVQA-LR ships a single RGB tif per sample, not a three-composite stack.
+`RealChipDataset` **repeats a view** when a caller pins a composite count
+(`dataset.py:213`), so running the C22 two-vs-three ablation here would compare
+a picture against a copy of itself and report a real-looking delta. That
+ablation belongs on the BEN chips, which have three genuinely different
+composites.
+
+### Staged 2026-08-29
+
+`scripts/stage_rsvqa_lr.py --split test` -> **10,004 rows over 100 images**,
+verified end to end through `load_canonical_manifest` and `RealChipDataset`,
+with GSD-conditioned prompting applied
+(`[ground sample distance: 10 m] Is it a rural or an urban area`).

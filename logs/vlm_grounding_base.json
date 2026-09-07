@@ -1,0 +1,146 @@
+{
+ "model": "Qwen/Qwen3-VL-4B-Instruct",
+ "adapter": null,
+ "sampled": 600,
+ "overall": {
+  "acc@0.5": 0.6133,
+  "acc@0.7": 0.4,
+  "mean_iou": 0.5577,
+  "unparsable": 0.0017
+ },
+ "by_slice": {
+  "large": {
+   "n": 7,
+   "acc@0.5": 0.8571,
+   "acc@0.7": 0.7143,
+   "mean_iou": 0.7588,
+   "unparsable": 0.0
+  },
+  "small": {
+   "n": 531,
+   "acc@0.5": 0.6252,
+   "acc@0.7": 0.3974,
+   "mean_iou": 0.5587,
+   "unparsable": 0.0019
+  },
+  "unique:False": {
+   "n": 215,
+   "acc@0.5": 0.5535,
+   "acc@0.7": 0.3535,
+   "mean_iou": 0.4951,
+   "unparsable": 0.0
+  },
+  "unique:True": {
+   "n": 385,
+   "acc@0.5": 0.6468,
+   "acc@0.7": 0.426,
+   "mean_iou": 0.5927,
+   "unparsable": 0.0026
+  },
+  "unspecified": {
+   "n": 62,
+   "acc@0.5": 0.4839,
+   "acc@0.7": 0.3871,
+   "mean_iou": 0.5269,
+   "unparsable": 0.0
+  }
+ },
+ "replies": [
+  {
+   "question": "The plane closer to the bottom-left edge of the image.",
+   "obj_cls": "airplane",
+   "reply": "```json\n[\n\t{\"bbox_2d\": [0, 817, 315, 995]}\n]\n```",
+   "parsed": "[0.00 0.82, 0.32 0.99]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  },
+  {
+   "question": "The airport is located at the left part of the image.",
+   "obj_cls": "airport",
+   "reply": "[{\"bbox_2d\": [0, 0, 587, 998]}]",
+   "parsed": "[0.00 0.00, 0.59 1.00]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  },
+  {
+   "question": "The baseball field is positioned at the bottom of the image.",
+   "obj_cls": "baseball-diamond",
+   "reply": "```json\n[\n\t{\"bbox_2d\": [58, 840, 345, 1000]\n]\n```",
+   "parsed": "[0.06 0.84, 0.34 1.00]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  },
+  {
+   "question": "The basketball court is marked on the right side of the image, featuring white game lines on a grey surface.",
+   "obj_cls": "basketball-court",
+   "reply": "```json\n[\n\t{\"bbox_2d\": [557, 410, 998, 998]\n}\n]\n```",
+   "parsed": "[0.56 0.41, 1.00 1.00]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  },
+  {
+   "question": "The small bridge over a narrow waterway is situated at the top-middle of the image.",
+   "obj_cls": "bridge",
+   "reply": "```json\n[\n\t{\"bbox_2d\": [337, 14, 398, 250]\n}\n]\n```",
+   "parsed": "[0.34 0.01, 0.40 0.25]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  },
+  {
+   "question": "The chimney in the center of the image is emitting a plume of smoke.",
+   "obj_cls": "chimney",
+   "reply": "```json\n[\n\t{\"bbox_2d\": [587, 303, 853, 563], \"label\": \"The chimney in the center of the image is emitting a plume of smoke in this image.\"}\n]\n```",
+   "parsed": "[0.59 0.30, 0.85 0.56]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  },
+  {
+   "question": "The container crane situated at the bottom-middle of the image on the left-most side along the dock.",
+   "obj_cls": "container-crane",
+   "reply": "```json\n[\n\t{\"bbox_2d\": [327, 807, 412, 875]}\n]\n```",
+   "parsed": "[0.33 0.81, 0.41 0.88]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  },
+  {
+   "question": "The dam is observed along the right edge of the image, with its structure occupying a significant portion extending from the center towards the bottom.",
+   "obj_cls": "dam",
+   "reply": "```json\n[\n\t{\"bbox_2d\": [797, 627, 997, 997]}\n]\n```",
+   "parsed": "[0.80 0.63, 1.00 1.00]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  },
+  {
+   "question": "Located on the right side of the expressway, the service area is amongst a backdrop of vegetation and cleared grounds.",
+   "obj_cls": "expressway-service-area",
+   "reply": "```json\n[\n\t{\"bbox_2d\": [648, 273, 800, 400], \"label\": \"Located on the right side of the expressway, the service area is amongst a backdrop of vegetation and cleared grounds in this image.\"}\n]\n```",
+   "parsed": "[0.65 0.27, 0.80 0.40]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  },
+  {
+   "question": "The expressway toll station is located on the right side of the image.",
+   "obj_cls": "expressway-toll-station",
+   "reply": "```json\n[\n\t{\"bbox_2d\": [525, 0, 999, 397], \"label\": \"The expressway toll station is located on the right side of the image\"}\n]\n```",
+   "parsed": "[0.53 0.00, 1.00 0.40]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  },
+  {
+   "question": "The golf field, which includes visible sand bunkers and fairways, is located at the top part of the image.",
+   "obj_cls": "golffield",
+   "reply": "```json\n[\n\t{\"bbox_2d\": [550, 101, 683, 208]\n]\n```",
+   "parsed": "[0.55 0.10, 0.68 0.21]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  },
+  {
+   "question": "The largest ground track field is situated on the bottom-right.",
+   "obj_cls": "ground-track-field",
+   "reply": "```json\n[\n\t{\"bbox_2d\": [883, 638, 1000, 757]}\n]\n```",
+   "parsed": "[0.88 0.64, 1.00 0.76]",
+   "basis": "declared scale 0-1000",
+   "coord_scale": 1000.0
+  }
+ ]
+}

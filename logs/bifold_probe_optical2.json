@@ -1,0 +1,34 @@
+{
+  "arm": "optical",
+  "model": "BIFOLD-BigEarthNetv2-0/resnet50-s2-v0.2.0",
+  "candidates": {
+    "s1=n/a,s2=configilm": {
+      "accuracy": 0.5942,
+      "scored": 1200,
+      "per_question_type": {
+        "landcover_forest_optical": 0.5369,
+        "landcover_presence_optical": 0.6179
+      },
+      "majority_answer_floor": 0.5067
+    },
+    "s1=n/a,s2=sorted": {
+      "accuracy": 0.5783,
+      "scored": 1200,
+      "per_question_type": {
+        "landcover_forest_optical": 0.4773,
+        "landcover_presence_optical": 0.6203
+      },
+      "majority_answer_floor": 0.5067
+    },
+    "s1=n/a,s2=string_sorted": {
+      "accuracy": 0.5533,
+      "scored": 1200,
+      "per_question_type": {
+        "landcover_forest_optical": 0.4432,
+        "landcover_presence_optical": 0.5991
+      },
+      "majority_answer_floor": 0.5067
+    }
+  },
+  "best": "s1=n/a,s2=configilm"
+}

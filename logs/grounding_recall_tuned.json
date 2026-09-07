@@ -1,0 +1,307 @@
+{
+ "model": "IDEA-Research/grounding-dino-base",
+ "iou_threshold": 0.5,
+ "topk": 30,
+ "tiles": 2,
+ "synonyms": true,
+ "box_threshold": 0.05,
+ "sampled": 600,
+ "missing_images": 0,
+ "degenerate_references_dropped": 13,
+ "mean_best_iou": 0.6404,
+ "overall": {
+  "n": 600,
+  "mean_candidates": 260.9,
+  "recall@1": 0.2217,
+  "recall@3": 0.4133,
+  "recall@5": 0.4967,
+  "recall@10": 0.62,
+  "recall@30": 0.7667
+ },
+ "by_size": {
+  "large": {
+   "n": 7,
+   "mean_candidates": 246.7,
+   "recall@1": 0.5714,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0,
+   "recall@30": 1.0
+  },
+  "small": {
+   "n": 531,
+   "mean_candidates": 259.8,
+   "recall@1": 0.209,
+   "recall@3": 0.3992,
+   "recall@5": 0.484,
+   "recall@10": 0.6121,
+   "recall@30": 0.7608
+  },
+  "unspecified": {
+   "n": 62,
+   "mean_candidates": 272.3,
+   "recall@1": 0.2903,
+   "recall@3": 0.4677,
+   "recall@5": 0.5484,
+   "recall@10": 0.6452,
+   "recall@30": 0.7903
+  }
+ },
+ "by_unique": {
+  "False": {
+   "n": 215,
+   "mean_candidates": 240.7,
+   "recall@1": 0.1535,
+   "recall@3": 0.2977,
+   "recall@5": 0.3953,
+   "recall@10": 0.5023,
+   "recall@30": 0.6698
+  },
+  "True": {
+   "n": 385,
+   "mean_candidates": 272.3,
+   "recall@1": 0.2597,
+   "recall@3": 0.4779,
+   "recall@5": 0.5532,
+   "recall@10": 0.6857,
+   "recall@30": 0.8208
+  }
+ },
+ "by_class": {
+  "airplane": {
+   "n": 25,
+   "mean_candidates": 240.9,
+   "recall@1": 0.56,
+   "recall@3": 0.68,
+   "recall@5": 0.84,
+   "recall@10": 0.88,
+   "recall@30": 1.0
+  },
+  "airport": {
+   "n": 25,
+   "mean_candidates": 353.5,
+   "recall@1": 0.24,
+   "recall@3": 0.52,
+   "recall@5": 0.68,
+   "recall@10": 0.88,
+   "recall@30": 1.0
+  },
+  "baseball-diamond": {
+   "n": 25,
+   "mean_candidates": 247.1,
+   "recall@1": 0.24,
+   "recall@3": 0.48,
+   "recall@5": 0.6,
+   "recall@10": 0.88,
+   "recall@30": 0.96
+  },
+  "basketball-court": {
+   "n": 25,
+   "mean_candidates": 157.0,
+   "recall@1": 0.2,
+   "recall@3": 0.52,
+   "recall@5": 0.52,
+   "recall@10": 0.56,
+   "recall@30": 0.76
+  },
+  "bridge": {
+   "n": 25,
+   "mean_candidates": 347.5,
+   "recall@1": 0.04,
+   "recall@3": 0.08,
+   "recall@5": 0.12,
+   "recall@10": 0.16,
+   "recall@30": 0.24
+  },
+  "chimney": {
+   "n": 25,
+   "mean_candidates": 192.8,
+   "recall@1": 0.4,
+   "recall@3": 0.72,
+   "recall@5": 0.76,
+   "recall@10": 0.96,
+   "recall@30": 1.0
+  },
+  "container-crane": {
+   "n": 12,
+   "mean_candidates": 153.5,
+   "recall@1": 0.0833,
+   "recall@3": 0.4167,
+   "recall@5": 0.5,
+   "recall@10": 0.5833,
+   "recall@30": 0.6667
+  },
+  "dam": {
+   "n": 25,
+   "mean_candidates": 248.4,
+   "recall@1": 0.12,
+   "recall@3": 0.44,
+   "recall@5": 0.64,
+   "recall@10": 0.8,
+   "recall@30": 0.92
+  },
+  "expressway-service-area": {
+   "n": 25,
+   "mean_candidates": 279.3,
+   "recall@1": 0.04,
+   "recall@3": 0.36,
+   "recall@5": 0.48,
+   "recall@10": 0.56,
+   "recall@30": 0.84
+  },
+  "expressway-toll-station": {
+   "n": 25,
+   "mean_candidates": 180.8,
+   "recall@1": 0.0,
+   "recall@3": 0.04,
+   "recall@5": 0.12,
+   "recall@10": 0.32,
+   "recall@30": 0.6
+  },
+  "golffield": {
+   "n": 25,
+   "mean_candidates": 226.6,
+   "recall@1": 0.24,
+   "recall@3": 0.64,
+   "recall@5": 0.68,
+   "recall@10": 0.76,
+   "recall@30": 0.84
+  },
+  "ground-track-field": {
+   "n": 25,
+   "mean_candidates": 470.0,
+   "recall@1": 0.12,
+   "recall@3": 0.16,
+   "recall@5": 0.2,
+   "recall@10": 0.32,
+   "recall@30": 0.44
+  },
+  "harbor": {
+   "n": 24,
+   "mean_candidates": 304.7,
+   "recall@1": 0.125,
+   "recall@3": 0.2083,
+   "recall@5": 0.2917,
+   "recall@10": 0.5833,
+   "recall@30": 0.9167
+  },
+  "helicopter": {
+   "n": 24,
+   "mean_candidates": 174.5,
+   "recall@1": 0.4583,
+   "recall@3": 0.75,
+   "recall@5": 0.8333,
+   "recall@10": 0.875,
+   "recall@30": 1.0
+  },
+  "helipad": {
+   "n": 1,
+   "mean_candidates": 244.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0,
+   "recall@30": 1.0
+  },
+  "overpass": {
+   "n": 24,
+   "mean_candidates": 314.5,
+   "recall@1": 0.2917,
+   "recall@3": 0.5417,
+   "recall@5": 0.6667,
+   "recall@10": 0.75,
+   "recall@30": 0.7917
+  },
+  "roundabout": {
+   "n": 24,
+   "mean_candidates": 257.8,
+   "recall@1": 0.4167,
+   "recall@3": 0.5,
+   "recall@5": 0.5417,
+   "recall@10": 0.7917,
+   "recall@30": 0.875
+  },
+  "ship": {
+   "n": 24,
+   "mean_candidates": 157.2,
+   "recall@1": 0.1667,
+   "recall@3": 0.375,
+   "recall@5": 0.5,
+   "recall@10": 0.6667,
+   "recall@30": 0.8333
+  },
+  "soccer-ball-field": {
+   "n": 24,
+   "mean_candidates": 207.6,
+   "recall@1": 0.375,
+   "recall@3": 0.5833,
+   "recall@5": 0.625,
+   "recall@10": 0.6667,
+   "recall@30": 0.75
+  },
+  "stadium": {
+   "n": 24,
+   "mean_candidates": 532.0,
+   "recall@1": 0.4167,
+   "recall@3": 0.5833,
+   "recall@5": 0.6667,
+   "recall@10": 0.7917,
+   "recall@30": 1.0
+  },
+  "storage-tank": {
+   "n": 24,
+   "mean_candidates": 115.7,
+   "recall@1": 0.2917,
+   "recall@3": 0.5417,
+   "recall@5": 0.6667,
+   "recall@10": 0.75,
+   "recall@30": 0.7917
+  },
+  "swimming-pool": {
+   "n": 24,
+   "mean_candidates": 244.5,
+   "recall@1": 0.3333,
+   "recall@3": 0.4583,
+   "recall@5": 0.625,
+   "recall@10": 0.7083,
+   "recall@30": 0.75
+  },
+  "tennis-court": {
+   "n": 24,
+   "mean_candidates": 153.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0833,
+   "recall@5": 0.0833,
+   "recall@10": 0.125,
+   "recall@30": 0.3333
+  },
+  "trainstation": {
+   "n": 24,
+   "mean_candidates": 387.2,
+   "recall@1": 0.0,
+   "recall@3": 0.125,
+   "recall@5": 0.2083,
+   "recall@10": 0.375,
+   "recall@30": 0.7083
+  },
+  "vehicle": {
+   "n": 24,
+   "mean_candidates": 312.1,
+   "recall@1": 0.3333,
+   "recall@3": 0.4167,
+   "recall@5": 0.4167,
+   "recall@10": 0.4583,
+   "recall@30": 0.5833
+  },
+  "windmill": {
+   "n": 24,
+   "mean_candidates": 209.5,
+   "recall@1": 0.0,
+   "recall@3": 0.125,
+   "recall@5": 0.1667,
+   "recall@10": 0.2917,
+   "recall@30": 0.5
+  }
+ },
+ "dumped": []
+}

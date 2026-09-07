@@ -1,0 +1,340 @@
+{
+ "model": "Qwen/Qwen3-VL-4B-Instruct",
+ "adapter": null,
+ "style": "strong",
+ "samples": 300,
+ "scores": {
+  "bleu_1": 0.3653,
+  "bleu_2": 0.1097,
+  "bleu_3": 0.0354,
+  "bleu_4": 0.0161,
+  "bleu": 0.0648,
+  "brevity_penalty": 0.938,
+  "rouge_l": 0.2517,
+  "cider_d": 0.1348,
+  "mean_pred_words": 47.0,
+  "mean_ref_words": 50.0,
+  "empty_predictions": 0
+ },
+ "blind_floor": {
+  "bleu_1": 0.3137,
+  "bleu_2": 0.0867,
+  "bleu_3": 0.0291,
+  "bleu_4": 0.0141,
+  "bleu": 0.0542,
+  "brevity_penalty": 0.938,
+  "rouge_l": 0.2218,
+  "cider_d": 0.0556,
+  "mean_pred_words": 47.0,
+  "mean_ref_words": 50.0,
+  "empty_predictions": 0
+ },
+ "headroom": {
+  "bleu": 0.0106,
+  "rouge_l": 0.0299,
+  "cider_d": 0.0792
+ },
+ "caveat": "Scored with the in-repo comparator, NOT the official benchmark scorer. Valid for run-to-run comparison; not quotable as a benchmark result (master plan section 6.4, C8).",
+ "examples": [
+  {
+   "image_id": "07946_0000.png",
+   "reference": "The image, sourced from GoogleEarth, features a dry, barren landscape scattered with windmills. There are three windmills visible.",
+   "prediction": "The image, sourced from GoogleEarth, features three wind turbines, each small, positioned in the middle-left, bottom-center, and bottom-right. They stand on bare ground, near roads and sparse green areas. Surroundings include scattered trees, fields, and minimal buildings.",
+   "rouge_l": 0.2591,
+   "bleu_1": 0.2,
+   "inventory": "",
+   "pred_words": 37,
+   "ref_words": 18
+  },
+  {
+   "image_id": "08655_0000.png",
+   "reference": "This aerial image from GoogleEarth captures a recreational area featuring two adjacent tennis courts surrounded by greenery. The tennis courts are positioned next to each other with the one on the left and the one on the right being parallel to it.",
+   "prediction": "The image, sourced from GoogleEarth, captures two tennis courts in the bottom-left corner, each with net and lines. A small building sits near the courts, surrounded by green areas and winding paths. Roads and bare ground are visible along the edges, with trees framing the scene.",
+   "rouge_l": 0.3178,
+   "bleu_1": 0.4468,
+   "inventory": "",
+   "pred_words": 46,
+   "ref_words": 42
+  },
+  {
+   "image_id": "P0770_0006.png",
+   "reference": "The high-resolution image from Google Earth features an urban area with a cluster of buildings surrounded by roads. The buildings exhibit various rooftop colors, including reddish-brown, beige, and gray. On the bottom-right edge of the image, there is a small vehicle.",
+   "prediction": "The image, sourced from GoogleEarth, shows several buildings, one large and several small, in the middle, surrounded by green areas and bare ground. On the left, a parking lot is visible, while roads border the bottom and right. Buildings line the top and bottom edges, with greenery in the center.",
+   "rouge_l": 0.2583,
+   "bleu_1": 0.38,
+   "inventory": "",
+   "pred_words": 50,
+   "ref_words": 41
+  },
+  {
+   "image_id": "P5789_1036.png",
+   "reference": "This grayscale image with high resolution captures a dense urban environment featuring buildings and a baseball diamond positioned on the left side of the frame.",
+   "prediction": "The image, sourced from GoogleEarth, captures several buildings, including one large structure at the bottom-left and two smaller ones on the right. Parking lots and roads crisscross the scene, with bare ground near the top-right. Green areas and water are absent, surrounded by urban infrastructure.",
+   "rouge_l": 0.2058,
+   "bleu_1": 0.2128,
+   "inventory": "",
+   "pred_words": 45,
+   "ref_words": 25
+  },
+  {
+   "image_id": "10506_0000.png",
+   "reference": "The image, sourced from GoogleEarth, features a small windmill situated in the lower right quadrant. The surrounding area has a weathered texture.",
+   "prediction": "The image, sourced from GoogleEarth, captures one small dark shape in the top-center, near a winding road on the left. Several thin lines, likely roads, stretch across the bottom-right, near bare ground. Surroundings include sparse roads, minimal green areas, and no visible buildings or water.",
+   "rouge_l": 0.2791,
+   "bleu_1": 0.234,
+   "inventory": "",
+   "pred_words": 45,
+   "ref_words": 22
+  },
+  {
+   "image_id": "10003_0000.png",
+   "reference": "This satellite image from Google Earth shows a storage facility featuring several storage tanks surrounded by trees. There are five visible storage tanks of similar size, with one at the bottom-right corner. The facility appears to have additional structures and an access road nearby. The tanks are positioned within a cleared area, suggesting an organized layout for the storage site.",
+   "prediction": "The image, sourced from GoogleEarth, shows several large cylindrical tanks in the middle, on the right side, near a cluster of small buildings. Roads and bare ground surround them, with green areas on the left edge. Trees border the site, and parking spaces are visible at the top-right corner.",
+   "rouge_l": 0.2124,
+   "bleu_1": 0.4,
+   "inventory": "",
+   "pred_words": 49,
+   "ref_words": 60
+  },
+  {
+   "image_id": "08329_0000.png",
+   "reference": "The image, sourced from GoogleEarth, displays a high-angle view of a section of a road with vehicles. The image does not specify a resolution. There are three vehicles with one positioned towards the top of the image and two towards the bottom. The top-most vehicle is noticeably separate from the others, while the two at the bottom are positioned closer to each other, one towards the bottom-right, slightly to the right of the center.",
+   "prediction": "The image, sourced from GoogleEarth, captures a highway with three cars: one white sedan in the middle lane, one dark sedan at the bottom-right, and another dark vehicle near the bottom center. Green areas flank the road, with trees and grass on the left side. Roads, green areas, and bare ground dominate the scene.",
+   "rouge_l": 0.2648,
+   "bleu_1": 0.4545,
+   "inventory": "",
+   "pred_words": 54,
+   "ref_words": 74
+  },
+  {
+   "image_id": "06264_0000.png",
+   "reference": "The image, sourced from GoogleEarth, depicts a dam with its distinctive spillway and surrounding terrain. The dam is positioned in the lower central part of the image, creating a contrast between the water's turquoise hue above and the darker tones of the water below the structure. Surrounding the dam are patterns of terraced landforms, indicative of agricultural terraces.",
+   "prediction": "The image, sourced from GoogleEarth, captures a dam in the middle, with water flowing at the bottom-left. Several terraced fields stretch up the right side, while bare ground dominates the top. Roads and small buildings appear near the bottom-right, surrounded by water and sparse green areas.",
+   "rouge_l": 0.2569,
+   "bleu_1": 0.3958,
+   "inventory": "",
+   "pred_words": 46,
+   "ref_words": 58
+  },
+  {
+   "image_id": "09816_0000.png",
+   "reference": "The image, sourced from GoogleEarth, features a landscape with apparent natural terrain and a circular storage tanks. The storage tank on the right side of the image has a small structure attached on its southern edge. There are no visible houses or roads in close proximity to the tank, indicating a possibly industrial location.",
+   "prediction": "The image, sourced from GoogleEarth, captures one large circular structure in the middle-right, with another smaller one at the bottom. Several small patches of green vegetation dot the barren ground. Bare ground surrounds both, with no roads, buildings, or water visible.",
+   "rouge_l": 0.2445,
+   "bleu_1": 0.4524,
+   "inventory": "",
+   "pred_words": 41,
+   "ref_words": 54
+  },
+  {
+   "image_id": "07372_0000.png",
+   "reference": "A color aerial view image from GoogleEarth shows a section of an airstrip with a single small airplane positioned in the bottom-right part of the frame. The image lacks clear details beyond the presence of the airstrip and the aircraft.",
+   "prediction": "The image, sourced from GoogleEarth, captures a barren landscape with several small dark shapes in the bottom-right corner. One long, narrow road runs diagonally across the middle, separating bare ground from sparse vegetation. Surroundings include roads, bare ground, and no visible green areas or buildings.",
+   "rouge_l": 0.2788,
+   "bleu_1": 0.2826,
+   "inventory": "",
+   "pred_words": 45,
+   "ref_words": 40
+  },
+  {
+   "image_id": "P2645_0003.png",
+   "reference": "The image from GoogleEarth presents a high-resolution view of an industrial area where large vehicles are stationed. A striking feature within the image is a left-most large vehicle located at the top-middle of the frame.",
+   "prediction": "The image, sourced from GoogleEarth, captures a large industrial complex on the right, with several buildings and parking lots. A lone airplane flies above the left, near a train track running along the bottom. Green areas and roads border the scene, with bare ground and scattered small structures visible.",
+   "rouge_l": 0.2588,
+   "bleu_1": 0.2653,
+   "inventory": "",
+   "pred_words": 49,
+   "ref_words": 35
+  },
+  {
+   "image_id": "10382_0000.png",
+   "reference": "The aerial image sourced from GoogleEarth presents a stadium with distinct green turf surrounded by seating areas. The stadium, situated in the center of the image, has a rectangular shape and occupies a significant portion of the area. Adjacent to the stadium are parking lots with several vehicles and a patch of greenery to its northwest corner.",
+   "prediction": "The image, sourced from GoogleEarth, captures a large stadium with several rows of seating on the bottom-right, surrounded by parking lots and roads. In the middle, a green field is bordered by buildings and bare ground. Green areas and roads frame the scene, with small structures and parked cars visible on the left side.",
+   "rouge_l": 0.3026,
+   "bleu_1": 0.4727,
+   "inventory": "",
+   "pred_words": 54,
+   "ref_words": 57
+  },
+  {
+   "image_id": "P1471_0060.png",
+   "reference": "The high-resolution image from GoogleEarth displays a section of an area with several small vehicles. At least three small vehicles can be clearly seen, where one is positioned towards the left side of the image, another is towards the top-middle, and a third is towards the bottom-middle of the image. The small vehicles are adjacent to buildings, and the overall scene suggests urban infrastructure.",
+   "prediction": "The image, sourced from GoogleEarth, captures several small buildings in the bottom-left corner, with one prominent structure. On the right, a few small green areas are visible near the top-right edge. Roads and bare ground surround these structures, with no water or large parking lots apparent.",
+   "rouge_l": 0.2195,
+   "bleu_1": 0.3958,
+   "inventory": "",
+   "pred_words": 46,
+   "ref_words": 64
+  },
+  {
+   "image_id": "P8656_0110.png",
+   "reference": "A high-resolution aerial image showcasing a scene with parked small-vehicles aligned next to each other. There are a total of eight vehicles visible in various positions, with different colors and orientations within their parking spaces. Some vehicles are positioned in the middle-left area, while another vehicle is distinctly placed at the top-middle of the frame.",
+   "prediction": "The image, sourced from GoogleEarth, shows several small cars parked in a lot, with one red vehicle at the middle-right. A few small trees and bare ground are visible on the left side, near the edge. Roads and green areas surround the parking lot, with buildings at the bottom.",
+   "rouge_l": 0.1808,
+   "bleu_1": 0.38,
+   "inventory": "",
+   "pred_words": 49,
+   "ref_words": 55
+  },
+  {
+   "image_id": "P1471_0069.png",
+   "reference": "The high-resolution image from GoogleEarth displays a portion of an urban area with several small vehicles and buildings present. A small vehicle is located at the top-middle of the image, and another is positioned on the far right. Structures with various rooftop colors and shapes are scattered throughout the scene, and patches of dense greenery are noticeable at the bottom edge.",
+   "prediction": "The image, sourced from GoogleEarth, captures several small buildings in the bottom-left, clustered near a narrow road. A few green areas appear on the right side, adjacent to bare ground and a few parked vehicles. Roads and buildings dominate the scene, with minimal greenery.",
+   "rouge_l": 0.2697,
+   "bleu_1": 0.4667,
+   "inventory": "",
+   "pred_words": 44,
+   "ref_words": 61
+  },
+  {
+   "image_id": "P1268_0060.png",
+   "reference": "The grayscale image, sourced from GF with high resolution, displays a rural landscape with distinguishable patterned agricultural fields and a small cluster of structures that could be indicative of a rural settlement. A clear feature within the image is a bridge located in the top-right region.",
+   "prediction": "The image, sourced from GoogleEarth, captures several small buildings clustered in the middle, surrounded by roads and bare ground. On the left, rows of crops stretch toward the bottom-left corner. At the top-right, water flows beside dense green areas and scattered buildings.",
+   "rouge_l": 0.2185,
+   "bleu_1": 0.2727,
+   "inventory": "",
+   "pred_words": 42,
+   "ref_words": 46
+  },
+  {
+   "image_id": "P4151_0058.png",
+   "reference": "The aerial image displays a high-resolution view of an urban setting featuring vehicles parked along a street adjacent to a building with multiple windows. A red-colored small vehicle is distinctly parked at the top side of the street. Other vehicles, some with darker tones and others lighter, are neatly aligned next to each other. The structure of the street and the arrangement of the cars suggest an orderly urban environment.",
+   "prediction": "The image, sourced from GoogleEarth, captures a multi-story apartment building with several windows and a flat roof. On the street, two cars are parked, and a scooter rests near the building\u2019s side. Green trees line the bottom-right, with roads and bare ground surrounding the structure.",
+   "rouge_l": 0.2413,
+   "bleu_1": 0.4375,
+   "inventory": "",
+   "pred_words": 45,
+   "ref_words": 70
+  },
+  {
+   "image_id": "10947_0000.png",
+   "reference": "The image, sourced from GoogleEarth, showcases an urban area with a prominent stadium as the main structure. The stadium has an elliptical shape and is notable for its large open field surrounded by seating areas. Surrounding the stadium are various buildings and streets running parallel and perpendicular to each other.",
+   "prediction": "The image, sourced from GoogleEarth, captures a stadium with a green field, surrounded by parking lots and buildings. Several small structures line the left side, while roads run along the top and bottom edges. Bare ground and sparse green areas frame the scene, with buildings clustered near the bottom-left corner.",
+   "rouge_l": 0.2579,
+   "bleu_1": 0.3725,
+   "inventory": "",
+   "pred_words": 50,
+   "ref_words": 50
+  },
+  {
+   "image_id": "P1513_0033.png",
+   "reference": "The high-resolution image from GoogleEarth shows a cluster of small vehicles parked on a tarmac near buildings. A distinct small vehicle is seen positioned towards the bottom-most part of the image.",
+   "prediction": "The image, sourced from GoogleEarth, shows several buildings, including one with a blue roof at the top-left corner. A parking lot with several cars is in the middle, near the bottom-right. Roads and bare ground surround the structures, with small green areas on the right side.",
+   "rouge_l": 0.281,
+   "bleu_1": 0.3125,
+   "inventory": "",
+   "pred_words": 46,
+   "ref_words": 31
+  },
+  {
+   "image_id": "06399_0000.png",
+   "reference": "This aerial image sourced from GoogleEarth shows a stadium with a large football field surrounded by multiple sections of colorful seating. The stadium is located near various roads and has a curved structure on one end. Surrounding areas include trees and smaller structures. There is no resolution information provided for the image.",
+   "prediction": "The image, sourced from GoogleEarth, captures a large stadium with a green field, surrounded by tiered seating in white and blue. Several small vehicles are on the roads near the stadium, with trees and green areas on the left and right. Buildings and parking lots are visible at the top and bottom, with roads winding around the structure.",
+   "rouge_l": 0.3305,
+   "bleu_1": 0.4138,
+   "inventory": "",
+   "pred_words": 58,
+   "ref_words": 52
+  },
+  {
+   "image_id": "P1314_0042.png",
+   "reference": "The grayscale high-resolution image provided by the GF source features a landscape predominantly occupied by structures that resemble an industrial area. A noticeable construction within the image is a bridge located at the bottom part, spanning over a water channel.",
+   "prediction": "The image, sourced from GoogleEarth, captures a narrow waterway running through a patchwork of small buildings and bare ground. On the left, several structures cluster near roads, while the right side holds sparse buildings and green areas. Surroundings include roads, water, and bare ground, with minimal vegetation.",
+   "rouge_l": 0.1611,
+   "bleu_1": 0.1702,
+   "inventory": "",
+   "pred_words": 47,
+   "ref_words": 40
+  },
+  {
+   "image_id": "P1088_0002.png",
+   "reference": "The high-resolution image sourced from GoogleEarth shows a landscape divided into two distinct sections. There is a small, white vehicle oriented diagonally relative to the image frame.",
+   "prediction": "The image, sourced from GoogleEarth, captures a white car parked on the left side, near a building\u2019s corner. Several small birds are scattered across the bare ground and grassy patches. Roads and parking areas dominate the right, bordered by buildings and sparse green areas.",
+   "rouge_l": 0.2574,
+   "bleu_1": 0.2222,
+   "inventory": "",
+   "pred_words": 44,
+   "ref_words": 27
+  },
+  {
+   "image_id": "06815_0000.png",
+   "reference": "The image from GoogleEarth features a stadium on the right side with its structure occupying a significant portion of the frame. Adjacent to it, there's a dense cluster of trees, and two overpasses are prominently seen in the image.",
+   "prediction": "The image, sourced from GoogleEarth, captures a stadium with one green field, surrounded by several small buildings and parking lots. Roads curve around the stadium, with cars on the left and right edges. Bare ground and green areas flank the structure, near water and buildings.",
+   "rouge_l": 0.2616,
+   "bleu_1": 0.3111,
+   "inventory": "",
+   "pred_words": 45,
+   "ref_words": 39
+  },
+  {
+   "image_id": "09722_0000.png",
+   "reference": "The image, sourced from GoogleEarth, shows a landscape with a prominent body of water surrounded by vegetated areas. It includes an airport located at the bottom right corner of the frame. The airport features multiple buildings, a parking area, and sections of taxiways or runways. The vegetated areas show variation in the density and color of foliage.",
+   "prediction": "The image, sourced from GoogleEarth, captures a small runway on the bottom-left, bordered by green areas and bare ground. A single dark lake sits in the middle, surrounded by dense forest. Roads, buildings, and parking are visible near the runway, with green areas and water dominating the surroundings.",
+   "rouge_l": 0.2606,
+   "bleu_1": 0.4694,
+   "inventory": "",
+   "pred_words": 48,
+   "ref_words": 57
+  },
+  {
+   "image_id": "11504_0000.png",
+   "reference": "The image, sourced from GoogleEarth, shows an area featuring a stadium with a elliptical shape, encompassed by a variety of surrounding trees and several adjoining roads. The stadium occupies a significant portion of the image and includes a visible running track as well as a green-colored field.",
+   "prediction": "The image, sourced from GoogleEarth, captures a large stadium with a green field and red track, surrounded by several small parking lots and sparse trees. In the middle, a red flag stands on the field, while roads and bare ground stretch around the edge. Green areas and buildings frame the scene, with parking lots visible on the left and right.",
+   "rouge_l": 0.3024,
+   "bleu_1": 0.3667,
+   "inventory": "",
+   "pred_words": 60,
+   "ref_words": 47
+  },
+  {
+   "image_id": "P1315_0057.png",
+   "reference": "The image, sourced from GF, is a high-resolution grayscale aerial photograph featuring infrastructure and land use patterns. Dominating the scene is an array of rectangular agricultural plots. To the left of the image, a small bridge is visible.",
+   "prediction": "The image, sourced from GoogleEarth, captures several small buildings in the bottom-left corner, near a narrow waterway. On the right, a large curved road encircles bare ground, with a few small structures nearby. Roads, green areas, and parking lots are visible, surrounded by sparse vegetation and open fields.",
+   "rouge_l": 0.232,
+   "bleu_1": 0.2449,
+   "inventory": "",
+   "pred_words": 48,
+   "ref_words": 38
+  },
+  {
+   "image_id": "07292_0000.png",
+   "reference": "This aerial image from GoogleEarth features an industrial setting with a distinct large structure in the frame\u2014a chimney that extends vertically from the bottom to the top of the image. The image lacks specific resolution details; however, the clarity is sufficient to discern the structure's cylindrical shape and its dark opening at the top.",
+   "prediction": "The image, sourced from GoogleEarth, captures a large cylindrical structure at the bottom-right, surrounded by several low buildings in the middle-left. Roads and bare ground stretch across the top and right side, with small green areas near the left corner. Parking and buildings dot the scene, bordered by sparse vegetation.",
+   "rouge_l": 0.2391,
+   "bleu_1": 0.3654,
+   "inventory": "",
+   "pred_words": 50,
+   "ref_words": 54
+  },
+  {
+   "image_id": "08932_0000.png",
+   "reference": "This satellite image from Google Earth shows a small bridge crossing over a body of water, positioned in the bottom-right area of the image, bordered by trees and greenery. Additionally, two small vehicles are visible on the roads; one is located at the bottom-left, while the other is positioned in the bottom-middle section.",
+   "prediction": "The image, sourced from GoogleEarth, captures a river flowing in the middle, bordered by dense green areas on both sides. Several small vehicles are on the road at the bottom, near a parking lot. Bare ground and sparse buildings appear on the left side, with roads and green areas surrounding the scene.",
+   "rouge_l": 0.3127,
+   "bleu_1": 0.4423,
+   "inventory": "",
+   "pred_words": 52,
+   "ref_words": 53
+  },
+  {
+   "image_id": "06527_0000.png",
+   "reference": "Aerial view of an airplane on a tarmac captured from Google Earth in te top-middle part of the image.",
+   "prediction": "The image, sourced from GoogleEarth, features one airplane in mid-air, positioned towards the top center, and another small aircraft on the ground at the bottom-left. Both are on bare ground, near concrete roads and sparse structures. Surroundings include paved surfaces and minimal green areas.",
+   "rouge_l": 0.1305,
+   "bleu_1": 0.1522,
+   "inventory": "",
+   "pred_words": 44,
+   "ref_words": 19
+  },
+  {
+   "image_id": "P2455_0000.png",
+   "reference": "The high-resolution GoogleEarth image displays a mixture of agricultural land, infrastructure, and vehicles. A road runs diagonally across the center, with fields on the left and an industrial complex on the right. There is a total of 5 large vehicles and 1 small vehicle in various positions within the image. The large vehicles are primarily located at the top-left and bottom-right corners. The small vehicle is towards the bottom-right corner.",
+   "prediction": "The image, sourced from GoogleEarth, shows several small vehicles on the road, in the middle, near the bottom-left. Buildings, including one large white structure, are on the right side, near the bottom-right. Green areas and bare ground surround roads and parking lots.",
+   "rouge_l": 0.2431,
+   "bleu_1": 0.5227,
+   "inventory": "",
+   "pred_words": 42,
+   "ref_words": 70
+  }
+ ]
+}

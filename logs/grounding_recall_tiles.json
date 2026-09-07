@@ -1,0 +1,307 @@
+{
+ "model": "IDEA-Research/grounding-dino-base",
+ "iou_threshold": 0.5,
+ "topk": 20,
+ "tiles": 2,
+ "synonyms": true,
+ "box_threshold": 0.15,
+ "sampled": 600,
+ "missing_images": 0,
+ "degenerate_references_dropped": 13,
+ "mean_best_iou": 0.5968,
+ "overall": {
+  "n": 600,
+  "mean_candidates": 25.6,
+  "recall@1": 0.2217,
+  "recall@3": 0.4133,
+  "recall@5": 0.495,
+  "recall@10": 0.615,
+  "recall@20": 0.7033
+ },
+ "by_size": {
+  "large": {
+   "n": 7,
+   "mean_candidates": 30.9,
+   "recall@1": 0.5714,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0,
+   "recall@20": 1.0
+  },
+  "small": {
+   "n": 531,
+   "mean_candidates": 25.2,
+   "recall@1": 0.209,
+   "recall@3": 0.3992,
+   "recall@5": 0.4821,
+   "recall@10": 0.6064,
+   "recall@20": 0.6949
+  },
+  "unspecified": {
+   "n": 62,
+   "mean_candidates": 28.6,
+   "recall@1": 0.2903,
+   "recall@3": 0.4677,
+   "recall@5": 0.5484,
+   "recall@10": 0.6452,
+   "recall@20": 0.7419
+  }
+ },
+ "by_unique": {
+  "False": {
+   "n": 215,
+   "mean_candidates": 27.2,
+   "recall@1": 0.1535,
+   "recall@3": 0.2977,
+   "recall@5": 0.3907,
+   "recall@10": 0.4884,
+   "recall@20": 0.586
+  },
+  "True": {
+   "n": 385,
+   "mean_candidates": 24.8,
+   "recall@1": 0.2597,
+   "recall@3": 0.4779,
+   "recall@5": 0.5532,
+   "recall@10": 0.6857,
+   "recall@20": 0.7688
+  }
+ },
+ "by_class": {
+  "airplane": {
+   "n": 25,
+   "mean_candidates": 37.0,
+   "recall@1": 0.56,
+   "recall@3": 0.68,
+   "recall@5": 0.84,
+   "recall@10": 0.88,
+   "recall@20": 1.0
+  },
+  "airport": {
+   "n": 25,
+   "mean_candidates": 25.6,
+   "recall@1": 0.24,
+   "recall@3": 0.52,
+   "recall@5": 0.68,
+   "recall@10": 0.88,
+   "recall@20": 0.96
+  },
+  "baseball-diamond": {
+   "n": 25,
+   "mean_candidates": 35.0,
+   "recall@1": 0.24,
+   "recall@3": 0.48,
+   "recall@5": 0.6,
+   "recall@10": 0.88,
+   "recall@20": 0.96
+  },
+  "basketball-court": {
+   "n": 25,
+   "mean_candidates": 18.3,
+   "recall@1": 0.2,
+   "recall@3": 0.52,
+   "recall@5": 0.52,
+   "recall@10": 0.56,
+   "recall@20": 0.64
+  },
+  "bridge": {
+   "n": 25,
+   "mean_candidates": 22.8,
+   "recall@1": 0.04,
+   "recall@3": 0.08,
+   "recall@5": 0.12,
+   "recall@10": 0.16,
+   "recall@20": 0.2
+  },
+  "chimney": {
+   "n": 25,
+   "mean_candidates": 19.9,
+   "recall@1": 0.4,
+   "recall@3": 0.72,
+   "recall@5": 0.76,
+   "recall@10": 0.96,
+   "recall@20": 0.96
+  },
+  "container-crane": {
+   "n": 12,
+   "mean_candidates": 11.5,
+   "recall@1": 0.0833,
+   "recall@3": 0.4167,
+   "recall@5": 0.5,
+   "recall@10": 0.5833,
+   "recall@20": 0.5833
+  },
+  "dam": {
+   "n": 25,
+   "mean_candidates": 22.6,
+   "recall@1": 0.12,
+   "recall@3": 0.44,
+   "recall@5": 0.64,
+   "recall@10": 0.8,
+   "recall@20": 0.88
+  },
+  "expressway-service-area": {
+   "n": 25,
+   "mean_candidates": 27.9,
+   "recall@1": 0.04,
+   "recall@3": 0.36,
+   "recall@5": 0.48,
+   "recall@10": 0.56,
+   "recall@20": 0.68
+  },
+  "expressway-toll-station": {
+   "n": 25,
+   "mean_candidates": 20.6,
+   "recall@1": 0.0,
+   "recall@3": 0.04,
+   "recall@5": 0.12,
+   "recall@10": 0.32,
+   "recall@20": 0.48
+  },
+  "golffield": {
+   "n": 25,
+   "mean_candidates": 19.0,
+   "recall@1": 0.24,
+   "recall@3": 0.64,
+   "recall@5": 0.68,
+   "recall@10": 0.76,
+   "recall@20": 0.8
+  },
+  "ground-track-field": {
+   "n": 25,
+   "mean_candidates": 34.9,
+   "recall@1": 0.12,
+   "recall@3": 0.16,
+   "recall@5": 0.2,
+   "recall@10": 0.32,
+   "recall@20": 0.4
+  },
+  "harbor": {
+   "n": 24,
+   "mean_candidates": 32.6,
+   "recall@1": 0.125,
+   "recall@3": 0.2083,
+   "recall@5": 0.2917,
+   "recall@10": 0.5833,
+   "recall@20": 0.8333
+  },
+  "helicopter": {
+   "n": 24,
+   "mean_candidates": 16.9,
+   "recall@1": 0.4583,
+   "recall@3": 0.75,
+   "recall@5": 0.8333,
+   "recall@10": 0.875,
+   "recall@20": 0.9167
+  },
+  "helipad": {
+   "n": 1,
+   "mean_candidates": 39.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0,
+   "recall@20": 1.0
+  },
+  "overpass": {
+   "n": 24,
+   "mean_candidates": 24.0,
+   "recall@1": 0.2917,
+   "recall@3": 0.5417,
+   "recall@5": 0.6667,
+   "recall@10": 0.75,
+   "recall@20": 0.7917
+  },
+  "roundabout": {
+   "n": 24,
+   "mean_candidates": 23.6,
+   "recall@1": 0.4167,
+   "recall@3": 0.5,
+   "recall@5": 0.5417,
+   "recall@10": 0.7917,
+   "recall@20": 0.8333
+  },
+  "ship": {
+   "n": 24,
+   "mean_candidates": 19.7,
+   "recall@1": 0.1667,
+   "recall@3": 0.375,
+   "recall@5": 0.4583,
+   "recall@10": 0.5417,
+   "recall@20": 0.5833
+  },
+  "soccer-ball-field": {
+   "n": 24,
+   "mean_candidates": 24.0,
+   "recall@1": 0.375,
+   "recall@3": 0.5833,
+   "recall@5": 0.625,
+   "recall@10": 0.6667,
+   "recall@20": 0.75
+  },
+  "stadium": {
+   "n": 24,
+   "mean_candidates": 45.1,
+   "recall@1": 0.4167,
+   "recall@3": 0.5833,
+   "recall@5": 0.6667,
+   "recall@10": 0.7917,
+   "recall@20": 0.9583
+  },
+  "storage-tank": {
+   "n": 24,
+   "mean_candidates": 19.1,
+   "recall@1": 0.2917,
+   "recall@3": 0.5417,
+   "recall@5": 0.6667,
+   "recall@10": 0.75,
+   "recall@20": 0.75
+  },
+  "swimming-pool": {
+   "n": 24,
+   "mean_candidates": 25.0,
+   "recall@1": 0.3333,
+   "recall@3": 0.4583,
+   "recall@5": 0.625,
+   "recall@10": 0.7083,
+   "recall@20": 0.75
+  },
+  "tennis-court": {
+   "n": 24,
+   "mean_candidates": 18.8,
+   "recall@1": 0.0,
+   "recall@3": 0.0833,
+   "recall@5": 0.0833,
+   "recall@10": 0.125,
+   "recall@20": 0.1667
+  },
+  "trainstation": {
+   "n": 24,
+   "mean_candidates": 28.4,
+   "recall@1": 0.0,
+   "recall@3": 0.125,
+   "recall@5": 0.2083,
+   "recall@10": 0.375,
+   "recall@20": 0.625
+  },
+  "vehicle": {
+   "n": 24,
+   "mean_candidates": 34.8,
+   "recall@1": 0.3333,
+   "recall@3": 0.4167,
+   "recall@5": 0.4167,
+   "recall@10": 0.4583,
+   "recall@20": 0.5833
+  },
+  "windmill": {
+   "n": 24,
+   "mean_candidates": 25.9,
+   "recall@1": 0.0,
+   "recall@3": 0.125,
+   "recall@5": 0.1667,
+   "recall@10": 0.2917,
+   "recall@20": 0.4167
+  }
+ },
+ "dumped": []
+}

@@ -8,16 +8,16 @@ precision="32-true" silently contradicting the hand-loaded bf16 weights.
 
 WHAT THIS MEASURES, AND WHY IT IS A SWEEP
 
-configs/preprocessing.yaml carries:
-
-    tiling:
-      max_pixels: null   # TODO ... must be measured against the prep SLA of
-                         # 5 min/scene on the named demo machine, not guessed
+configs/preprocessing.yaml now carries `tiling.max_pixels: 262144` (v2), frozen
+on the strength of an earlier run of this harness. It is read from the contract
+via satquery.training.TrainingConfig and printed in every report, so a swept
+value can never be mistaken for the frozen one.
 
 Section 5.5 ranks max_pixels as cost lever #1, and C22 (three-composite optical
 input) multiplies image tokens by 2-3x on multispectral samples at an estimated
-cost of 5-8 of the 50 hours. Neither number is decided. So a single timing run
-cannot re-derive the budget table -- it can only price one arbitrary point on a
+cost of 5-8 of the 50 hours. The freeze rests on a measurement whose own report
+flagged gradient checkpointing as inert, so it is still worth re-deriving. So a
+single timing run cannot re-derive the budget table -- it can only price a point on a
 curve whose x-axis is still open.
 
 This harness sweeps (max_pixels x n_composites) and emits the section 5.5 table
@@ -85,6 +85,7 @@ import json
 import math
 import platform
 import statistics
+import sys
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
@@ -96,6 +97,20 @@ import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 
+# The harness used to import nothing from the package and restate max_pixels,
+# the composite count and the LoRA hyperparameters. It drifted: this docstring
+# described `max_pixels: null` after the config was frozen at 262,144. Every
+# contract value now comes from the contract.
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from satquery.training.config import TrainingConfig  # noqa: E402
+from satquery.training.dataset import (  # noqa: E402
+    RealChipDataset,
+    load_canonical_manifest,
+)
+
 # --------------------------------------------------------------------------
 # Section 5.5 budget table. Sample counts are the "60-80k samples, 1 epoch"
 # band from the plan; hours are the scheduled per-adapter lines.
@@ -105,37 +120,37 @@ ADAPTERS: dict[str, dict] = {
     "rs_vqa": {
         "samples": 80_000,
         "budget_h": 4.0,
-        "composites": 3,   # BEN.txt is Sentinel-2 multispectral -> C22 three-composite
+        "composites": 3,  # BEN.txt is Sentinel-2 multispectral -> C22 three-composite
         "note": "Run first (guard rail 3). Cheapest adapter, exercises the whole path.",
     },
     "change_vqa": {
         "samples": 80_000,
         "budget_h": 6.0,
-        "composites": 3,   # bi-temporal pairs; composites here means views per sample
+        "composites": 3,  # bi-temporal pairs; composites here means views per sample
         "note": "SpaceNet 7 / MUDS primary after C59.",
     },
     "optsar_fusion": {
         "samples": 80_000,
         "budget_h": 6.0,
-        "composites": 3,   # optical composites + SAR stack
+        "composites": 3,  # optical composites + SAR stack
         "note": "Includes SpaceNet 6 / OEM-SAR generated captions.",
     },
     "rs_ground_caption": {
         "samples": 80_000,
         "budget_h": 12.0,
-        "composites": 2,   # sub-metre optical, no SWIR on Cartosat -> always two
+        "composites": 2,  # sub-metre optical, no SWIR on Cartosat -> always two
         "note": "~40% of cost is image size. Uncuttable (C17).",
     },
 }
 
-SCHEDULED_TOTAL_H = 31.0   # four adapters + 3 h smoke/timing/debug
+SCHEDULED_TOTAL_H = 31.0  # four adapters + 3 h smoke/timing/debug
 RESERVE_H = 19.0
 TOTAL_ACCESS_H = 50.0
 
 # Vision tokens per image = max_pixels / (patch_size^2 * merge_size^2)
 DEFAULT_MAX_PIXELS_SWEEP = [
-    262_144,    # ~256 vision tokens  (512x512 view)
-    524_288,    # ~512
+    262_144,  # ~256 vision tokens  (512x512 view)
+    524_288,  # ~512
     1_048_576,  # ~1024              (1024x1024 view)
     2_097_152,  # ~2048
 ]
@@ -143,24 +158,30 @@ DEFAULT_COMPOSITE_SWEEP = [1, 2, 3]
 
 MIN_PIXELS = 56 * 56
 
-# Default is larger than any swept max_pixels, so the cap always binds. Override
-# with --source-size to measure REAL workloads: BigEarthNet patches are 120x120
-# (16 vision tokens), benchmark chips are 512px (256 tokens). Qwen3-VL never
-# upsamples, so a 120px source costs 16 tokens no matter how high max_pixels is.
-DEFAULT_SOURCE_TILE = 2048
+# Default is 512px: the benchmark chip size, and the size every source is tiled
+# to under the frozen resolution policy. It is EXACTLY max_pixels=262144, so the
+# cap fits without binding. Override with --source-size to measure other real
+# workloads: BigEarthNet patches are 120x120 (16 vision tokens).
+#
+# This default was 2048, which made the cap bind on every cell and mispriced
+# every adapter -- synthetic tiles always hit the cap, real imagery mostly does
+# not. Qwen3-VL never upsamples, so a 120px source costs 16 tokens no matter how
+# high max_pixels is.
+DEFAULT_SOURCE_TILE = 512
 
 
 # --------------------------------------------------------------------------
 # Config
 # --------------------------------------------------------------------------
 
+
 @dataclass
 class SweepConfig:
     model_id: str = "Qwen/Qwen3-VL-4B-Instruct"
     max_pixels: int = 1_048_576
     composites: int = 3
-    micro_batch: int = 1
-    grad_accum: int = 4
+    micro_batch: int = 4
+    grad_accum: int = 1
     steps: int = 200
     warmup_steps: int = 20
     num_workers: int = 4
@@ -168,14 +189,25 @@ class SweepConfig:
     grad_checkpointing: bool = True
     lora_r: int = 16
     lora_alpha: int = 32
-    lora_dropout: float = 0.1          # section 5.2 as written
+    lora_dropout: float = 0.1  # section 5.2 as written
     lora_targets: str = "all-linear"
-    peak_lr: float = 1e-4              # section 5.2: warmup 1e-6 -> 1e-4, cosine
+    peak_lr: float = 1e-4  # section 5.2: warmup 1e-6 -> 1e-4, cosine
     init_lr: float = 1e-6
     warmup_frac: float = 0.01
-    max_text_tokens: int = 256         # cap on TEXT only; images are uncapped here
+    max_text_tokens: int = 256  # cap on TEXT only; images are uncapped here
     source_size: int = DEFAULT_SOURCE_TILE
     seed: int = 0
+    # Real imagery when given, synthetic shapes when not. Never silently
+    # synthetic: `data_source` is printed in the report header, because a cost
+    # surface measured on noise and one measured on the corpus are different
+    # claims and the first sweep did not distinguish them.
+    manifest: str = ""
+    image_root: str = ""
+    adapter: str = ""
+
+    @property
+    def data_source(self) -> str:
+        return f"real:{self.manifest}" if self.manifest else "synthetic-shapes"
 
     @property
     def effective_batch(self) -> int:
@@ -220,7 +252,6 @@ class SweepResult:
 # --------------------------------------------------------------------------
 
 
-
 class SyntheticRSDataset(Dataset):
     def __init__(self, cfg: SweepConfig, n: int = 4096):
         self.cfg = cfg
@@ -230,9 +261,7 @@ class SyntheticRSDataset(Dataset):
         # num_workers; content does not matter.
         self._pool = [
             Image.fromarray(
-                rng.integers(
-                    0, 256, (cfg.source_size, cfg.source_size, 3), dtype=np.uint8
-                )
+                rng.integers(0, 256, (cfg.source_size, cfg.source_size, 3), dtype=np.uint8)
             )
             for _ in range(4)
         ]
@@ -311,9 +340,7 @@ class Collator:
             images.append(item["images"])
 
         # Dynamic padding to the longest sequence in the batch -- NOT a fixed cap.
-        enc = self.processor(
-            text=full_texts, images=images, return_tensors="pt", padding=True
-        )
+        enc = self.processor(text=full_texts, images=images, return_tensors="pt", padding=True)
         prompt_enc = self.processor(
             text=prompt_texts, images=images, return_tensors="pt", padding=True
         )
@@ -341,6 +368,7 @@ class Collator:
 # --------------------------------------------------------------------------
 # Model
 # --------------------------------------------------------------------------
+
 
 class TimingModule(pl.LightningModule):
     """
@@ -466,9 +494,7 @@ class TimingModule(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         self.seq_lens.append(int(batch["input_ids"].shape[1]))
-        self.sup_tokens.append(
-            float((batch["labels"] != -100).sum()) / self.cfg.micro_batch
-        )
+        self.sup_tokens.append(float((batch["labels"] != -100).sum()) / self.cfg.micro_batch)
         grid = batch.get("image_grid_thw")
         if grid is not None:
             self.vis_tokens.append(
@@ -545,8 +571,10 @@ class TimingCallback(pl.Callback):
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
             el = time.perf_counter() - self.t0
-            print(f"    step {done}/{self.cfg.steps}  {el:.1f}s  "
-                  f"({el/done:.3f} s/step)  loss={self.losses[-1]:.4f}")
+            print(
+                f"    step {done}/{self.cfg.steps}  {el:.1f}s  "
+                f"({el / done:.3f} s/step)  loss={self.losses[-1]:.4f}"
+            )
 
     def on_train_end(self, trainer, pl_module):
         if self.t0 is not None:
@@ -560,14 +588,30 @@ def run_one(cfg: SweepConfig, dry_run: bool = False) -> SweepResult:
 
     pl.seed_everything(cfg.seed, workers=True)
 
-    print(f"\n--- max_pixels={cfg.max_pixels:,} composites={cfg.composites} "
-          f"(~{cfg.approx_vision_tokens:,} vision tokens/sample) ---")
+    print(
+        f"\n--- max_pixels={cfg.max_pixels:,} composites={cfg.composites} "
+        f"(~{cfg.approx_vision_tokens:,} vision tokens/sample) ---"
+    )
 
     processor = AutoProcessor.from_pretrained(
         cfg.model_id, min_pixels=MIN_PIXELS, max_pixels=cfg.max_pixels
     )
 
-    ds = SyntheticRSDataset(cfg)
+    if cfg.manifest:
+        samples = load_canonical_manifest(
+            cfg.manifest, adapter=cfg.adapter or None, split=None
+        )
+        ds = RealChipDataset(
+            samples,
+            root=cfg.image_root or Path(cfg.manifest).parent,
+            composites=cfg.composites,
+            # The sweep's whole job is pricing max_pixels x composites, so it
+            # varies the view count on purpose and must be allowed to.
+            resize_views=True,
+        )
+        print(f"  data: {len(ds)} real samples from {cfg.manifest}")
+    else:
+        ds = SyntheticRSDataset(cfg)
     dl = DataLoader(
         ds,
         batch_size=cfg.micro_batch,
@@ -585,8 +629,10 @@ def run_one(cfg: SweepConfig, dry_run: bool = False) -> SweepResult:
         res = SweepResult(config=asdict(cfg), ok=True)
         res.mean_seq_len = float(batch["input_ids"].shape[1])
         res.mean_supervised_tokens = float(sup) / cfg.micro_batch
-        print(f"  seq_len={res.mean_seq_len:.0f}  supervised_tokens/sample="
-              f"{res.mean_supervised_tokens:.1f}  (dry run, no timing)")
+        print(
+            f"  seq_len={res.mean_seq_len:.0f}  supervised_tokens/sample="
+            f"{res.mean_supervised_tokens:.1f}  (dry run, no timing)"
+        )
         if sup == 0:
             res.ok = False
             res.error = "label masking produced zero supervised tokens"
@@ -614,9 +660,11 @@ def run_one(cfg: SweepConfig, dry_run: bool = False) -> SweepResult:
         barebones=False,
     )
 
-    print(f"  attn={module.attn_impl}  trainable={module.n_trainable/1e6:.1f}M  "
-          f"grad_ckpt={cfg.grad_checkpointing}  devices={trainer.num_devices}  "
-          f"precision=bf16-mixed")
+    print(
+        f"  attn={module.attn_impl}  trainable={module.n_trainable / 1e6:.1f}M  "
+        f"grad_ckpt={cfg.grad_checkpointing}  devices={trainer.num_devices}  "
+        f"precision=bf16-mixed"
+    )
 
     try:
         trainer.fit(module, train_dataloaders=dl)
@@ -626,8 +674,9 @@ def run_one(cfg: SweepConfig, dry_run: bool = False) -> SweepResult:
         return SweepResult(config=asdict(cfg), ok=False, error="CUDA OOM")
 
     if cb.total <= 0:
-        return SweepResult(config=asdict(cfg), ok=False,
-                           error="timing window never opened (steps <= warmup?)")
+        return SweepResult(
+            config=asdict(cfg), ok=False, error="timing window never opened (steps <= warmup?)"
+        )
 
     res = SweepResult(config=asdict(cfg), ok=True)
     res.sec_per_opt_step = cb.total / cfg.steps
@@ -661,17 +710,17 @@ def run_one(cfg: SweepConfig, dry_run: bool = False) -> SweepResult:
 
     for name, spec in ADAPTERS.items():
         steps_per_epoch = math.ceil(spec["samples"] / samples_per_step)
-        res.per_adapter_hours[name] = round(
-            steps_per_epoch * res.sec_per_opt_step / 3600, 2
-        )
+        res.per_adapter_hours[name] = round(steps_per_epoch * res.sec_per_opt_step / 3600, 2)
 
-    print(f"  => {res.sec_per_opt_step:.3f} s/opt-step | seq_len mean "
-          f"{res.mean_seq_len:.0f} p95 {res.p95_seq_len:.0f} | vision "
-          f"{res.mean_vision_tokens:.0f} tok | supervised "
-          f"{res.mean_supervised_tokens:.1f} tok | VRAM "
-          f"{res.peak_vram_gb:.1f} GB peak "
-          f"({res.static_vram_gb:.1f} static + {res.activation_vram_gb:.1f} act) "
-          f"| ~{res.effective_tflops:.0f} TFLOPS")
+    print(
+        f"  => {res.sec_per_opt_step:.3f} s/opt-step | seq_len mean "
+        f"{res.mean_seq_len:.0f} p95 {res.p95_seq_len:.0f} | vision "
+        f"{res.mean_vision_tokens:.0f} tok | supervised "
+        f"{res.mean_supervised_tokens:.1f} tok | VRAM "
+        f"{res.peak_vram_gb:.1f} GB peak "
+        f"({res.static_vram_gb:.1f} static + {res.activation_vram_gb:.1f} act) "
+        f"| ~{res.effective_tflops:.0f} TFLOPS"
+    )
 
     del module, trainer, cb
     if torch.cuda.is_available():
@@ -682,7 +731,7 @@ def run_one(cfg: SweepConfig, dry_run: bool = False) -> SweepResult:
 def gpu_name() -> str:
     if torch.cuda.is_available():
         p = torch.cuda.get_device_properties(0)
-        return f"{p.name} ({p.total_memory/1024**3:.0f} GB)"
+        return f"{p.name} ({p.total_memory / 1024**3:.0f} GB)"
     return "CPU"
 
 
@@ -695,48 +744,63 @@ def write_report(results: list[SweepResult], out: Path, cfg0: SweepConfig) -> No
     A(f"**Date:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}  ")
     A(f"**Hardware:** {gpu_name()} × {cfg0.devices} device(s)  ")
     A(f"**Base model:** `{cfg0.model_id}`  ")
-    A(f"**Adapter:** LoRA r={cfg0.lora_r}, α={cfg0.lora_alpha}, "
-      f"dropout={cfg0.lora_dropout}, target=`{cfg0.lora_targets}`  ")
-    A(f"**Schedule:** {cfg0.init_lr:g} → {cfg0.peak_lr:g} over first "
-      f"{cfg0.warmup_frac:.0%} of steps, cosine decay (§5.2)  ")
-    A(f"**Batch:** micro={cfg0.micro_batch} × accum={cfg0.grad_accum} × "
-      f"devices={cfg0.devices} = **{cfg0.effective_batch} effective**  ")
+    A(
+        f"**Adapter:** LoRA r={cfg0.lora_r}, α={cfg0.lora_alpha}, "
+        f"dropout={cfg0.lora_dropout}, target=`{cfg0.lora_targets}`  "
+    )
+    A(
+        f"**Schedule:** {cfg0.init_lr:g} → {cfg0.peak_lr:g} over first "
+        f"{cfg0.warmup_frac:.0%} of steps, cosine decay (§5.2)  "
+    )
+    A(
+        f"**Batch:** micro={cfg0.micro_batch} × accum={cfg0.grad_accum} × "
+        f"devices={cfg0.devices} = **{cfg0.effective_batch} effective**  "
+    )
     A(f"**Grad checkpointing:** {cfg0.grad_checkpointing}  ")
     A(f"**Source tile:** {cfg0.source_size}px  ")
+    A(f"**Data:** {cfg0.data_source}  ")
+    A(f"**Contract:** {TrainingConfig.from_frozen().provenance()}  ")
     A(f"**Torch:** {torch.__version__} · Python {platform.python_version()}\n")
 
-    A("> Timed window excludes the first "
-      f"{cfg0.warmup_steps} warmup steps. Synthetic imagery: pixel values do not "
-      "affect timing, dimensions do — tiles are generated at "
-      f"{cfg0.source_size}×{cfg0.source_size} and capped by `max_pixels`. "
-      "Qwen3-VL never upsamples, so a source smaller than the cap sets the token "
-      "count on its own — 120px (BigEarthNet) is 16 tokens at any `max_pixels`.\n")
+    A(
+        "> Timed window excludes the first "
+        f"{cfg0.warmup_steps} warmup steps. Synthetic imagery: pixel values do not "
+        "affect timing, dimensions do — tiles are generated at "
+        f"{cfg0.source_size}×{cfg0.source_size} and capped by `max_pixels`. "
+        "Qwen3-VL never upsamples, so a source smaller than the cap sets the token "
+        "count on its own — 120px (BigEarthNet) is 16 tokens at any `max_pixels`.\n"
+    )
 
     if not ok:
         A("## No configuration completed\n")
         for r in results:
             c = r.config
-            A(f"- max_pixels={c['max_pixels']:,} composites={c['composites']}: "
-              f"**{r.error}**")
+            A(f"- max_pixels={c['max_pixels']:,} composites={c['composites']}: **{r.error}**")
         out.write_text("\n".join(L), encoding="utf-8")
         return
 
     A("## Measured cost surface\n")
-    A("| max_pixels | comps | vision tok | seq len (mean/p95) | s/opt-step | "
-      "s/sample | peak VRAM | static | activations | ~TFLOPS |")
+    A(
+        "| max_pixels | comps | vision tok | seq len (mean/p95) | s/opt-step | "
+        "s/sample | peak VRAM | static | activations | ~TFLOPS |"
+    )
     A("|---|---|---|---|---|---|---|---|---|---|")
     for r in results:
         c = r.config
         if not r.ok:
-            A(f"| {c['max_pixels']:,} | {c['composites']} | "
-              f"~{int(c['composites']*c['max_pixels']/1024):,} | — | **{r.error}** "
-              f"| — | — | — | — | — |")
+            A(
+                f"| {c['max_pixels']:,} | {c['composites']} | "
+                f"~{int(c['composites'] * c['max_pixels'] / 1024):,} | — | **{r.error}** "
+                f"| — | — | — | — | — |"
+            )
             continue
-        A(f"| {c['max_pixels']:,} | {c['composites']} | {r.mean_vision_tokens:.0f} | "
-          f"{r.mean_seq_len:.0f} / {r.p95_seq_len:.0f} | {r.sec_per_opt_step:.3f} | "
-          f"{r.sec_per_sample:.3f} | {r.peak_vram_gb:.1f} GB | "
-          f"{r.static_vram_gb:.1f} GB | {r.activation_vram_gb:.1f} GB | "
-          f"{r.effective_tflops:.0f} |")
+        A(
+            f"| {c['max_pixels']:,} | {c['composites']} | {r.mean_vision_tokens:.0f} | "
+            f"{r.mean_seq_len:.0f} / {r.p95_seq_len:.0f} | {r.sec_per_opt_step:.3f} | "
+            f"{r.sec_per_sample:.3f} | {r.peak_vram_gb:.1f} GB | "
+            f"{r.static_vram_gb:.1f} GB | {r.activation_vram_gb:.1f} GB | "
+            f"{r.effective_tflops:.0f} |"
+        )
     A("")
 
     # Index cells by (max_pixels, composites) so each adapter can be costed at
@@ -745,12 +809,17 @@ def write_report(results: list[SweepResult], out: Path, cfg0: SweepConfig) -> No
     mp_values = sorted({r.config["max_pixels"] for r in ok})
 
     A("## §5.5 budget table, re-derived (guard rail 4)\n")
-    A("Hours for **1 epoch** per adapter, each costed at its own composite count "
-      "from §5.2 — `rs_ground_caption` at two (no SWIR on Cartosat, so it is "
-      "always two), the rest at three under C22. Columns are `max_pixels`, "
-      "expressed as vision tokens per image.\n")
-    A("| Adapter | comps | §5.5 budget | " +
-      " | ".join(f"{mp // 1024}k tok/img" for mp in mp_values) + " |")
+    A(
+        "Hours for **1 epoch** per adapter, each costed at its own composite count "
+        "from §5.2 — `rs_ground_caption` at two (no SWIR on Cartosat, so it is "
+        "always two), the rest at three under C22. Columns are `max_pixels`, "
+        "expressed as vision tokens per image.\n"
+    )
+    A(
+        "| Adapter | comps | §5.5 budget | "
+        + " | ".join(f"{mp // 1024}k tok/img" for mp in mp_values)
+        + " |"
+    )
     A("|---|---|---|" + "---|" * len(mp_values))
 
     column_totals: dict[int, float] = {mp: 0.0 for mp in mp_values}
@@ -768,8 +837,7 @@ def write_report(results: list[SweepResult], out: Path, cfg0: SweepConfig) -> No
             h = r.per_adapter_hours.get(name, 0.0)
             column_totals[mp] += h
             cells.append(f"{h:.1f} h" + ("" if h <= spec["budget_h"] else " ⚠"))
-        A(f"| `{name}` | {comps} | {spec['budget_h']:.0f} h | " +
-          " | ".join(cells) + " |")
+        A(f"| `{name}` | {comps} | {spec['budget_h']:.0f} h | " + " | ".join(cells) + " |")
 
     train_budget = SCHEDULED_TOTAL_H - 3
     totals = []
@@ -779,17 +847,20 @@ def write_report(results: list[SweepResult], out: Path, cfg0: SweepConfig) -> No
             continue
         t = column_totals[mp]
         totals.append(f"**{t:.1f} h**" + ("" if t <= train_budget else " ⚠"))
-    A(f"| **Four-adapter total** | mixed | **{train_budget:.0f} h** | " +
-      " | ".join(totals) + " |")
+    A(f"| **Four-adapter total** | mixed | **{train_budget:.0f} h** | " + " | ".join(totals) + " |")
     A("")
-    A(f"Scheduled total in §5.5 is **{SCHEDULED_TOTAL_H:.0f} h** including 3 h of "
-      f"smoke/timing/debug, against **{RESERVE_H:.0f} h** reserve out of "
-      f"**{TOTAL_ACCESS_H:.0f} h** access. The four-adapter row above is the "
-      f"{train_budget:.0f} h of actual training.\n")
+    A(
+        f"Scheduled total in §5.5 is **{SCHEDULED_TOTAL_H:.0f} h** including 3 h of "
+        f"smoke/timing/debug, against **{RESERVE_H:.0f} h** reserve out of "
+        f"**{TOTAL_ACCESS_H:.0f} h** access. The four-adapter row above is the "
+        f"{train_budget:.0f} h of actual training.\n"
+    )
 
     A("## C22 three-composite ablation\n")
-    A("§5.5 prices three-composite optical input at 5–8 of the 50 hours and "
-      "asks for it to be measured, not assumed.\n")
+    A(
+        "§5.5 prices three-composite optical input at 5–8 of the 50 hours and "
+        "asks for it to be measured, not assumed.\n"
+    )
     by_mp: dict[int, dict[int, SweepResult]] = {}
     for r in ok:
         by_mp.setdefault(r.config["max_pixels"], {})[r.config["composites"]] = r
@@ -801,78 +872,102 @@ def write_report(results: list[SweepResult], out: Path, cfg0: SweepConfig) -> No
             if two <= 0:
                 continue
             shown = True
-            A(f"- `max_pixels={mp:,}`: two composites **{two:.1f} h**, three "
-              f"**{three:.1f} h** → C22 costs **{three - two:+.1f} h** "
-              f"({(three / two - 1) * 100:+.0f}%)")
+            A(
+                f"- `max_pixels={mp:,}`: two composites **{two:.1f} h**, three "
+                f"**{three:.1f} h** → C22 costs **{three - two:+.1f} h** "
+                f"({(three / two - 1) * 100:+.0f}%)"
+            )
     if not shown:
-        A("- Not measured: sweep both 2 and 3 composites at a shared `max_pixels` "
-          "to price this.")
+        A("- Not measured: sweep both 2 and 3 composites at a shared `max_pixels` to price this.")
     A("")
 
-    fits = [mp for mp in mp_values
-            if column_complete[mp] and column_totals[mp] <= train_budget]
+    fits = [mp for mp in mp_values if column_complete[mp] and column_totals[mp] <= train_budget]
     A("## Recommendation\n")
     if fits:
         best_mp = max(fits)
-        peak = max((cell[(best_mp, c)].peak_vram_gb
-                    for c in {s["composites"] for s in ADAPTERS.values()}
-                    if (best_mp, c) in cell), default=0.0)
-        A(f"Highest `max_pixels` that fits the {train_budget:.0f} h training "
-          f"schedule: **{best_mp:,}** (~{best_mp // 1024} vision tokens/image, "
-          f"{column_totals[best_mp]:.1f} h across four adapters, "
-          f"{peak:.1f} GB peak).\n")
-        A(f"Set `tiling.max_pixels: {best_mp}` in "
-          "`configs/preprocessing.yaml` and bump `version` — **but only after "
-          "checking it against the 5 min/scene prep SLA on the demo machine**, "
-          "which this harness does not measure. The YAML TODO names that SLA as "
-          "the binding constraint alongside the compute budget.\n")
+        peak = max(
+            (
+                cell[(best_mp, c)].peak_vram_gb
+                for c in {s["composites"] for s in ADAPTERS.values()}
+                if (best_mp, c) in cell
+            ),
+            default=0.0,
+        )
+        A(
+            f"Highest `max_pixels` that fits the {train_budget:.0f} h training "
+            f"schedule: **{best_mp:,}** (~{best_mp // 1024} vision tokens/image, "
+            f"{column_totals[best_mp]:.1f} h across four adapters, "
+            f"{peak:.1f} GB peak).\n"
+        )
+        A(
+            f"Set `tiling.max_pixels: {best_mp}` in "
+            "`configs/preprocessing.yaml` and bump `version` — **but only after "
+            "checking it against the 5 min/scene prep SLA on the demo machine**, "
+            "which this harness does not measure. The YAML TODO names that SLA as "
+            "the binding constraint alongside the compute budget.\n"
+        )
     else:
-        A("**No swept configuration fits the training schedule.** Apply the §5.5 "
-          "cost lever ranking in order: (1) cap `max_pixels` harder, "
-          "(2) subsample below 80k, (3) merge adapters — noting C17 forbids "
-          "degrading `rs_ground_caption`.\n")
+        A(
+            "**No swept configuration fits the training schedule.** Apply the §5.5 "
+            "cost lever ranking in order: (1) cap `max_pixels` harder, "
+            "(2) subsample below 80k, (3) merge adapters — noting C17 forbids "
+            "degrading `rs_ground_caption`.\n"
+        )
 
     hi = max(ok, key=lambda r: r.peak_vram_gb)
-    A(f"Peak VRAM across the sweep: **{hi.peak_vram_gb:.1f} GB** at "
-      f"max_pixels={hi.config['max_pixels']:,}, composites={hi.config['composites']}. "
-      "§5.5 is written for an A100-**80GB** (C41: *\"a 4B base fits 80 GB "
-      "trivially\"*, *\"raise batch size until utilisation saturates\"*). "
-      "Confirm which card is actually available before committing this table.\n")
+    A(
+        f"Peak VRAM across the sweep: **{hi.peak_vram_gb:.1f} GB** at "
+        f"max_pixels={hi.config['max_pixels']:,}, composites={hi.config['composites']}. "
+        '§5.5 is written for an A100-**80GB** (C41: *"a 4B base fits 80 GB '
+        'trivially"*, *"raise batch size until utilisation saturates"*). '
+        "Confirm which card is actually available before committing this table.\n"
+    )
 
     A("## Sanity checks\n")
     A("| Check | Expected | Observed |")
     A("|---|---|---|")
     r0 = ok[0]
-    A(f"| Opening loss | ~2–4 healthy; near ln(151669)=11.93 means the label "
-      f"mask is broken. Synthetic answers come from a 4-item pool, so a low "
-      f"value here is memorisation, not a fault | {r0.first_loss:.2f} |")
-    A(f"| Supervised tokens/sample | answer span only, not the full sequence | "
-      f"{r0.mean_supervised_tokens:.1f} of {r0.mean_seq_len:.0f} |")
-    A(f"| Vision tokens/image | max_pixels/1024 = "
-      f"{r0.config['max_pixels']//1024} | "
-      f"{r0.mean_vision_tokens/max(1,r0.config['composites']):.0f} |")
+    A(
+        f"| Opening loss | ~2–4 healthy; near ln(151669)=11.93 means the label "
+        f"mask is broken. Synthetic answers come from a 4-item pool, so a low "
+        f"value here is memorisation, not a fault | {r0.first_loss:.2f} |"
+    )
+    A(
+        f"| Supervised tokens/sample | answer span only, not the full sequence | "
+        f"{r0.mean_supervised_tokens:.1f} of {r0.mean_seq_len:.0f} |"
+    )
+    A(
+        f"| Vision tokens/image | max_pixels/1024 = "
+        f"{r0.config['max_pixels'] // 1024} | "
+        f"{r0.mean_vision_tokens / max(1, r0.config['composites']):.0f} |"
+    )
     A("")
     # Direct audit, not a scaling heuristic. An earlier version inferred
     # checkpointing from activation-vs-seq_len scaling, which is wrong: saved
     # layer-boundary activations scale linearly with seq_len too. Checkpointing
     # changes the coefficient, not the exponent.
-    A(f"| Gradient checkpointing actually active | all "
-      f"{r0.ckpt_layers} checkpointable layers when enabled | "
-      f"{r0.ckpt_active} of {r0.ckpt_layers} |")
+    A(
+        f"| Gradient checkpointing actually active | all "
+        f"{r0.ckpt_layers} checkpointable layers when enabled | "
+        f"{r0.ckpt_active} of {r0.ckpt_layers} |"
+    )
     A("")
-    if r0.config.get("grad_checkpointing") and r0.ckpt_layers and \
-            r0.ckpt_active < r0.ckpt_layers:
-        A(f"> ⚠ **Gradient checkpointing is enabled but only "
-          f"{r0.ckpt_active}/{r0.ckpt_layers} layers will actually checkpoint.** "
-          "transformers gates it on `gradient_checkpointing AND self.training`; "
-          "layers left in eval mode silently skip it. Every OOM above is then an "
-          "artifact of full activation storage, not a hardware limit.\n")
+    if r0.config.get("grad_checkpointing") and r0.ckpt_layers and r0.ckpt_active < r0.ckpt_layers:
+        A(
+            f"> ⚠ **Gradient checkpointing is enabled but only "
+            f"{r0.ckpt_active}/{r0.ckpt_layers} layers will actually checkpoint.** "
+            "transformers gates it on `gradient_checkpointing AND self.training`; "
+            "layers left in eval mode silently skip it. Every OOM above is then an "
+            "artifact of full activation storage, not a hardware limit.\n"
+        )
 
     if r0.first_loss > 9.0:
-        A("> ⚠ **Opening loss is near ln(vocab).** Label masking is not working — "
-          "the model is being scored on tokens it was never trained to emit. "
-          "This was the defect in `run_200_step_timing.py`. Do not trust these "
-          "numbers until it is fixed.\n")
+        A(
+            "> ⚠ **Opening loss is near ln(vocab).** Label masking is not working — "
+            "the model is being scored on tokens it was never trained to emit. "
+            "This was the defect in `run_200_step_timing.py`. Do not trust these "
+            "numbers until it is fixed.\n"
+        )
 
     A("---\n")
     A("<details><summary>Raw results (JSON)</summary>\n")
@@ -885,6 +980,7 @@ def write_report(results: list[SweepResult], out: Path, cfg0: SweepConfig) -> No
 
 # --------------------------------------------------------------------------
 
+
 def print_dry_run_summary(results: list[SweepResult]) -> None:
     """
     Shape + label-masking check only. Deliberately writes no report: with no
@@ -893,55 +989,75 @@ def print_dry_run_summary(results: list[SweepResult]) -> None:
     harness exists to stop producing.
     """
     print("\n--- DRY RUN: shapes and label masking ---")
-    print(f"{'max_pixels':>12} {'comps':>6} {'pred tok':>9} {'seq_len':>8} "
-          f"{'supervised':>11}")
+    print(f"{'max_pixels':>12} {'comps':>6} {'pred tok':>9} {'seq_len':>8} {'supervised':>11}")
     bad = []
     for r in results:
         c = r.config
         pred = int(c["composites"] * c["max_pixels"] / 1024)
         if not r.ok:
-            print(f"{c['max_pixels']:>12,} {c['composites']:>6} {pred:>9,} "
-                  f"{'—':>8} {r.error:>11}")
+            print(f"{c['max_pixels']:>12,} {c['composites']:>6} {pred:>9,} {'—':>8} {r.error:>11}")
             bad.append(r)
             continue
-        print(f"{c['max_pixels']:>12,} {c['composites']:>6} {pred:>9,} "
-              f"{r.mean_seq_len:>8.0f} {r.mean_supervised_tokens:>11.1f}")
+        print(
+            f"{c['max_pixels']:>12,} {c['composites']:>6} {pred:>9,} "
+            f"{r.mean_seq_len:>8.0f} {r.mean_supervised_tokens:>11.1f}"
+        )
         if r.mean_supervised_tokens <= 0:
             bad.append(r)
 
     print()
     if bad:
-        print("FAIL: label masking produced no supervised tokens in "
-              f"{len(bad)} cell(s). Do not run the timing sweep -- loss would "
-              "be meaningless.")
+        print(
+            "FAIL: label masking produced no supervised tokens in "
+            f"{len(bad)} cell(s). Do not run the timing sweep -- loss would "
+            "be meaningless."
+        )
         return
-    print("PASS: every cell supervises a nonzero answer span, and seq_len "
-          "tracks max_pixels/1024 per image as expected.")
+    print(
+        "PASS: every cell supervises a nonzero answer span, and seq_len "
+        "tracks max_pixels/1024 per image as expected."
+    )
     print("Next: python scripts/phase0_timing_sweep.py")
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--model-id", default=SweepConfig.model_id)
-    ap.add_argument("--max-pixels", type=int, default=None,
-                    help="single value; omit to sweep")
-    ap.add_argument("--composites", type=int, default=None,
-                    help="single value; omit to sweep")
-    ap.add_argument("--source-size", type=int, default=DEFAULT_SOURCE_TILE,
-                    help="synthetic source tile edge in px. 120=BigEarthNet patch, "
-                         "512=benchmark chip. max_pixels only binds above this.")
+    ap.add_argument("--max-pixels", type=int, default=None, help="single value; omit to sweep")
+    ap.add_argument("--composites", type=int, default=None, help="single value; omit to sweep")
+    ap.add_argument(
+        "--source-size",
+        type=int,
+        default=DEFAULT_SOURCE_TILE,
+        help="synthetic source tile edge in px. 120=BigEarthNet patch, "
+        "512=benchmark chip. max_pixels only binds above this.",
+    )
     ap.add_argument("--micro-batch", type=int, default=SweepConfig.micro_batch)
     ap.add_argument("--grad-accum", type=int, default=SweepConfig.grad_accum)
     ap.add_argument("--steps", type=int, default=SweepConfig.steps)
     ap.add_argument("--warmup-steps", type=int, default=SweepConfig.warmup_steps)
     ap.add_argument("--num-workers", type=int, default=SweepConfig.num_workers)
-    ap.add_argument("--devices", type=int, default=SweepConfig.devices,
-                    help="GPUs per cell. >1 sweeps under DDP; prefer one cell "
-                         "per invocation in that case.")
+    ap.add_argument(
+        "--devices",
+        type=int,
+        default=SweepConfig.devices,
+        help="GPUs per cell. >1 sweeps under DDP; prefer one cell per invocation in that case.",
+    )
     ap.add_argument("--no-grad-checkpointing", action="store_true")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="shape and label-masking check only, no timing")
+    ap.add_argument(
+        "--manifest",
+        default="",
+        help="canonical JSONL of real samples. Without it the sweep runs on "
+        "synthetic shapes, which prices a config honestly but proves nothing "
+        "about the corpus. Phase 0 item 12 asks for real data.",
+    )
+    ap.add_argument("--image-root", default="", help="defaults to the manifest dir")
+    ap.add_argument("--adapter", default="", help="filter the manifest to one adapter")
+    ap.add_argument(
+        "--dry-run", action="store_true", help="shape and label-masking check only, no timing"
+    )
     ap.add_argument("--out", default="logs/phase_0_timing_sweep.md")
     args = ap.parse_args()
 
@@ -958,11 +1074,21 @@ def main() -> None:
         source_size=args.source_size,
         devices=args.devices,
         grad_checkpointing=not args.no_grad_checkpointing,
+        manifest=args.manifest,
+        image_root=args.image_root,
+        adapter=args.adapter,
     )
 
+    frozen = TrainingConfig.from_frozen()
+    print(frozen.provenance())
+    if not args.manifest:
+        print(
+            "  [note] no --manifest: measuring synthetic shapes. Legitimate for "
+            "pricing a config, not for Phase 0 item 12, which asks for real data."
+        )
+
     print(f"Hardware: {gpu_name()} x {base.devices} device(s)")
-    print(f"Sweep: max_pixels={mps} composites={comps}  "
-          f"({len(mps) * len(comps)} cells)")
+    print(f"Sweep: max_pixels={mps} composites={comps}  ({len(mps) * len(comps)} cells)")
 
     results: list[SweepResult] = []
     for mp in mps:
@@ -973,8 +1099,7 @@ def main() -> None:
             except Exception as exc:  # noqa: BLE001 - one bad cell must not kill the sweep
                 print(f"  [error] {type(exc).__name__}: {exc}")
                 results.append(
-                    SweepResult(config=asdict(cfg), ok=False,
-                                error=f"{type(exc).__name__}: {exc}")
+                    SweepResult(config=asdict(cfg), ok=False, error=f"{type(exc).__name__}: {exc}")
                 )
 
     if args.dry_run:

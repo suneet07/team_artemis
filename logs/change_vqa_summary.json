@@ -1,0 +1,72 @@
+{
+ "rows": 51956,
+ "splits": {
+  "train": 43908,
+  "val": 8048
+ },
+ "types": {
+  "change_compare": {
+   "rows": 15200,
+   "distinct_answers": 2,
+   "blind_ceiling": 50.0,
+   "top": {
+    "second": 7600,
+    "first": 7600
+   }
+  },
+  "change_count": {
+   "rows": 14478,
+   "distinct_answers": 21,
+   "blind_ceiling": 19.48,
+   "top": {
+    "0": 2820,
+    "1": 1964,
+    "2": 1296,
+    "3": 1184,
+    "4": 876,
+    "5": 800
+   }
+  },
+  "change_direction": {
+   "rows": 594,
+   "distinct_answers": 3,
+   "blind_ceiling": 33.33,
+   "top": {
+    "unchanged": 198,
+    "decreased": 198,
+    "increased": 198
+   }
+  },
+  "change_magnitude": {
+   "rows": 6380,
+   "distinct_answers": 4,
+   "blind_ceiling": 28.65,
+   "top": {
+    "many": 1828,
+    "a few": 1828,
+    "dozens": 1828,
+    "none": 896
+   }
+  },
+  "change_presence": {
+   "rows": 1896,
+   "distinct_answers": 2,
+   "blind_ceiling": 50.0,
+   "top": {
+    "yes": 948,
+    "no": 948
+   }
+  },
+  "change_where": {
+   "rows": 13408,
+   "distinct_answers": 4,
+   "blind_ceiling": 25.4,
+   "top": {
+    "west": 3405,
+    "east": 3397,
+    "north": 3384,
+    "south": 3222
+   }
+  }
+ }
+}

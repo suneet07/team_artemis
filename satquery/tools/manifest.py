@@ -38,6 +38,7 @@ class ToolManifest:
     required_modalities: tuple[str, ...]
     permitted_parameters: dict[str, ParamSpec]
     outputs: dict[str, dict[str, Any]]
+    modality_mode: str = "all"
     confidence_source: str | None = None
     low_confidence_proposer: bool = False
     expected_latency_ms: int | None = None
@@ -65,6 +66,7 @@ class ToolManifest:
             required_modalities=tuple(raw["required_modalities"]),
             permitted_parameters=params,
             outputs=dict(raw["outputs"]),
+            modality_mode=raw.get("modality_mode", "all"),
             confidence_source=raw.get("confidence_source"),
             low_confidence_proposer=raw.get("low_confidence_proposer", False),
             expected_latency_ms=raw.get("expected_latency_ms"),

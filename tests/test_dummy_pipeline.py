@@ -51,9 +51,7 @@ def test_defaults_applied_recorded_and_graded_params_match_run():
 
 
 def test_modality_mismatch_refuses(dummy_like_context=None):
-    trace = run_dummy_query(
-        "q", {"index": "ALPHA", "scale": 0.5}, modality="sar"
-    )
+    trace = run_dummy_query("q", {"index": "ALPHA", "scale": 0.5}, modality="sar")
     validate_trace(trace)
     outputs = trace["graded"]["outputs"]
     assert outputs["refusal"]["category"] == "parameter_gate"

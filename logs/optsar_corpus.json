@@ -1,0 +1,64 @@
+{
+  "rows": 85096,
+  "source": "reBEN (BigEarthNet v2.0)",
+  "licence": "CDLA-Permissive-1.0",
+  "arms": {
+    "optical": 46592,
+    "sar": 19252,
+    "fused": 19252
+  },
+  "answers": {
+    "yes": 42535,
+    "no": 42561
+  },
+  "answers_per_arm": {
+    "optical": {
+      "yes": 23283,
+      "no": 23309
+    },
+    "sar": {
+      "yes": 9626,
+      "no": 9626
+    },
+    "fused": {
+      "yes": 9626,
+      "no": 9626
+    }
+  },
+  "majority_answer_floor": {
+    "optical": 0.5003,
+    "sar": 0.5,
+    "fused": 0.5
+  },
+  "questions_per_arm": {
+    "optical": {
+      "landcover_presence": 33584,
+      "landcover_forest": 13008
+    },
+    "sar": {
+      "landcover_presence": 6244,
+      "landcover_forest": 13008
+    },
+    "fused": {
+      "landcover_presence": 6244,
+      "landcover_forest": 13008
+    }
+  },
+  "questions": {
+    "forest_pool": 13008,
+    "presence/optical": 27340,
+    "sar_presence/3arm": 6244,
+    "group/3arm": 13008
+  },
+  "splits": {
+    "val": 41850,
+    "train": 43246
+  },
+  "sar_answerable_classes": [
+    "Industrial or commercial units",
+    "Inland waters",
+    "Marine waters",
+    "Urban fabric"
+  ],
+  "out": "/data/manifests/optsar_fusion.jsonl"
+}

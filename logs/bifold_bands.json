@@ -1,0 +1,126 @@
+{
+  "band_counts_seen": [
+    10
+  ],
+  "channels": [
+    {
+      "channel": 0,
+      "observed_mean": 439.4,
+      "nearest": "B02",
+      "nearest_reference_mean": 429.9,
+      "residual": 9.4,
+      "runner_up": "B04",
+      "margin": 141.5
+    },
+    {
+      "channel": 1,
+      "observed_mean": 681.4,
+      "nearest": "B03",
+      "nearest_reference_mean": 614.2,
+      "residual": 67.2,
+      "runner_up": "B04",
+      "margin": 24.0
+    },
+    {
+      "channel": 2,
+      "observed_mean": 651.1,
+      "nearest": "B03",
+      "nearest_reference_mean": 614.2,
+      "residual": 36.9,
+      "runner_up": "B04",
+      "margin": 24.0
+    },
+    {
+      "channel": 3,
+      "observed_mean": 1105.1,
+      "nearest": "B12",
+      "nearest_reference_mean": 1009.3,
+      "residual": 95.8,
+      "runner_up": "B05",
+      "margin": 58.6
+    },
+    {
+      "channel": 4,
+      "observed_mean": 2321.6,
+      "nearest": "B8A",
+      "nearest_reference_mean": 2266.5,
+      "residual": 55.1,
+      "runner_up": "B08",
+      "margin": 47.5
+    },
+    {
+      "channel": 5,
+      "observed_mean": 2774.7,
+      "nearest": "B8A",
+      "nearest_reference_mean": 2266.5,
+      "residual": 508.2,
+      "runner_up": "B08",
+      "margin": 47.5
+    },
+    {
+      "channel": 6,
+      "observed_mean": 2905.5,
+      "nearest": "B8A",
+      "nearest_reference_mean": 2266.5,
+      "residual": 639.1,
+      "runner_up": "B08",
+      "margin": 47.5
+    },
+    {
+      "channel": 7,
+      "observed_mean": 2293.4,
+      "nearest": "B8A",
+      "nearest_reference_mean": 2266.5,
+      "residual": 27.0,
+      "runner_up": "B08",
+      "margin": 47.5
+    },
+    {
+      "channel": 8,
+      "observed_mean": 1446.5,
+      "nearest": "B11",
+      "nearest_reference_mean": 1594.4,
+      "residual": 147.9,
+      "runner_up": "B06",
+      "margin": 198.0
+    },
+    {
+      "channel": 9,
+      "observed_mean": 3016.2,
+      "nearest": "B8A",
+      "nearest_reference_mean": 2266.5,
+      "residual": 749.7,
+      "runner_up": "B08",
+      "margin": 47.5
+    }
+  ],
+  "inferred_order": [
+    "B02",
+    "B03",
+    "B03",
+    "B12",
+    "B8A",
+    "B8A",
+    "B8A",
+    "B8A",
+    "B11",
+    "B8A"
+  ],
+  "matches_configilm": false,
+  "duplicate_assignments": [
+    "B03",
+    "B8A"
+  ],
+  "expected_configilm": [
+    "B02",
+    "B03",
+    "B04",
+    "B08",
+    "B05",
+    "B06",
+    "B07",
+    "B11",
+    "B12",
+    "B8A"
+  ]
+}

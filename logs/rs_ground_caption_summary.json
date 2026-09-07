@@ -1,0 +1,16 @@
+{
+ "rows": 19896,
+ "splits": {
+  "train": 16657,
+  "val": 3239
+ },
+ "tasks": {
+  "ground_presence": 4800,
+  "ground_reference": 7679,
+  "ground_point": 7417
+ },
+ "sources": {
+  "RarePlanes (real split)": 13923,
+  "SpaceNet 6 / MSAW (Rotterdam)": 5973
+ }
+}

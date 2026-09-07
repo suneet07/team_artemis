@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SatQuery QA Sample Schema",
+  "type": "object",
+  "properties": {
+    "sample_id": {"type": "string"},
+    "adapter": {"type": "string"},
+    "task": {"type": "string"},
+    "images": {"type": "array", "items": {"type": "string"}},
+    "image_roles": {"type": "array", "items": {"type": "string"}},
+    "modality": {"type": "array", "items": {"type": "string"}},
+    "effective_gsd_m": {"type": "array", "items": {"type": "number"}},
+    "question": {"type": "string"},
+    "answer": {"type": "string"},
+    "answer_type": {"type": "string"},
+    "answer_vocab": {"type": ["string", "null"]},
+    "template_id": {"type": "string"},
+    "paraphrase_id": {"type": "integer"},
+    "source": {"type": "string"},
+    "source_ann_ids": {"type": "array", "items": {"type": "string"}},
+    "licence": {"type": "string"},
+    "provenance_chain": {"type": "array", "items": {"type": "string"}},
+    "generator_version": {"type": "string"},
+    "split": {"type": "string"},
+    "balance_key": {"type": "string"}
+  },
+  "required": [
+    "sample_id", "adapter", "task", "images", "image_roles", "modality", 
+    "effective_gsd_m", "question", "answer", "answer_type", "template_id", 
+    "paraphrase_id", "source", "source_ann_ids", "licence", "provenance_chain", 
+    "generator_version", "split", "balance_key"
+  ]
+}

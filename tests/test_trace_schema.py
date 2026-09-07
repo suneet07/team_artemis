@@ -191,3 +191,35 @@ def test_write_json_roundtrip(tmp_path):
     trace = minimal_builder().write_json(path)
     loaded = json.loads(path.read_text(encoding="utf-8"))
     assert loaded == trace
+
+
+def test_router_path_reaches_the_built_trace():
+    """The field must be *emitted*, not merely validated.
+
+    ``set_routing`` used to store ``router_path`` on the builder while
+    ``build()`` emitted ``self._trace``. Every trace therefore passed the
+    "routing was set" check and shipped without the field -- validated absent.
+    Section 4.5 measures rule-router accuracy against the LLM fallback rate and
+    the trace viewer renders it, so an omitted field breaks both silently.
+    """
+    from satquery.agent.task_enum import RouterPath, Task
+    from satquery.agent.trace import TraceBuilder
+
+    builder = TraceBuilder("Is there water here?")
+    builder.set_routing(Task.SINGLE_VQA, RouterPath.RULES)
+    builder.set_parameter_check(passed=True, rejected=[])
+    trace = builder.build()
+
+    assert trace["router_path"] == "rules"
+    assert trace["graded"]["task_selected"] == "single_vqa"
+
+
+def test_router_path_accepts_the_enum_and_the_string():
+    from satquery.agent.task_enum import RouterPath, Task
+    from satquery.agent.trace import TraceBuilder
+
+    for given, expected in ((RouterPath.LLM, "llm"), ("rules", "rules")):
+        builder = TraceBuilder("q")
+        builder.set_routing(Task.SINGLE_VQA, given)
+        builder.set_parameter_check(passed=True, rejected=[])
+        assert builder.build()["router_path"] == expected

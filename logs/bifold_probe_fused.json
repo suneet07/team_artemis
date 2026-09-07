@@ -1,0 +1,43 @@
+{
+  "arm": "fused",
+  "model": "BIFOLD-BigEarthNetv2-0/resnet50-all-v0.2.0",
+  "candidates": {
+    "s1=vh_vv,s2=configilm": {
+      "accuracy": 0.5007,
+      "scored": 1500,
+      "per_question_type": {
+        "landcover_forest_fused": 0.4967,
+        "landcover_presence_fused": 0.5104
+      },
+      "majority_answer_floor": 0.502
+    },
+    "s1=vh_vv,s2=sorted": {
+      "accuracy": 0.496,
+      "scored": 1500,
+      "per_question_type": {
+        "landcover_forest_fused": 0.492,
+        "landcover_presence_fused": 0.5058
+      },
+      "majority_answer_floor": 0.502
+    },
+    "s1=vv_vh,s2=configilm": {
+      "accuracy": 0.498,
+      "scored": 1500,
+      "per_question_type": {
+        "landcover_forest_fused": 0.4949,
+        "landcover_presence_fused": 0.5058
+      },
+      "majority_answer_floor": 0.502
+    },
+    "s1=vv_vh,s2=sorted": {
+      "accuracy": 0.498,
+      "scored": 1500,
+      "per_question_type": {
+        "landcover_forest_fused": 0.4949,
+        "landcover_presence_fused": 0.5058
+      },
+      "majority_answer_floor": 0.502
+    }
+  },
+  "best": "s1=vh_vv,s2=configilm"
+}

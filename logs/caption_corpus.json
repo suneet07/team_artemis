@@ -1,0 +1,30 @@
+{
+ "rows": 49602,
+ "by_source": {
+  "RarePlanes (real split)": 8993,
+  "SpaceNet 2 (Vegas/Paris/Shanghai/Khartoum)": 9472,
+  "SpaceNet 6 / MSAW (Rotterdam)": 6306,
+  "RSVQA-HR": 4848,
+  "BigEarthNet.txt": 19983
+ },
+ "by_mode": {
+  "concise": 15140,
+  "detailed": 14479,
+  "landcover": 19983
+ },
+ "median_words_generated": 16,
+ "target_words": 47,
+ "diversity": {
+  "captions": 29619,
+  "top_opening_share": 0.1001,
+  "distinct_openings": 34,
+  "distinct_4gram_ratio": 0.014,
+  "median_words": 16,
+  "median_sentences": 1
+ },
+ "diversity_reference_vrsbench": {
+  "top_opening_share": 0.173,
+  "median_words": 47,
+  "median_sentences": 3
+ }
+}
