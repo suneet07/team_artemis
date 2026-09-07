@@ -136,37 +136,104 @@ function MapPane({
             }}
           />
         </Source>
+      ) : scene?.preview_url && scene.bounds_wgs84 ? (
+        /* No tile pyramid is built for an uploaded scene, so the single
+           percentile-stretched preview is placed on its own footprint instead.
+           Without this the imagery window renders an empty black canvas with a
+           thin outline -- the scene is loaded, prepared and answerable, and the
+           map simply had nothing to paint, which reads as a broken upload.
+
+           Quality caveat worth keeping in mind: this is one 512 px image
+           stretched across the whole extent, so it will not sharpen as you zoom
+           the way real tiles would. It is orientation, not analysis -- every
+           measured claim still comes from a tool, with its own overlay. */
+        <Source
+          id={`${paneId}-scene-preview`}
+          type="image"
+          url={resolveUrl(scene.preview_url)}
+          coordinates={[
+            [scene.bounds_wgs84[0], scene.bounds_wgs84[3]],
+            [scene.bounds_wgs84[2], scene.bounds_wgs84[3]],
+            [scene.bounds_wgs84[2], scene.bounds_wgs84[1]],
+            [scene.bounds_wgs84[0], scene.bounds_wgs84[1]],
+          ]}
+        >
+          <Layer
+            id={`${paneId}-scene-preview-layer`}
+            type="raster"
+            paint={{
+              "raster-opacity": baseOpacity,
+              "raster-fade-duration": 100,
+            }}
+          />
+        </Source>
       ) : null}
 
       {/* Largest extent underneath: a broad mask drawn last would bury the
           narrow ones the answer actually turns on. */}
       {layers
-        .filter((layer) => layer.visible && layer.asset.tile_url_template)
+        .filter(
+          (layer) =>
+            layer.visible &&
+            (layer.asset.tile_url_template ||
+              /* No tile pyramid is built for evidence, so an overlay PNG is
+                 placed on its own georeferenced footprint instead. Requiring
+                 tiles meant every mask the tools produced -- the NDWI water
+                 mask, the texture segmentation, the change map -- was written,
+                 registered, listed in the evidence panel, and never drawn. The
+                 answer cited a measurement the user could not see. */
+              (layer.asset.overlay_url && layer.asset.bounds_wgs84)),
+        )
         .slice()
         .sort(
           (a, b) =>
             (b.asset.stats?.area_km2 ?? 0) - (a.asset.stats?.area_km2 ?? 0),
         )
-        .map((layer) => (
-          <Source
-            key={layer.asset.asset_id}
-            id={`${paneId}-asset-${layer.asset.asset_id}`}
-            type="raster"
-            tiles={[resolveUrl(layer.asset.tile_url_template!)]}
-            tileSize={256}
-            bounds={layer.asset.bounds_wgs84 ?? undefined}
-          >
-            <Layer
-              id={`${paneId}-asset-layer-${layer.asset.asset_id}`}
+        .map((layer) =>
+          layer.asset.tile_url_template ? (
+            <Source
+              key={layer.asset.asset_id}
+              id={`${paneId}-asset-${layer.asset.asset_id}`}
               type="raster"
-              paint={{
-                "raster-opacity": layer.opacity,
-                "raster-fade-duration": 100,
-                "raster-resampling": "nearest",
-              }}
-            />
-          </Source>
-        ))}
+              tiles={[resolveUrl(layer.asset.tile_url_template)]}
+              tileSize={256}
+              bounds={layer.asset.bounds_wgs84 ?? undefined}
+            >
+              <Layer
+                id={`${paneId}-asset-layer-${layer.asset.asset_id}`}
+                type="raster"
+                paint={{
+                  "raster-opacity": layer.opacity,
+                  "raster-fade-duration": 100,
+                  "raster-resampling": "nearest",
+                }}
+              />
+            </Source>
+          ) : (
+            <Source
+              key={layer.asset.asset_id}
+              id={`${paneId}-asset-img-${layer.asset.asset_id}`}
+              type="image"
+              url={resolveUrl(layer.asset.overlay_url!)}
+              coordinates={[
+                [layer.asset.bounds_wgs84![0], layer.asset.bounds_wgs84![3]],
+                [layer.asset.bounds_wgs84![2], layer.asset.bounds_wgs84![3]],
+                [layer.asset.bounds_wgs84![2], layer.asset.bounds_wgs84![1]],
+                [layer.asset.bounds_wgs84![0], layer.asset.bounds_wgs84![1]],
+              ]}
+            >
+              <Layer
+                id={`${paneId}-asset-img-layer-${layer.asset.asset_id}`}
+                type="raster"
+                paint={{
+                  "raster-opacity": layer.opacity,
+                  "raster-fade-duration": 100,
+                  "raster-resampling": "nearest",
+                }}
+              />
+            </Source>
+          ),
+        )}
 
       {/* The scene footprint, so the ground outside it reads as "no data"
           rather than as a failed render. */}

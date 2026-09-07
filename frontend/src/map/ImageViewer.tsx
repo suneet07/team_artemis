@@ -118,7 +118,13 @@ export function ImageViewer({ scene }: { scene: Scene }) {
         )}
       >
         <div
-          className="relative origin-top-left will-change-transform"
+          /* `w-fit` is load-bearing, not cosmetic. Masks and grounding boxes are
+             absolutely positioned as a percentage of THIS element, so it has to
+             be exactly the size of the image. While the image was `w-full` the
+             two matched by accident; bounding the image to the pane left this
+             wrapper full-width, and every box landed to the right of the
+             picture it was describing. */
+          className="relative w-fit origin-top-left will-change-transform"
           style={{
             transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           }}
@@ -133,7 +139,12 @@ export function ImageViewer({ scene }: { scene: Scene }) {
                 h: event.currentTarget.naturalHeight,
               })
             }
-            className="block w-full select-none"
+            /* `w-full` alone lets a portrait image set the pane's height from
+               its aspect ratio. Bounded by the pane and centred instead, so the
+               viewer fills the space it is given rather than the space the
+               image wants. Pan and zoom still work -- the transform wrapper is
+               unchanged. */
+            className="block max-h-full w-auto max-w-full select-none"
             style={{ opacity: baseOpacity, imageRendering: "pixelated" }}
           />
 
@@ -160,15 +171,23 @@ export function ImageViewer({ scene }: { scene: Scene }) {
                 .filter((entry) => entry.visible)
                 .map((entry) => {
                   const [x0, y0, x1, y1] = entry.box;
+                  /* Boxes are in the SOURCE raster's pixels; the element on
+                     screen is the preview, which `_write_preview` thumbnails to
+                     at most 512 px. Dividing source pixels by the preview's
+                     natural size overshoots by exactly that ratio. Scene
+                     dimensions when the API reports them, preview size only as
+                     a fallback. */
+                  const boxW = scene.width_px || naturalSize.w;
+                  const boxH = scene.height_px || naturalSize.h;
                   return (
                     <span
                       key={entry.key}
                       className="pointer-events-none absolute border-2"
                       style={{
-                        left: `${(x0 / naturalSize.w) * 100}%`,
-                        top: `${(y0 / naturalSize.h) * 100}%`,
-                        width: `${((x1 - x0) / naturalSize.w) * 100}%`,
-                        height: `${((y1 - y0) / naturalSize.h) * 100}%`,
+                        left: `${(x0 / boxW) * 100}%`,
+                        top: `${(y0 / boxH) * 100}%`,
+                        width: `${((x1 - x0) / boxW) * 100}%`,
+                        height: `${((y1 - y0) / boxH) * 100}%`,
                         borderColor: entry.colour,
                       }}
                     >

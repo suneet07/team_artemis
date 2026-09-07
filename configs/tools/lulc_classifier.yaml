@@ -1,17 +1,14 @@
 name: lulc_classifier
-description: Multi-label land use / land cover classification over image tiles.
+description: Multi-label land-use/land-cover classifier over SAR (sigmoid, not softmax - one patch can be forest and water and pasture). Scoped to radar because that is the modality the VLM cannot read; optical land cover is already served by spectral_index and rs_vqa, both measured. One input signal among several to the end-to-end calibrator; it does not anchor system confidence.
 version: 1
-required_modalities: [optical]
+required_modalities: [sar]
 confidence_source: learned_logprob
-expected_latency_ms: 500
+expected_latency_ms: 800
 permitted_parameters:
-  threshold:
-    type: float
-    range: [0.0, 1.0]
-    default: 0.5
-    optional: true
+  top_k:
+    type: int
+    range: [1, 44]
+    default: 5
 outputs:
   labels:
     type: stats
-  confidence:
-    type: float

@@ -8,24 +8,21 @@ dependencies = [
     "pyyaml>=6.0",
     "numpy>=2.0",
     "rasterio>=1.3",
-    "scipy>=1.10",
-    "langgraph>=0.2",
+    # Imported by the base package, not by an extra: the deterministic tools
+    # (P6), co-registration (P3) and the SAR model-input stack (P2) all run on
+    # the CPU-only headless path of section 4.11, which must work inside one
+    # container with no extras installed. Declaring them under an extra while
+    # `satquery.tools` imports them at module scope makes a clean
+    # `pip install -e ".[dev]"` fail on import -- which is what CI does first.
+    "scipy>=1.11",
+    "scikit-image>=0.22",
+    "pillow>=10.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
     "ruff>=0.4",
-    "fastapi>=0.110",
-    "httpx>=0.27",
-]
-agent = [
-    "outlines>=0.1",
-]
-api = [
-    "fastapi>=0.110",
-    "uvicorn>=0.29",
-    "httpx>=0.27",
 ]
 # Training / timing harness only. Deliberately NOT in [dev]: CI installs dev and
 # runs `ruff check . && pytest -q` on a CPU runner, and pulling torch there would
@@ -41,6 +38,27 @@ coreg = [
     "arosics>=1.0.0",
 ]
 
+sar = [
+    # Optional convenience wrapper around SNAP's command line. SNAP itself is
+    # GPL-3.0 and is invoked as an external process either way (section 4.2).
+    "pyrosar>=0.23",
+]
+
+agent = [
+    "langgraph>=0.2",
+]
+
+# Copernicus acquisition (satquery/ingest/copernicus). Deliberately an extra:
+# the headless eval path (section 4.11) runs with no network at all, so the
+# container that scores the hidden set must not carry an HTTP stack. Nothing on
+# that path imports it -- the fetcher is training-data machinery.
+fetch = [
+    "requests>=2.31",
+    # GDAL needs its S3 vsi driver for windowed reads over byte ranges; rasterio
+    # wheels ship it, but pin the floor that has it.
+    "rasterio>=1.3",
+]
+
 train = [
     "torch>=2.4",
     "lightning>=2.4",
@@ -49,6 +67,7 @@ train = [
     "peft>=0.13",
     "accelerate>=0.34",
     "pillow>=10.0",
+    "scikit-learn>=1.3",
 ]
 
 [build-system]
@@ -67,4 +86,3 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]

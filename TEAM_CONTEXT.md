@@ -49,8 +49,8 @@ thing a new person needs to understand.
 
 ### Empty stubs — directory exists, zero lines of code
 
-`satquery/sar/` · `satquery/coreg/` · `satquery/tiling/` · `satquery/fusion/` ·
-`satquery/confidence/` · `satquery/report/` · `satquery/serving/` · `satquery/api/`
+`satquery/serving/` · `satquery/api/` — that is P9 and the whole FastAPI layer.
+(P2, P3, P4, P7 and P8 are no longer on this list; see §3.7.)
 
 That is **P2, P3, P4, P7, P8, P9 and the whole API** — most of the pipeline the plan
 describes. `training/train_lora.py` does not exist at all. Nobody should read the Part 7
@@ -175,6 +175,84 @@ Also: `logs/ckpt_audit.md` currently has **one filled cell** and a budget table 
 
 ---
 
+## 3.7 The audit of 2026-08-28 — what was stubbed, and what it cost
+
+A pass over Phases 0-4 against the code found that most of P5 existed as
+*shape* rather than as behaviour, and that several stubs were not merely
+incomplete but actively false in the graded artifact. Recorded here because the
+pattern matters more than the individual fixes.
+
+**The controller could not run.** `route_node` handed a string to
+`set_routing`, which does `self._task.value` at build time, so `TraceBuilder`
+raised on every non-refusal path. `gate_node` handed a `ToolManifest` dataclass
+to something that called `.get()` on it. Neither had ever been executed
+end to end; both were covered by tests that exercised the pieces separately.
+
+**Stubs that lie are worse than stubs that fail.** `executor_node` wired
+`lambda p: {"result": "ok", "confidence": 0.9}` for every tool; `confidence_node`
+returned a hardcoded `0.95`; `evalcli/batch.py` wrote `"Mocked answer for ..."`
+with `parameter_check.passed = True`. Each of those writes a confident, false
+value into the file the problem statement says is the graded artifact, and a
+reader cannot tell it from a real run. **A stub must fail loudly or say it is a
+stub in its own output.**
+
+**The tools and the parameter gate were mutually incompatible.** The tools took
+their rasters through `params` (`index_array`, `sigma0_array`, `image_array`),
+but `params` is exactly what section 4.5.4 validates against the manifest, and
+the manifests permit `index` and `threshold_method`, not arrays. So no real tool
+could pass its own gate — which is *why* the controller ran stubs. Pixels now
+travel on `ToolContext`; only manifest-declared settings travel in `params`.
+**If a design forces you to bypass a gate, the design is wrong, not the gate.**
+
+**Thresholds had drifted back into Python.** `0.2`, `0.3`, `-18.0`, `-3.0`,
+`5.0` were hardcoded in `tools/deterministic.py`, and `(sar_band, polarisation)`
+keying did not exist, so an X-band RISAT-2B scene was silently scored against
+C-band physics — the Critical risk row the plan opens with. All of it is in
+`preprocessing.yaml` now, and an untuned band warns and lowers confidence.
+
+**Two performance choices would have missed the SLA outright.**
+`compute_texture` was `generic_filter(np.std, size=3)` — a Python callback per
+pixel, minutes on a benchmark chip and hours on a full scene against a 5 min
+prep SLA. `GeoTiler` defaulted to 1024 px tiles, four times the frozen
+`max_pixels`, so every tile it produced would have been downsampled inside the
+processor with no record of it.
+
+**Things that were quietly wrong in ways tests would not catch.**
+`format_yes_no` matched `"no"` as a substring, so "a road to the **no**rth",
+"**no**ne of the fields" and "we can**no**t tell" all scored `no` on binary VQA.
+`create_refusal` returned a `remedy` key the trace schema forbids, so every
+graceful refusal failed validation. `change_stats` returned `float("inf")` for
+new construction, which is not valid JSON. The ECE binning used `< upper` on
+every bin, so a prediction of exactly 1.0 fell in no bin and was dropped —
+precisely the samples a calibration number is most often wrong about. The
+disagreement table returned the *water* row `wet_smooth_soil` for a built-up
+conflict, and picked `sar` by default when no rule fired, against the plan's
+explicit "never silently pick one".
+
+**The routing eval set measured nothing.** It sampled the expected task and the
+expected router path *at random*, so its ground truth was noise; it was
+unseeded, so the file changed on every run; it wrote to a hard-coded path on one
+developer's machine; and every `expected_tools` entry was `["dummy_tool"]`. It
+is now authored case by case, deterministic and byte-stable, and
+`training/eval/score_routing.py` reports the number the risk register triggers
+on. Current: **100% task accuracy on unambiguous cases, 100% invalid-config
+catch rate, 95% routed by rules.**
+
+**The licence gate cried wolf.** It scanned for bare substrings, so the ordinary
+English words "second" and "ground" tripped it the day real prose was written.
+It now matches word-boundary identifiers, exempts `CREDITS.md` (naming an
+exclusion is that file's job), checks that every shipped weight maps to a
+CREDITS entry marked CLEAR, checks the AROSICS `>=1.0.0` pin, and asserts SNAP
+is never imported.
+
+**CI existed as an empty directory.** `.github/workflows/` had no workflow in
+it, so none of the gates the plan calls non-negotiable had ever run
+automatically. There is now a workflow with mask conformance, the parameter
+gate, the trace schema, the licence rails and routing accuracy as separately
+named checks.
+
+---
+
 ## 4. Mistakes already made — do not repeat
 
 Each of these actually happened on this project.
@@ -193,6 +271,11 @@ Each of these actually happened on this project.
 | 10 | **Batch-size arithmetic under DDP** | `steps_for_epoch = 80000 // batch_size` treats per-device batch as global — wrong by N× | Global batch = micro × accum × devices. Write it out |
 | 11 | **Optimising frozen parameters** | `AdamW(self.model.parameters())` includes the frozen base | Pass only trainable params |
 | 12 | **No peak VRAM reported** | The one number needed to choose a batch size was missing from the first run | Every timing run reports peak VRAM per cell |
+| 13 | **Inferring a coordinate scale from magnitude** | Three times. VRSBench references are **0–100**, Qwen predictions **0–1000**, our generator **0–1 floats**. Normalising Qwen by image size clamped every value above 512 to 1.0, collapsed the box, and reported **75% "unparsable"** — indistinguishable from a model that cannot ground at all. Only dumping raw replies showed the answers were fine | Coordinate scale is **declared per contract**, never guessed. `AnswerFormat.box_scale`. Print raw model output before trusting any score |
+| 14 | **Re-deriving a fixed regex** | A bare number scan takes the **`2` out of `bbox_2d`** as the first coordinate and shifts every value one place. Fixed once in `format_box`, then re-introduced by writing a fresh pattern for `point_2d` — which scored **0.0%** and read as total model failure | Import `formatter._BOX_NUMBER`; do not write a new number pattern |
+| 15 | **Reporting a stratified sample as a score** | Class-balanced sampling gives `vehicle` 4% weight where the benchmark gives it 28%. It moved Grounding DINO's number by 3–7 points | `--sampling random` for any headline. Stratified is for per-class diagnosis only, and must be labelled as such |
+| 16 | **Comparing models on different samples** | The detector and the base VLM were each measured on their own draw for a full day before anyone scored them on the same questions | Fixed shared row list (`/data/eval/pipeline_sample.json`). Paired comparison or no comparison |
+| 17 | **Two `modal run` calls of one app** | The second silently displaces the first — seen as "Webhook label stolen", then as a fetch that simply stopped. Cost a SpaceNet 6 run and a completed sweep variant | One app, one run at a time. Chain sequentially, or use a single entrypoint that does both. `--detach` for anything that must outlive the terminal |
 
 ---
 
@@ -208,6 +291,38 @@ Reopening these wastes days and re-imports risk. Each was reversed with a stated
 | **C52 → C54** | RSVQA-HR imagery source DISPUTED (possibly Sentinel-2 over the Netherlands) | **USGS HRO 15 cm, US northeast, public domain.** C27 stands | Blogs conflate HR and LR because they share a paper |
 | **Compute as the binding constraint** | T4 free tier, 200–320 GPU-hours, triage ladder live | ~50 h on a single A100-80GB; ladder is paper-only fallback | C41 |
 | **Change data** | SECOND-family (CDVQA / SECOND-CC / QAG-360K) | SpaceNet 7 primary + HRSCD + OSCD + self-generated Indian Sentinel pairs | SECOND has **no licence statement of any kind**, and all three "independent" sources descend from it |
+
+**`change_map` — commissioned, trained, abandoned. Closed 2026-09-06; re-litigated twice, do not reopen.**
+
+It was never rejected on licence grounds, which is the version everyone
+half-remembers. C33 -> C56 dropped *training it on LEVIR/SECOND/QAG*; the
+SpaceNet 7 route that replaced them is permitted, and that is what we trained.
+The full arc:
+
+| step | what happened |
+|---|---|
+| pitched | Measurement over inference. CDVQA `smallest_change` sits at 32-37% for every published model; the plan targeted >60% via `change_stats` arithmetic on a mask |
+| trained | Siamese U-Net on 12,004 SpaceNet 7 pairs. Best **F1 0.2931 / IoU 0.1717** at step 2750, then drifted down. Dead end |
+| alternatives | TinyCD non-commercial · Open-CD Apache code but weights inherit LEVIR academic-only, masks are non-directional, 8x resolution gap · SpaceNet winners' weights are Apache-2.0 and genuinely published, but wrong task and resolution · awesome-list has no weights |
+| closed | The problem statement names **CDVQA** as the graded benchmark, so the trained VLM adapter is what serves change VQA |
+
+**The decisive reason is task mismatch, not weight quality.** CDVQA asks about
+*land cover* -- buildings, low vegetation, trees, water, playground. Our detector
+finds *buildings*, and the measurement pipeline needs footprints at inference
+that CDVQA does not have and we cannot produce. At F1 0.95 it still could not
+answer a CDVQA question.
+
+**What survives and is worth keeping.** The arithmetic half is finished and
+verified: router plus `change_stats` scored **100% AA on 2,012 rows**. It was
+scored by handing it SpaceNet 7's own ground-truth footprints, so what is empty
+is *perception*, not reasoning. If a land-cover segmenter ever lands on a
+clearable licence, the reasoning layer is already built and tested.
+
+**Do not compare 43.5% to 68.0%.** The old adapter's 43.5% was our SpaceNet 7
+corpus (`change_compare/count/direction/magnitude/presence/where`); the new
+adapter's 68.0% is CDVQA's eight land-cover types. Different corpora, different
+taxonomies. The claim that holds is "the shipped adapter is measured good on the
+benchmark we are graded on", not a 24-point gain.
 
 **Permanently excluded — with reasons, in `CREDITS.md`:** xView3-SAR · DIOR · FAIR1M ·
 NWPU-Captions · RSICD · VRSBench (training use) · TinyCD and ChangeFormer weights ·
@@ -270,6 +385,87 @@ A new person will violate these without knowing they exist.
 | Data-loading cost | ❌ **Not modelled at all** | See §8.1 — the dominant remaining risk |
 | Captioning target length | ⚠ | Longer than the 24-token synthetic answers used in the harness. Budget is unvalidated for it |
 | Checkpoint I/O cost | ❌ | Unmodelled |
+| change_vqa AA 68.0% on CDVQA Val | ✅ | 1,200 balanced rows, IF 1.000, 0 unparsable. See §7.1 |
+| change_vqa "beats 68.6% SOTA" | ❌ | Val + in-repo scorer vs Test1/Test2 + official scorer. Not comparable |
+| The 0.727 from the first bakeoff run | ❌ | `--limit 160` slice, 59% yes/no. Superseded by the balanced 1,200 |
+| +23 points over the 45.0% blind ceiling | ✅ | The defensible claim about vision contribution |
+
+---
+
+## 7.1 The change_vqa adapter — trained, scored, done (2026-09-06)
+
+First adapter in this project to generate a token. Everything before this was
+loss curves.
+
+**Training.** 4,000 steps, 2.41 h on A100, 2.167 s/step, peak 19.13 GB.
+Loss 6.314 -> 0.172. LoRA r=16 alpha=32 all-linear, 40,271,872 trainable
+(0.899%). Corpus `change_vqa_cdvqa_combined.jsonl`, 37,518 train rows, six
+composite views per sample.
+
+val_loss fell to the last check -- 0.1637 (3250), 0.1615 (3500), 0.1615 (3750),
+**0.1608 (4000)**. No overfitting. The step-2750 "val has risen three times"
+warning was noise; val set four new bests after it fired. Do not trust that
+warning at `--val-batches 20`: 160 samples per check is too few, and train_loss
+in the same line is a single batch.
+
+**Result.** 1,200 rows of official CDVQA Val, 150 per question type:
+
+| metric | value |
+|---|---|
+| AA (macro over 8 types) | **68.0%** |
+| overall | 68.0% (identical -- split is balanced) |
+| instruction-following | 1.000 |
+| unparsable | 0 |
+
+| type | acc | | type | acc |
+|---|---|---|---|---|
+| change_or_not | 85.3% | | largest_change | 66.7% |
+| increase_or_not | 83.3% | | change_to_what | 65.3% |
+| decrease_or_not | 81.3% | | change_ratio | 52.0% |
+| change_ratio_types | 80.7% | | **smallest_change** | **29.3%** |
+
+Blind ceiling is 45.0%, so **+23 points come from actually seeing the imagery**.
+That gap is the defensible claim, not the absolute number.
+
+**What this number is NOT.** Published CDVQA figures (55.3% baseline, 68.6%
+SOTA) are Test1/Test2 through the official scorer. This is Val through the
+in-repo comparator. Two uncontrolled differences, so 68.0 is not "we matched
+SOTA" -- it is "we are in that range under our own measurement". Closing it
+needs a Test1/Test2 run through the official scorer.
+
+**`smallest_change` at 29.3% is the outlier.** Every other type clears 52%. It
+costs roughly 5 points of AA alone. Unresolved whether that is a real capability
+gap or a formatter/vocabulary mismatch -- it is the type most likely to have
+near-tied class ratios, where a small ranking error flips the answer.
+
+**A sampling trap, recorded because it nearly became a false claim.** The first
+run used `--limit 160`, which *slices* the first 160 rows rather than sampling.
+That slice was 59% yes/no questions and left four types on n=8-12; it scored
+**0.727**, above published SOTA. The number was an artifact of which rows the
+slice happened to contain. Always score the balanced 1,200
+(`/data/manifests/cdvqa_heldout.jsonl`), never a bare `--limit`.
+
+**`--composites 6` is mandatory** when scoring this adapter. It trained on six
+views per sample and `bakeoff` leaves rows as-is by default, which would score
+the model on an input shape it never saw.
+
+**Leakage was checked and there is none.** Official Train (1,574 image pairs)
+and official Val (393 pairs) share zero images. An earlier scare came from
+comparing Val against the *combined* manifest, which embeds the 1,200 Val rows --
+so Val overlapped itself. Compare against `split == "train"` rows only.
+
+**Adapter inventory.** `change_vqa` is the only trained LoRA adapter that exists.
+`rs_vqa` has no checkpoint on the Volume, so `Api` reports it absent -- correct
+behaviour, not a bug. `checkpoints/change_map/` holds the Siamese U-Net (`.pt`,
+not a LoRA). Final weights: `/data/checkpoints/change_vqa/adapter`, with
+snapshots at `adapter_step1000/2000/3000/4000`.
+
+**Housekeeping left.** `checkpoints/change_vqa/` still holds `step=4500.ckpt`,
+`best-v1.ckpt` and `last-v1.ckpt` from the earlier SpaceNet 7 run. They are
+stale and misleading beside a 4,000-step run. Not deleted -- removal needs a
+decision, not an assumption.
+
+---
 
 ---
 

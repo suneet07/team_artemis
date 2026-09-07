@@ -1,0 +1,54 @@
+{
+  "run": "phase0_item9_bakeoff",
+  "date": "2026-09-05T21:39:58.871779+00:00",
+  "adapter": "/data/checkpoints/change_vqa/adapter",
+  "composites": 6,
+  "ablate_images": "none",
+  "models": {
+    "Qwen/Qwen3-VL-4B-Instruct": {
+      "cdvqa": {
+        "samples": 1200,
+        "overall_accuracy": 0.68,
+        "average_accuracy": 0.68,
+        "per_type": {
+          "change_or_not": {
+            "n": 150,
+            "accuracy": 0.8533
+          },
+          "change_ratio": {
+            "n": 150,
+            "accuracy": 0.52
+          },
+          "change_ratio_types": {
+            "n": 150,
+            "accuracy": 0.8067
+          },
+          "change_to_what": {
+            "n": 150,
+            "accuracy": 0.6533
+          },
+          "decrease_or_not": {
+            "n": 150,
+            "accuracy": 0.8133
+          },
+          "increase_or_not": {
+            "n": 150,
+            "accuracy": 0.8333
+          },
+          "largest_change": {
+            "n": 150,
+            "accuracy": 0.6667
+          },
+          "smallest_change": {
+            "n": 150,
+            "accuracy": 0.2933
+          }
+        },
+        "caveat": "Scored with the in-repo comparator, NOT the official benchmark scorer. Valid for run-to-run comparison; not quotable as a benchmark result (master plan section 6.4, C8).",
+        "instruction_following": 1.0,
+        "unparsable": 0
+      }
+    }
+  },
+  "caveat": "Scored with the in-repo comparator, NOT the official benchmark scorer. Valid for run-to-run comparison; not quotable as a benchmark result (master plan section 6.4, C8)."
+}

@@ -1,0 +1,20 @@
+{
+  "rows_scored": 4000,
+  "optical_model": "BIFOLD-BigEarthNetv2-0/resnet50-s2-v0.2.0",
+  "radar_model": "BIFOLD-BigEarthNetv2-0/resnet50-s1-v0.2.0",
+  "threshold": 0.5,
+  "optical_alone": 0.4968,
+  "radar_alone": 0.7525,
+  "agreement_rate": 0.6542,
+  "when_they_agree": {
+    "n": 2617,
+    "accuracy": 0.6905
+  },
+  "when_they_disagree": {
+    "n": 1383,
+    "optical_right": 0.1302,
+    "radar_right": 0.8698
+  },
+  "policy_agree_else_optical": 0.4968,
+  "note": "Both models answer the SAME rows here, so radar_alone and optical_alone are directly comparable -- unlike the per-arm scores, where the SAR arm asks only about radar-legible classes."
+}

@@ -1,0 +1,90 @@
+{
+ "model": "Qwen/Qwen3-VL-4B-Instruct",
+ "adapter": null,
+ "style": "styled",
+ "samples": 300,
+ "scores": {
+  "bleu_1": 0.3435,
+  "bleu_2": 0.0815,
+  "bleu_3": 0.0139,
+  "bleu_4": 0.0033,
+  "bleu": 0.0302,
+  "brevity_penalty": 0.8969,
+  "rouge_l": 0.2276,
+  "cider_d": 0.1459,
+  "mean_pred_words": 45.1,
+  "mean_ref_words": 50.0,
+  "empty_predictions": 0
+ },
+ "blind_floor": {
+  "bleu_1": 0.2819,
+  "bleu_2": 0.0513,
+  "bleu_3": 0.0051,
+  "bleu_4": 0.0008,
+  "bleu": 0.014,
+  "brevity_penalty": 0.8969,
+  "rouge_l": 0.1869,
+  "cider_d": 0.036,
+  "mean_pred_words": 45.1,
+  "mean_ref_words": 50.0,
+  "empty_predictions": 0
+ },
+ "headroom": {
+  "bleu": 0.0162,
+  "rouge_l": 0.0407,
+  "cider_d": 0.1099
+ },
+ "caveat": "Scored with the in-repo comparator, NOT the official benchmark scorer. Valid for run-to-run comparison; not quotable as a benchmark result (master plan section 6.4, C8).",
+ "examples": [
+  {
+   "image_id": "07946_0000.png",
+   "reference": "The image, sourced from GoogleEarth, features a dry, barren landscape scattered with windmills. There are three windmills visible.",
+   "prediction": "The image shows three wind turbines on arid terrain. One sits top-left, another center, and the third bottom-right. Sparse vegetation and dirt roads surround them. No water or buildings are visible. The landscape is dry, with patchy green fields nearby."
+  },
+  {
+   "image_id": "08655_0000.png",
+   "reference": "This aerial image from GoogleEarth captures a recreational area featuring two adjacent tennis courts surrounded by greenery. The tennis courts are positioned next to each other with the one on the left and the one on the right being parallel to it.",
+   "prediction": "The image shows two tennis courts in a brown enclosure, top-left. A small building sits center-right. Paved paths wind through green grass and trees, surrounding the courts. Vegetation dominates the frame, with no visible roads or water."
+  },
+  {
+   "image_id": "P0770_0006.png",
+   "reference": "The high-resolution image from Google Earth features an urban area with a cluster of buildings surrounded by roads. The buildings exhibit various rooftop colors, including reddish-brown, beige, and gray. On the bottom-right edge of the image, there is a small vehicle.",
+   "prediction": "The image shows a courtyard with dense green trees, surrounded by buildings with terracotta roofs. A paved road runs left, while a parking lot sits bottom-left. Vegetation dominates the center, with buildings framing the edges. Surfaces include concrete, asphalt, and tiled roofs."
+  },
+  {
+   "image_id": "P5789_1036.png",
+   "reference": "This grayscale image with high resolution captures a dense urban environment featuring buildings and a baseball diamond positioned on the left side of the frame.",
+   "prediction": "The image shows a grayscale urban area with multiple buildings, roads, and parking lots. Several large structures dominate the center and bottom-left, surrounded by smaller buildings. Roads crisscross the frame, with vegetation and sparse water visible in the top-left and bottom-right corners."
+  },
+  {
+   "image_id": "10506_0000.png",
+   "reference": "The image, sourced from GoogleEarth, features a small windmill situated in the lower right quadrant. The surrounding area has a weathered texture.",
+   "prediction": "The image shows a rural landscape with one prominent wind turbine in the center-right. A winding road curves from top-left to bottom-right. Sparse vegetation and dry terrain dominate, with no visible buildings or water bodies. The turbine stands on a flat, barren field."
+  },
+  {
+   "image_id": "10003_0000.png",
+   "reference": "This satellite image from Google Earth shows a storage facility featuring several storage tanks surrounded by trees. There are five visible storage tanks of similar size, with one at the bottom-right corner. The facility appears to have additional structures and an access road nearby. The tanks are positioned within a cleared area, suggesting an organized layout for the storage site.",
+   "prediction": "The image shows a facility with six large white cylindrical tanks, clustered center-right. Adjacent are small buildings and roads. Dense green forest borders the top-left. Concrete surfaces dominate, with no visible water. Vegetation lines the left edge, contrasting with the industrial layout."
+  },
+  {
+   "image_id": "08329_0000.png",
+   "reference": "The image, sourced from GoogleEarth, displays a high-angle view of a section of a road with vehicles. The image does not specify a resolution. There are three vehicles with one positioned towards the top of the image and two towards the bottom. The top-most vehicle is noticeably separate from the others, while the two at the bottom are positioned closer to each other, one towards the bottom-right, slightly to the right of the center.",
+   "prediction": "The image shows a multi-lane road with four cars: one white sedan near center, two dark sedans below, and a dark vehicle in bottom-right. Grass, sidewalks, and trees line the road\u2019s edge. A building occupies top-left. Asphalt dominates, with green vegetation and concrete pathways surrounding the scene."
+  },
+  {
+   "image_id": "06264_0000.png",
+   "reference": "The image, sourced from GoogleEarth, depicts a dam with its distinctive spillway and surrounding terrain. The dam is positioned in the lower central part of the image, creating a contrast between the water's turquoise hue above and the darker tones of the water below the structure. Surrounding the dam are patterns of terraced landforms, indicative of agricultural terraces.",
+   "prediction": "The image shows a dam with a curved concrete structure, centered bottom-right, spanning a river. Turbulent water flows beneath it. Surrounding slopes are terraced, brown with sparse green vegetation. A small road runs along the left. A building sits near the dam\u2019s base."
+  },
+  {
+   "image_id": "09816_0000.png",
+   "reference": "The image, sourced from GoogleEarth, features a landscape with apparent natural terrain and a circular storage tanks. The storage tank on the right side of the image has a small structure attached on its southern edge. There are no visible houses or roads in close proximity to the tank, indicating a possibly industrial location.",
+   "prediction": "The image shows two large circular structures, likely tanks or reservoirs, centered in the frame. One sits top-left, the other bottom-right. Surrounding them are dry, rocky terrain with sparse green vegetation. No roads or buildings are visible."
+  },
+  {
+   "image_id": "07372_0000.png",
+   "reference": "A color aerial view image from GoogleEarth shows a section of an airstrip with a single small airplane positioned in the bottom-right part of the frame. The image lacks clear details beyond the presence of the airstrip and the aircraft.",
+   "prediction": "The image shows a dry, brown field with a narrow dirt road running diagonally. Several white and black aircraft are parked in the bottom-right corner. The top-left is barren land; no vegetation or water is visible. No buildings appear."
+  }
+ ]
+}

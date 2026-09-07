@@ -1,0 +1,46 @@
+{
+  "run": "phase0_batch_saturation",
+  "device": "NVIDIA A100-SXM4-80GB",
+  "attention": "flash_attention_2",
+  "checkpointing_active": "60/60",
+  "source_px": 512,
+  "composites": 6,
+  "vision_tokens_per_sample": 1536,
+  "rungs": [
+    {
+      "micro_batch": 1,
+      "status": "ok",
+      "peak_vram_gb": 12.37,
+      "sec_per_step": 1.2275,
+      "samples_per_sec": 0.815,
+      "source_px": 512
+    },
+    {
+      "micro_batch": 2,
+      "status": "ok",
+      "peak_vram_gb": 16.02,
+      "sec_per_step": 2.1006,
+      "samples_per_sec": 0.952,
+      "source_px": 512
+    },
+    {
+      "micro_batch": 4,
+      "status": "ok",
+      "peak_vram_gb": 23.3,
+      "sec_per_step": 3.7657,
+      "samples_per_sec": 1.062,
+      "source_px": 512
+    },
+    {
+      "micro_batch": 8,
+      "status": "ok",
+      "peak_vram_gb": 37.86,
+      "sec_per_step": 6.9572,
+      "samples_per_sec": 1.15,
+      "source_px": 512
+    }
+  ],
+  "largest_that_fits": 8,
+  "fastest": 8,
+  "caveat": "Synthetic tiles. Memory and step time only -- no loss here is evidence of anything. Valid for this sequence length; a shorter one is cheaper and a longer one may not fit."
+}

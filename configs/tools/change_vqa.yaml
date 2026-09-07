@@ -1,20 +1,18 @@
 name: change_vqa
-description: Bi-temporal change question answering across two registered images via learned VLM adapter.
+description: Bi-temporal visual question answering with the change_vqa LoRA adapter. Two co-registered images plus a question; text answer plus log-probability. Quantitative question types are answered by change_stats, not here.
 version: 1
-required_modalities: [pair]
+required_modalities: [optical, sar]
+modality_mode: any
 confidence_source: learned_logprob
-expected_latency_ms: 1800
+expected_latency_ms: 5000
 permitted_parameters:
-  question:
+  adapter:
     type: string
     optional: true
-  max_tokens:
+  max_new_tokens:
     type: int
     range: [1, 512]
-    default: 64
-    optional: true
+    default: 128
 outputs:
   answer:
     type: text
-  confidence:
-    type: float

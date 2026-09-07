@@ -1,0 +1,29 @@
+{
+ "steps": 200,
+ "wall_hours": 0.0338,
+ "seconds_per_step": 0.6083,
+ "trainable_params": 14385793,
+ "batch_size": 16,
+ "crop": 256,
+ "pairs": 12004,
+ "train_pairs": 10277,
+ "val_pairs": 1727,
+ "val_history": [
+  {
+   "step": 100,
+   "f1": 0.0735,
+   "iou": 0.0381
+  },
+  {
+   "step": 200,
+   "f1": 0.1584,
+   "iou": 0.086
+  }
+ ],
+ "best": {
+  "step": 200,
+  "f1": 0.1584,
+  "iou": 0.086
+ },
+ "smoke": true
+}

@@ -154,9 +154,7 @@ def test_dark_uint16_reports_container_depth_with_note(tmp_path):
 def test_processing_software_tag_does_not_force_sar(tmp_path):
     from tests.fixtures import write_tif
 
-    rng_data = (
-        np.random.default_rng(9).exponential(scale=60.0, size=(1, 96, 96)).astype(np.float32)
-    )
+    rng_data = np.random.default_rng(9).exponential(scale=60.0, size=(1, 96, 96)).astype(np.float32)
     tagged = write_tif(
         tmp_path / "sarscape.tif",
         rng_data,
@@ -205,5 +203,3 @@ def test_stretch_constant_band_maps_to_zero():
     flat = np.full((8, 8), 5, dtype=np.uint8)
     stretched, _ = percentile_stretch(flat)
     assert float(stretched.max()) == 0.0
-
-

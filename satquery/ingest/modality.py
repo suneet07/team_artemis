@@ -58,11 +58,7 @@ def _positive_values(band: np.ma.MaskedArray) -> np.ndarray:
 
 
 def scoped_sensor_text(meta) -> str:
-    parts = [
-        str(value)
-        for key, value in meta.tags.items()
-        if key.upper() in SENSOR_TAG_KEYS
-    ]
+    parts = [str(value) for key, value in meta.tags.items() if key.upper() in SENSOR_TAG_KEYS]
     if meta.sensor_hint:
         parts.append(meta.sensor_hint)
     return " ".join(parts).upper()
@@ -137,9 +133,7 @@ def detect_modality(meta, overview: np.ma.MaskedArray, mcfg) -> tuple[str, list[
             return "unknown", notes, "intensity_signature"
 
     if meta.count <= 2:
-        notes.append(
-            "single/two-band without speckle signature; assumed panchromatic optical"
-        )
+        notes.append("single/two-band without speckle signature; assumed panchromatic optical")
         return "optical", notes, "intensity_signature"
 
     return "optical", notes, "band_count"

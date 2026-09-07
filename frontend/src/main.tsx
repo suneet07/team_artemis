@@ -18,8 +18,18 @@ const queryClient = new QueryClient({
 
 async function bootstrap() {
   if (USE_MOCKS) {
-    const { startMocks } = await import("../mocks/browser");
-    await startMocks();
+    try {
+      const { startMocks } = await import("../mocks/browser");
+      await startMocks();
+    } catch (error) {
+      // Service Worker registration fails in sandboxed and embedded browsers,
+      // and over plain HTTP on a non-localhost host. Letting that reject here
+      // meant createRoot() never ran and the whole console rendered blank --
+      // a mock layer failing should degrade the app, not replace it with a
+      // white page. Without mocks the client falls through to the real API and
+      // the degraded-mode banner explains itself.
+      console.warn("[mocks] disabled: Service Worker unavailable", error);
+    }
   }
 
   createRoot(document.getElementById("root")!).render(

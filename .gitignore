@@ -61,6 +61,7 @@ desktop.ini
 *.key
 secrets.*
 credentials.*
+!satquery/credentials.py
 kaggle.json
 .kaggle/
 .netrc
@@ -141,6 +142,14 @@ hf_cache/
 logs/**/*.jsonl
 logs/tmp/
 
+# Large per-item eval dumps and corpus review artifacts. Regenerable, and
+# 21 MB of the 23 MB in logs/ sits in these five files alone. The curated
+# measurement reports every number in docs/ cites are small JSON and stay
+# tracked -- these are the raw intermediates behind them.
+logs/_*.json
+logs/corpus_review.html
+logs/corpus_sample.json
+
 # ---------------------------------------------------------------
 # HOUSEKEEPING
 # ---------------------------------------------------------------
@@ -151,8 +160,29 @@ _to_delete/
 *.7z
 tmp/
 scratch/
-traces/
 
+# Locally staged sample imagery. Referenced by
+# `satquery/qgen/loaders/rareplanes.py` and the demo scripts, fetched
+# with `sample_dataset/fetch_real.py` -- never redistributed by us.
+sample_dataset_real/
+/rareplanes_images/
+
+# Tool output, regenerable: `/graphify` rebuilds it from the tree.
+graphify-out/
+
+# Superseded frontend, archived outside the repo. Kept as a rule so a
+# stray copy cannot be committed.
+frontend_pre_merge/
+
+# Agent/editor workspace. `launch.json` is useful project config and is
+# whitelisted; session state is not.
+.claude/*
+!.claude/launch.json
+
+# The testing-corpus gallery: 275 images + previews, published to the
+# Modal Volume rather than the repo. Regenerate with
+# `scripts/build_gallery.py select && ... fetch`.
+/data/gallery/
 
 # --- Frontend (when the app lands) ---
 node_modules/
@@ -164,8 +194,3 @@ node_modules/
 npm-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
-# Impeccable review captures and build artifacts
-.impeccable/review/
-frontend/dist/
-frontend/*.tsbuildinfo

@@ -1,0 +1,58 @@
+{
+ "benchmark": "/data/eval/change_vqa_val.jsonl",
+ "source": "truth",
+ "rows": 2012,
+ "missing_labels": 0,
+ "average_accuracy_answered": 1.0,
+ "average_accuracy_all_rows": 1.0,
+ "per_type": {
+  "change_compare": {
+   "rows": 400,
+   "answered": 400,
+   "abstained": 0,
+   "unrouted": 0,
+   "accuracy_answered": 1.0,
+   "accuracy_all_rows": 1.0
+  },
+  "change_count": {
+   "rows": 400,
+   "answered": 400,
+   "abstained": 0,
+   "unrouted": 0,
+   "accuracy_answered": 1.0,
+   "accuracy_all_rows": 1.0
+  },
+  "change_direction": {
+   "rows": 36,
+   "answered": 36,
+   "abstained": 0,
+   "unrouted": 0,
+   "accuracy_answered": 1.0,
+   "accuracy_all_rows": 1.0
+  },
+  "change_magnitude": {
+   "rows": 400,
+   "answered": 400,
+   "abstained": 0,
+   "unrouted": 0,
+   "accuracy_answered": 1.0,
+   "accuracy_all_rows": 1.0
+  },
+  "change_presence": {
+   "rows": 376,
+   "answered": 376,
+   "abstained": 0,
+   "unrouted": 0,
+   "accuracy_answered": 1.0,
+   "accuracy_all_rows": 1.0
+  },
+  "change_where": {
+   "rows": 400,
+   "answered": 400,
+   "abstained": 0,
+   "unrouted": 0,
+   "accuracy_answered": 1.0,
+   "accuracy_all_rows": 1.0
+  }
+ }
+}

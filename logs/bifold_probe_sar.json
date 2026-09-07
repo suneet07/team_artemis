@@ -1,0 +1,25 @@
+{
+  "arm": "sar",
+  "model": "BIFOLD-BigEarthNetv2-0/resnet50-s1-v0.2.0",
+  "candidates": {
+    "s1=vh_vv,s2=n/a": {
+      "accuracy": 0.817,
+      "scored": 2000,
+      "per_question_type": {
+        "landcover_forest_sar": 0.8571,
+        "landcover_presence_sar": 0.7201
+      },
+      "majority_answer_floor": 0.5
+    },
+    "s1=vv_vh,s2=n/a": {
+      "accuracy": 0.499,
+      "scored": 2000,
+      "per_question_type": {
+        "landcover_forest_sar": 0.4993,
+        "landcover_presence_sar": 0.4983
+      },
+      "majority_answer_floor": 0.5
+    }
+  },
+  "best": "s1=vh_vv,s2=n/a"
+}

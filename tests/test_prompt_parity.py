@@ -1,130 +1,88 @@
-"""Prompt parity tests: inference assembler vs. training collator vs. golden fixture.
+"""The serving prompt must be byte-identical to the training prompt.
 
-§13 requires that train/serve prompt assembly byte-matches. This is enforced by:
-1. Comparing assemble_prompt() output against the committed golden fixture.
-2. Comparing QGPCollator.collate_example() against the SAME golden fixture.
+A prompt the model was never trained on is indistinguishable from a weak model:
+it does not raise, it answers fluently, and every score moves with no cause a
+metric can point at. ``satquery.training.dataset.scale_prefix`` is the single
+implementation for that reason, and these pin every other path to it.
 
-The golden fixture in training/eval/prompt_fixture.json was generated once by running
-assemble_prompt() and checked in.  To update the format, you must:
-  1. Regenerate the fixture intentionally (see training/eval/generate_prompt_fixture.py).
-  2. Update training/ imports and any grounding-prior format with the QGP owner (§13 Q5).
-  3. Re-check both sides agree before committing.
-
-Failure of these tests means the train/serve contract has drifted — the highest-risk
-silent failure in the whole component (§13).
+The specific hazard this guards: ``assemble_prompt`` used to build its own
+format -- ``<image>{role}</image>`` placeholders and ``[sensor: X | GSD: Y m]``
+tags -- which no adapter ever saw. It had no callers, but it carried the name a
+caller would reach for while wiring the backend.
 """
 
-import json
-from pathlib import Path
-
-import pytest
-
-from satquery.agent.bundle import ImageRef
 from satquery.agent.prompt import assemble_prompt
-from training.collator import QGPCollator
-
-# Path to the committed golden fixture, relative to the repo root
-FIXTURE_PATH = Path(__file__).parent.parent / "training" / "eval" / "prompt_fixture.json"
+from satquery.training.dataset import CanonicalSample, gsd_prompt_prefix, scale_prefix
 
 
-@pytest.fixture(scope="module")
-def golden() -> dict[str, str]:
-    """Load the golden prompt fixture checked into training/eval/."""
-    if not FIXTURE_PATH.exists():
-        pytest.skip(
-            f"Golden fixture not found at {FIXTURE_PATH}. "
-            "Generate it by running: python training/eval/generate_prompt_fixture.py"
-        )
-    return json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
-
-
-def test_prompt_parity_bitemporal_assembler_vs_golden(golden: dict[str, str]) -> None:
-    """assemble_prompt() must byte-match the golden fixture for a bitemporal pair."""
-    img0 = ImageRef(scene_id="s0", path="p0.tif", modality="optical", native_gsd_m=4.0)
-    img1 = ImageRef(scene_id="s1", path="p1.tif", modality="optical", native_gsd_m=4.0)
-
-    prompt = assemble_prompt(
-        images=[img0, img1],
-        roles=["t0", "t1"],
-        modalities=["optical", "optical"],
-        effective_gsd_m=[4.0, 4.0],
-        question="What changed between these two acquisitions?",
-    )
-
-    expected = golden["bitemporal"]
-    assert prompt == expected, (
-        "assemble_prompt() output does not match the golden fixture. "
-        "If the format changed intentionally, regenerate training/eval/prompt_fixture.json "
-        "and confirm the QGP owner is aligned (§13).\n"
-        f"Expected: {expected!r}\n"
-        f"Got:      {prompt!r}"
-    )
-
-
-def test_prompt_parity_bitemporal_collator_vs_golden(golden: dict[str, str]) -> None:
-    """QGPCollator must produce the same prompt as the golden fixture for a bitemporal pair."""
-    collator = QGPCollator()
-    example = {
-        "images": [
-            {"scene_id": "s0", "path": "p0.tif", "modality": "optical", "native_gsd_m": 4.0},
-            {"scene_id": "s1", "path": "p1.tif", "modality": "optical", "native_gsd_m": 4.0},
-        ],
-        "roles": ["t0", "t1"],
-        "modalities": ["optical", "optical"],
-        "effective_gsd_m": [4.0, 4.0],
-        "question": "What changed between these two acquisitions?",
+def _row(**over):
+    row = {
+        "sample_id": "x_0001",
+        "adapter": "change_vqa",
+        "task": "change_or_not",
+        "images": ["eval/second/im1/00001.png", "eval/second/im2/00001.png"],
+        "image_roles": ["first", "second"],
+        "modality": ["optical", "optical"],
+        "effective_gsd_m": [0.5, 0.5],
+        "question": "Have the areas of trees changed?",
+        "answer": "no",
+        "answer_type": "yesno",
+        "split": "train",
+        "source": "CDVQA (Yuan et al., TGRS 2022)",
     }
-    collated = collator.collate_example(example)
+    row.update(over)
+    return row
 
-    expected = golden["bitemporal"]
-    assert collated["prompt"] == expected, (
-        "QGPCollator output does not match the golden fixture — train/serve skew detected! "
-        "Regenerate training/eval/prompt_fixture.json and align both pipeline sides (§13).\n"
-        f"Expected: {expected!r}\n"
-        f"Got:      {collated['prompt']!r}"
+
+def test_assemble_prompt_matches_what_training_builds():
+    row = _row()
+    sample = CanonicalSample.from_row(row)
+
+    trained = f"{gsd_prompt_prefix(sample)}{sample.question}"
+    served = assemble_prompt(
+        row["images"],
+        row["image_roles"],
+        row["modality"],
+        row["effective_gsd_m"],
+        row["question"],
+        source=row["source"],
     )
+    assert served == trained
 
 
-def test_prompt_parity_grounding_assembler_vs_golden(golden: dict[str, str]) -> None:
-    """assemble_prompt() must byte-match the golden fixture for a grounding query with prior."""
-    img0 = ImageRef(scene_id="s0", path="p0.tif", modality="optical", native_gsd_m=0.5)
-
-    prompt = assemble_prompt(
-        images=[img0],
-        roles=["single"],
-        modalities=["optical"],
-        effective_gsd_m=[0.5],
-        question="Where is the aircraft?",
-        point_prior=(0.450, 0.625),
+def test_no_placeholder_tokens_leak_into_the_prompt():
+    """The model takes images as processor content, not as text placeholders."""
+    row = _row()
+    served = assemble_prompt(
+        row["images"],
+        row["image_roles"],
+        row["modality"],
+        row["effective_gsd_m"],
+        row["question"],
+        source=row["source"],
     )
+    for leaked in ("<image>", "</image>", "[sensor:", "{first}", "{second}"):
+        assert leaked not in served, f"{leaked!r} is not a token training ever used"
 
-    expected = golden["grounding_with_prior"]
-    assert prompt == expected, (
-        "assemble_prompt() grounding output does not match the golden fixture. "
-        "Note: the [prior: (x, y)] format must be confirmed with the QGP owner (§13 Q5).\n"
-        f"Expected: {expected!r}\n"
-        f"Got:      {prompt!r}"
+
+def test_missing_gsd_yields_no_prefix_rather_than_an_invented_one():
+    """A wrong scale is worse than none: the model learns to trust the field."""
+    served = assemble_prompt(
+        ["a.png"], ["single"], ["optical"], [], "What is here?", source=""
     )
+    assert served == "What is here?"
 
 
-def test_prompt_parity_grounding_collator_vs_golden(golden: dict[str, str]) -> None:
-    """QGPCollator must produce the same grounding prompt as the golden fixture."""
-    collator = QGPCollator()
-    example = {
-        "images": [
-            {"scene_id": "s0", "path": "p0.tif", "modality": "optical", "native_gsd_m": 0.5}
-        ],
-        "roles": ["single"],
-        "modalities": ["optical"],
-        "effective_gsd_m": [0.5],
-        "question": "Where is the aircraft?",
-        "point_prior": (0.450, 0.625),
-    }
-    collated = collator.collate_example(example)
-
-    expected = golden["grounding_with_prior"]
-    assert collated["prompt"] == expected, (
-        "QGPCollator grounding output does not match the golden fixture — train/serve skew!\n"
-        f"Expected: {expected!r}\n"
-        f"Got:      {collated['prompt']!r}"
+def test_scale_prefix_stays_the_single_implementation():
+    row = _row(effective_gsd_m=[0.5, 10.0])
+    direct = scale_prefix(row["effective_gsd_m"], row["question"], row["source"], None)
+    served = assemble_prompt(
+        row["images"],
+        row["image_roles"],
+        row["modality"],
+        row["effective_gsd_m"],
+        row["question"],
+        source=row["source"],
     )
+    assert served.startswith(direct)
+    assert "ground sample distance per view" in direct

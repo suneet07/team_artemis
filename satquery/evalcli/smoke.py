@@ -9,9 +9,7 @@ from satquery.tools.registry import ToolRegistry, check_parameters, effective_pa
 
 
 def _permitted_summary(manifest: ToolManifest) -> str:
-    return ", ".join(
-        f"{name}:{spec.type}" for name, spec in manifest.permitted_parameters.items()
-    )
+    return ", ".join(f"{name}:{spec.type}" for name, spec in manifest.permitted_parameters.items())
 
 
 def _refusal_answer(manifest: ToolManifest, reasons: list[str]) -> str:
@@ -30,9 +28,7 @@ def run_dummy_query(
     manifest = ToolRegistry.default().get("dummy_tool")
     merged = effective_params(manifest, params)
     defaults_applied = sorted(set(merged) - set(params))
-    check = check_parameters(
-        manifest, merged, band_inventory=band_inventory, modalities=modality
-    )
+    check = check_parameters(manifest, merged, band_inventory=band_inventory, modalities=modality)
     builder = (
         TraceBuilder(query_text)
         .set_routing(Task.SINGLE_VQA, "rules")

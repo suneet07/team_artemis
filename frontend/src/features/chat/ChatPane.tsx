@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Bundle } from "@contracts/types";
 import { useTasks } from "@/api/meta";
@@ -277,6 +278,25 @@ export function ChatPane({ bundle }: { bundle: Bundle | undefined }) {
   const { data: tasks } = useTasks();
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement | null>(null);
+
+  /* A question handed over in the URL, which is how the testing corpus opens an
+     item: it loads the bundle, then lands here with the benchmark's own wording
+     already in the box. Placed in the composer rather than asked automatically
+     -- the visitor should see the exact question that is about to be sent, and
+     be able to change it, which is most of the point of showing a held-out row
+     with its published answer beside it.
+
+     Consumed once, keyed on the parameter itself, so a later edit to the draft
+     is not overwritten on the next render. */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const handedOver = searchParams.get("q");
+  useEffect(() => {
+    if (!handedOver) return;
+    setDraft(handedOver);
+    const next = new URLSearchParams(searchParams);
+    next.delete("q");
+    setSearchParams(next, { replace: true });
+  }, [handedOver]);
 
   const sessionRuns = useMemo(
     () =>

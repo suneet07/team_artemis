@@ -50,6 +50,12 @@ SECOND data that v3.8 purges entirely. Do not read it.
 |---|---|
 | [`04-open/SPECULATIONS.md`](04-open/SPECULATIONS.md) | Open hypotheses with post-production review checklists. Includes the BigEarthNet imagery-extraction blocker, which gates all real training |
 
+## 07-evaluation — what the models actually score
+
+| File | What it owns |
+|---|---|
+| [`07-evaluation/g3-grounding-sweep.md`](07-evaluation/g3-grounding-sweep.md) | **Supersedes the plan's assumption that G3 grounding needs a trained adapter.** Eleven approaches measured on identical VRSBench rows; the shipped choice and why; the three coordinate-convention bugs; why stratified sampling must never produce a headline score. Says nothing about the captioning half, which still needs training |
+
 ## Where everything else lives
 
 | Path | Contents |

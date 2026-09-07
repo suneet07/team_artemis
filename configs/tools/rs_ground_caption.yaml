@@ -1,23 +1,30 @@
 name: rs_ground_caption
-description: Visual grounding and dense captioning on satellite imagery via learned VLM adapter.
+description: Referring grounding and grounded captioning with the rs_ground_caption LoRA adapter. Trained vocabulary covers land-cover regions, buildings, aircraft and ships; uncovered classes route to object_box_fallback instead. Accepts an optional normalised point prior in the prompt (D2).
 version: 1
-required_modalities: [optical]
+required_modalities: [optical, sar]
+modality_mode: any
 confidence_source: learned_logprob
-expected_latency_ms: 1500
+expected_latency_ms: 4500
 permitted_parameters:
-  prompt:
+  mode:
+    type: enum
+    values: [grounding, caption]
+    default: caption
+  phrase:
+    type: string
+    optional: true
+  adapter:
     type: string
     optional: true
   point_prior:
     type: string
     optional: true
-  max_tokens:
+  max_new_tokens:
     type: int
     range: [1, 512]
     default: 128
-    optional: true
 outputs:
   boxes:
     type: bbox_list
-  caption:
+  answer:
     type: text

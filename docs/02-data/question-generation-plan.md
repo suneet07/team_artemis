@@ -116,7 +116,8 @@ class Loader(Protocol):
     source: str
     licence: str
     provenance_chain: list[str]
-    def emit(self) -> Iterator[Primitive]: ...   # yields P1..P6 records
+
+    def emit(self) -> Iterator[Primitive]: ...  # yields P1..P6 records
 ```
 
 ---

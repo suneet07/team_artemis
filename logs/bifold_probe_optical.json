@@ -1,0 +1,25 @@
+{
+  "arm": "optical",
+  "model": "BIFOLD-BigEarthNetv2-0/resnet50-s2-v0.2.0",
+  "candidates": {
+    "s1=n/a,s2=configilm": {
+      "accuracy": 0.5913,
+      "scored": 1500,
+      "per_question_type": {
+        "landcover_forest_optical": 0.5409,
+        "landcover_presence_optical": 0.6123
+      },
+      "majority_answer_floor": 0.5013
+    },
+    "s1=n/a,s2=sorted": {
+      "accuracy": 0.576,
+      "scored": 1500,
+      "per_question_type": {
+        "landcover_forest_optical": 0.4841,
+        "landcover_presence_optical": 0.6142
+      },
+      "majority_answer_floor": 0.5013
+    }
+  },
+  "best": "s1=n/a,s2=configilm"
+}

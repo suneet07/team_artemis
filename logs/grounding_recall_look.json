@@ -1,0 +1,748 @@
+{
+ "model": "IDEA-Research/grounding-dino-base",
+ "iou_threshold": 0.5,
+ "topk": 10,
+ "tiles": 1,
+ "synonyms": true,
+ "box_threshold": 0.15,
+ "sampled": 40,
+ "missing_images": 0,
+ "degenerate_references_dropped": 13,
+ "mean_best_iou": 0.5099,
+ "overall": {
+  "n": 40,
+  "mean_candidates": 7.5,
+  "recall@1": 0.325,
+  "recall@3": 0.475,
+  "recall@5": 0.525,
+  "recall@10": 0.55
+ },
+ "by_size": {
+  "small": {
+   "n": 36,
+   "mean_candidates": 7.6,
+   "recall@1": 0.3056,
+   "recall@3": 0.4722,
+   "recall@5": 0.5278,
+   "recall@10": 0.5556
+  },
+  "unspecified": {
+   "n": 4,
+   "mean_candidates": 6.5,
+   "recall@1": 0.5,
+   "recall@3": 0.5,
+   "recall@5": 0.5,
+   "recall@10": 0.5
+  }
+ },
+ "by_unique": {
+  "False": {
+   "n": 14,
+   "mean_candidates": 8.8,
+   "recall@1": 0.0714,
+   "recall@3": 0.1429,
+   "recall@5": 0.1429,
+   "recall@10": 0.1429
+  },
+  "True": {
+   "n": 26,
+   "mean_candidates": 6.7,
+   "recall@1": 0.4615,
+   "recall@3": 0.6538,
+   "recall@5": 0.7308,
+   "recall@10": 0.7692
+  }
+ },
+ "by_class": {
+  "airplane": {
+   "n": 2,
+   "mean_candidates": 9.5,
+   "recall@1": 0.5,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "airport": {
+   "n": 2,
+   "mean_candidates": 7.0,
+   "recall@1": 0.5,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "baseball-diamond": {
+   "n": 2,
+   "mean_candidates": 14.0,
+   "recall@1": 0.5,
+   "recall@3": 0.5,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "basketball-court": {
+   "n": 2,
+   "mean_candidates": 5.0,
+   "recall@1": 0.5,
+   "recall@3": 0.5,
+   "recall@5": 0.5,
+   "recall@10": 0.5
+  },
+  "bridge": {
+   "n": 2,
+   "mean_candidates": 7.0,
+   "recall@1": 0.5,
+   "recall@3": 0.5,
+   "recall@5": 0.5,
+   "recall@10": 0.5
+  },
+  "chimney": {
+   "n": 2,
+   "mean_candidates": 10.0,
+   "recall@1": 1.0,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "container-crane": {
+   "n": 2,
+   "mean_candidates": 3.5,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0
+  },
+  "dam": {
+   "n": 2,
+   "mean_candidates": 7.0,
+   "recall@1": 0.5,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "expressway-service-area": {
+   "n": 2,
+   "mean_candidates": 7.5,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0
+  },
+  "expressway-toll-station": {
+   "n": 2,
+   "mean_candidates": 7.5,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0
+  },
+  "golffield": {
+   "n": 2,
+   "mean_candidates": 3.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0
+  },
+  "ground-track-field": {
+   "n": 2,
+   "mean_candidates": 13.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0
+  },
+  "harbor": {
+   "n": 2,
+   "mean_candidates": 18.0,
+   "recall@1": 0.5,
+   "recall@3": 0.5,
+   "recall@5": 0.5,
+   "recall@10": 0.5
+  },
+  "helicopter": {
+   "n": 2,
+   "mean_candidates": 4.5,
+   "recall@1": 0.5,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "helipad": {
+   "n": 1,
+   "mean_candidates": 8.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 1.0
+  },
+  "overpass": {
+   "n": 1,
+   "mean_candidates": 6.0,
+   "recall@1": 0.0,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "roundabout": {
+   "n": 1,
+   "mean_candidates": 5.0,
+   "recall@1": 1.0,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "ship": {
+   "n": 1,
+   "mean_candidates": 1.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0
+  },
+  "soccer-ball-field": {
+   "n": 1,
+   "mean_candidates": 5.0,
+   "recall@1": 1.0,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "stadium": {
+   "n": 1,
+   "mean_candidates": 6.0,
+   "recall@1": 0.0,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "storage-tank": {
+   "n": 1,
+   "mean_candidates": 0.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0
+  },
+  "swimming-pool": {
+   "n": 1,
+   "mean_candidates": 7.0,
+   "recall@1": 1.0,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "tennis-court": {
+   "n": 1,
+   "mean_candidates": 7.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0
+  },
+  "trainstation": {
+   "n": 1,
+   "mean_candidates": 8.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0
+  },
+  "vehicle": {
+   "n": 1,
+   "mean_candidates": 2.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0
+  },
+  "windmill": {
+   "n": 1,
+   "mean_candidates": 10.0,
+   "recall@1": 0.0,
+   "recall@3": 0.0,
+   "recall@5": 0.0,
+   "recall@10": 0.0
+  }
+ },
+ "dumped": [
+  {
+   "file": "HIT_0.92_1.png",
+   "image_id": "P2778_0037.png",
+   "question": "The plane closer to the bottom-left edge of the image.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "airplane . aircraft . plane . jet .",
+   "candidates": 14,
+   "best_iou": 0.9177,
+   "hit": true
+  },
+  {
+   "file": "HIT_0.51_2.png",
+   "image_id": "P4265_0003.png",
+   "question": "The airport is located at the left part of the image.",
+   "obj_cls": "airport",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "airport . airfield . runway .",
+   "candidates": 8,
+   "best_iou": 0.5073,
+   "hit": true
+  },
+  {
+   "file": "HIT_0.83_3.png",
+   "image_id": "06379_0000.png",
+   "question": "The baseball field is positioned at the bottom of the image.",
+   "obj_cls": "baseball-diamond",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "baseball field . baseball diamond .",
+   "candidates": 12,
+   "best_iou": 0.831,
+   "hit": true
+  },
+  {
+   "file": "HIT_0.88_4.png",
+   "image_id": "10021_0000.png",
+   "question": "The basketball court is marked on the right side of the image, featuring white game lines on a grey surface.",
+   "obj_cls": "basketball-court",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "basketball court .",
+   "candidates": 3,
+   "best_iou": 0.8836,
+   "hit": true
+  },
+  {
+   "file": "MISS_0.00_5.png",
+   "image_id": "P1356_0047.png",
+   "question": "The small bridge over a narrow waterway is situated at the top-middle of the image.",
+   "obj_cls": "bridge",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "bridge .",
+   "candidates": 9,
+   "best_iou": 0.0012,
+   "hit": false
+  },
+  {
+   "file": "HIT_0.94_6.png",
+   "image_id": "09069_0000.png",
+   "question": "The chimney in the center of the image is emitting a plume of smoke.",
+   "obj_cls": "chimney",
+   "size_group": "unspecified",
+   "unique": true,
+   "prompt": "chimney . smokestack . cooling tower .",
+   "candidates": 10,
+   "best_iou": 0.9386,
+   "hit": true
+  },
+  {
+   "file": "MISS_0.00_7.png",
+   "image_id": "P2733_0033.png",
+   "question": "The container crane situated at the bottom-middle of the image on the left-most side along the dock.",
+   "obj_cls": "container-crane",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "container crane . port crane . gantry crane .",
+   "candidates": 0,
+   "best_iou": 0.0,
+   "hit": false
+  },
+  {
+   "file": "HIT_0.57_8.png",
+   "image_id": "06969_0000.png",
+   "question": "The dam is observed along the right edge of the image, with its structure occupying a significant portion extending from the center towards the bottom.",
+   "obj_cls": "dam",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "dam .",
+   "candidates": 7,
+   "best_iou": 0.5737,
+   "hit": true
+  },
+  {
+   "file": "MISS_0.44_9.png",
+   "image_id": "09656_0000.png",
+   "question": "Located on the right side of the expressway, the service area is amongst a backdrop of vegetation and cleared grounds.",
+   "obj_cls": "expressway-service-area",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "service area . rest stop .",
+   "candidates": 7,
+   "best_iou": 0.444,
+   "hit": false
+  },
+  {
+   "file": "MISS_0.12_10.png",
+   "image_id": "07881_0000.png",
+   "question": "The expressway toll station is located on the right side of the image.",
+   "obj_cls": "expressway-toll-station",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "toll station . toll booth .",
+   "candidates": 9,
+   "best_iou": 0.1153,
+   "hit": false
+  },
+  {
+   "file": "MISS_0.04_11.png",
+   "image_id": "06080_0000.png",
+   "question": "The golf field, which includes visible sand bunkers and fairways, is located at the top part of the image.",
+   "obj_cls": "golffield",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "golf course . golf green .",
+   "candidates": 3,
+   "best_iou": 0.0442,
+   "hit": false
+  },
+  {
+   "file": "MISS_0.02_12.png",
+   "image_id": "06013_0000.png",
+   "question": "The largest ground track field is situated on the bottom-right.",
+   "obj_cls": "ground-track-field",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "running track . athletics track . stadium track .",
+   "candidates": 12,
+   "best_iou": 0.0201,
+   "hit": false
+  },
+  {
+   "file": "MISS_0.01_13.png",
+   "image_id": "P1029_0010.png",
+   "question": "The small harbor situated at the top-middle of the image.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "harbor . harbour . dock . pier . marina .",
+   "candidates": 29,
+   "best_iou": 0.0062,
+   "hit": false
+  },
+  {
+   "file": "HIT_0.63_14.png",
+   "image_id": "P1508_0012.png",
+   "question": "The helicopter is spotted on the middle-right side of the image.",
+   "obj_cls": "helicopter",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "helicopter . chopper .",
+   "candidates": 6,
+   "best_iou": 0.6332,
+   "hit": true
+  },
+  {
+   "file": "HIT_0.92_15.png",
+   "image_id": "P5171_0027.png",
+   "question": "The helipad situated in the middle-right of the image is characterized by its geometric marking, with a visible central circle and surrounding square.",
+   "obj_cls": "helipad",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "helipad . helicopter pad .",
+   "candidates": 8,
+   "best_iou": 0.9176,
+   "hit": true
+  },
+  {
+   "file": "HIT_0.69_16.png",
+   "image_id": "08333_0000.png",
+   "question": "The overpass in the image is located horizontally across the middle section.",
+   "obj_cls": "overpass",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "overpass . highway overpass . flyover .",
+   "candidates": 6,
+   "best_iou": 0.6915,
+   "hit": true
+  },
+  {
+   "file": "HIT_0.78_17.png",
+   "image_id": "P1598_0011.png",
+   "question": "The roundabout situated at the top-left corner of the image.",
+   "obj_cls": "roundabout",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "roundabout . traffic circle .",
+   "candidates": 5,
+   "best_iou": 0.7848,
+   "hit": true
+  },
+  {
+   "file": "MISS_0.00_18.png",
+   "image_id": "P0989_0009.png",
+   "question": "The ship that lies closer to the left edge of the image is positioned more towards the bottom of the body of water.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "ship . boat . vessel . cargo ship .",
+   "candidates": 1,
+   "best_iou": 0.0,
+   "hit": false
+  },
+  {
+   "file": "HIT_0.96_19.png",
+   "image_id": "P0665_0004.png",
+   "question": "The soccer ball field is the prominent green area with white lines.",
+   "obj_cls": "soccer-ball-field",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "soccer field . football pitch .",
+   "candidates": 5,
+   "best_iou": 0.9636,
+   "hit": true
+  },
+  {
+   "file": "HIT_0.95_20.png",
+   "image_id": "08437_0000.png",
+   "question": "The stadium visible in the image has tiers of seating with different colors and a partial roof structure.",
+   "obj_cls": "stadium",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "stadium . arena .",
+   "candidates": 6,
+   "best_iou": 0.9524,
+   "hit": true
+  },
+  {
+   "file": "MISS_0.00_21.png",
+   "image_id": "P2701_0029.png",
+   "question": "The storage-tank located at the bottom-right of the image.",
+   "obj_cls": "storage-tank",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "storage tank . oil tank . silo . round tank .",
+   "candidates": 0,
+   "best_iou": 0.0,
+   "hit": false
+  },
+  {
+   "file": "HIT_0.87_22.png",
+   "image_id": "P0990_0007.png",
+   "question": "The swimming pool positioned at the bottom portion of the image.",
+   "obj_cls": "swimming-pool",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "swimming pool . pool .",
+   "candidates": 7,
+   "best_iou": 0.8737,
+   "hit": true
+  },
+  {
+   "file": "MISS_0.19_23.png",
+   "image_id": "P0499_0002.png",
+   "question": "The small tennis court that is the top-most of the courts in the image is partially visible.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "tennis court .",
+   "candidates": 7,
+   "best_iou": 0.1852,
+   "hit": false
+  },
+  {
+   "file": "HIT_0.87_24.png",
+   "image_id": "11150_0000.png",
+   "question": "The train station is positioned along the right side of the image, characterized by its elongated structure paralleling multiple rail lines.",
+   "obj_cls": "trainstation",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "train station . railway station .",
+   "candidates": 8,
+   "best_iou": 0.868,
+   "hit": true
+  },
+  {
+   "file": "MISS_0.00_25.png",
+   "image_id": "P8287_0136.png",
+   "question": "The small vehicle is situated on the top-right corner of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": true,
+   "prompt": "vehicle . car . truck . van . parked car .",
+   "candidates": 2,
+   "best_iou": 0.0,
+   "hit": false
+  },
+  {
+   "file": "MISS_0.29_26.png",
+   "image_id": "08455_0000.png",
+   "question": "The small windmill in located in the bottom-middle of the scene.",
+   "obj_cls": "windmill",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "windmill . wind turbine .",
+   "candidates": 10,
+   "best_iou": 0.294,
+   "hit": false
+  },
+  {
+   "file": "HIT_0.94_27.png",
+   "image_id": "P1854_0116.png",
+   "question": "The plane is located at the top-right area of the frame, positioned on the tarmac adjacent to terminal buildings.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "airplane . aircraft . plane . jet .",
+   "candidates": 5,
+   "best_iou": 0.9446,
+   "hit": true
+  },
+  {
+   "file": "HIT_0.81_28.png",
+   "image_id": "06524_0000.png",
+   "question": "The small airport with a linear runway is located at the diagonal stretch from the bottom right towards the upper left of the imagery.",
+   "obj_cls": "airport",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "airport . airfield . runway .",
+   "candidates": 6,
+   "best_iou": 0.8113,
+   "hit": true
+  },
+  {
+   "file": "HIT_0.83_29.png",
+   "image_id": "07739_0000.png",
+   "question": "The baseball field visible in the bottom-right sections in the image.",
+   "obj_cls": "baseball-diamond",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "baseball field . baseball diamond .",
+   "candidates": 16,
+   "best_iou": 0.8304,
+   "hit": true
+  },
+  {
+   "file": "MISS_0.36_30.png",
+   "image_id": "08474_0000.png",
+   "question": "The basketball court situated on the right side of the image.",
+   "obj_cls": "basketball-court",
+   "size_group": "unspecified",
+   "unique": false,
+   "prompt": "basketball court .",
+   "candidates": 7,
+   "best_iou": 0.3561,
+   "hit": false
+  },
+  {
+   "file": "HIT_0.79_31.png",
+   "image_id": "08445_0000.png",
+   "question": "The bridge is located at the bottom of the image, connecting two land areas over a body of water.",
+   "obj_cls": "bridge",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "bridge .",
+   "candidates": 5,
+   "best_iou": 0.7868,
+   "hit": true
+  },
+  {
+   "file": "HIT_0.96_32.png",
+   "image_id": "06593_0000.png",
+   "question": "The large chimney is prominent in the image due to its size and cylindrical shape.",
+   "obj_cls": "chimney",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "chimney . smokestack . cooling tower .",
+   "candidates": 10,
+   "best_iou": 0.959,
+   "hit": true
+  },
+  {
+   "file": "MISS_0.38_33.png",
+   "image_id": "P2733_0029.png",
+   "question": "The top-most container crane in the top-right area of the image.",
+   "obj_cls": "container-crane",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "container crane . port crane . gantry crane .",
+   "candidates": 7,
+   "best_iou": 0.3777,
+   "hit": false
+  },
+  {
+   "file": "HIT_0.85_34.png",
+   "image_id": "07622_0000.png",
+   "question": "The dam is located at the bottom of the image.",
+   "obj_cls": "dam",
+   "size_group": "unspecified",
+   "unique": true,
+   "prompt": "dam .",
+   "candidates": 7,
+   "best_iou": 0.8507,
+   "hit": true
+  },
+  {
+   "file": "MISS_0.41_35.png",
+   "image_id": "09654_0000.png",
+   "question": "The expressway service area located closer to the top center of the image is surrounded by agricultural fields.",
+   "obj_cls": "expressway-service-area",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "service area . rest stop .",
+   "candidates": 8,
+   "best_iou": 0.4139,
+   "hit": false
+  },
+  {
+   "file": "MISS_0.07_36.png",
+   "image_id": "10486_0000.png",
+   "question": "The small expressway toll station is situated in the bottom right of the image.",
+   "obj_cls": "expressway-toll-station",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "toll station . toll booth .",
+   "candidates": 6,
+   "best_iou": 0.0742,
+   "hit": false
+  },
+  {
+   "file": "MISS_0.11_37.png",
+   "image_id": "08109_0000.png",
+   "question": "The golf course is located on the right side of the image.",
+   "obj_cls": "golffield",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "golf course . golf green .",
+   "candidates": 3,
+   "best_iou": 0.108,
+   "hit": false
+  },
+  {
+   "file": "MISS_0.01_38.png",
+   "image_id": "P3107_0002.png",
+   "question": "Another ground track field, located nearer to the central road and right of the left-most facility.",
+   "obj_cls": "ground-track-field",
+   "size_group": "small",
+   "unique": false,
+   "prompt": "running track . athletics track . stadium track .",
+   "candidates": 14,
+   "best_iou": 0.0073,
+   "hit": false
+  },
+  {
+   "file": "HIT_0.88_39.png",
+   "image_id": "P0970_0024.png",
+   "question": "The harbor located at the bottom-left part of the image.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "harbor . harbour . dock . pier . marina .",
+   "candidates": 7,
+   "best_iou": 0.885,
+   "hit": true
+  },
+  {
+   "file": "HIT_0.54_40.png",
+   "image_id": "P2791_0104.png",
+   "question": "The helicopter is located on the top-right corner.",
+   "obj_cls": "helicopter",
+   "size_group": "small",
+   "unique": true,
+   "prompt": "helicopter . chopper .",
+   "candidates": 3,
+   "best_iou": 0.5447,
+   "hit": true
+  }
+ ]
+}

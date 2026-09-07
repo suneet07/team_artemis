@@ -1,20 +1,17 @@
 name: optsar_fusion
-description: Multimodal reasoning combining co-registered optical and SAR imagery via learned VLM adapter.
+description: Cross-modal optical plus SAR question answering with the optsar_fusion LoRA adapter. An upgrade layered over the deterministic D1 fusion floor, never a dependency of it.
 version: 1
 required_modalities: [optical, sar]
 confidence_source: learned_logprob
-expected_latency_ms: 1800
+expected_latency_ms: 5500
 permitted_parameters:
-  question:
+  adapter:
     type: string
     optional: true
-  max_tokens:
+  max_new_tokens:
     type: int
     range: [1, 512]
-    default: 64
-    optional: true
+    default: 128
 outputs:
   answer:
     type: text
-  confidence:
-    type: float

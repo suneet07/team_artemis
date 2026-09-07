@@ -1,34 +1,63 @@
-from collections.abc import Callable
 from typing import Any
 
-EventSink = Callable[[str, dict[str, Any]], None]
 
-
-class EventEmitter:
-    """Emits SSE events to a configured sink, or acts as a no-op in headless mode.
-    
-    Also records emitted events for testing and introspection.
+def emit_event(emit: callable, event_name: str, payload: dict[str, Any]) -> None:
     """
-
-    def __init__(self, sink: EventSink | None = None) -> None:
-        self._sink = sink
-        self._history: list[tuple[str, dict[str, Any]]] = []
-
-    def emit(self, event: str, data: dict[str, Any]) -> None:
-        self._history.append((event, data))
-        if self._sink is not None:
-            self._sink(event, data)
-
-    def __call__(self, event: str, data: dict[str, Any]) -> None:
-        self.emit(event, data)
-
-    @property
-    def history(self) -> list[tuple[str, dict[str, Any]]]:
-        return list(self._history)
-
-    def clear(self) -> None:
-        self._history.clear()
+    Helper to emit an SSE event using the provided emit callback.
+    The callback signature is expected to be `emit(event_name: str, payload: dict)`.
+    """
+    if emit is not None:
+        emit(event_name, payload)
 
 
-def create_emitter(sink: EventSink | None = None) -> EventEmitter:
-    return EventEmitter(sink=sink)
+# Specific event helpers
+
+def emit_accepted(emit: callable, query_id: str, queued_ms: int = 0) -> None:
+    emit_event(emit, "accepted", {"query_id": query_id, "queued_ms": queued_ms})
+
+
+def emit_router(
+    emit: callable, router_path: str, task_selected: str | None, notes: list[str]
+) -> None:
+    emit_event(emit, "router", {
+        "router_path": router_path,
+        "task_selected": task_selected,
+        "notes": notes
+    })
+
+
+def emit_validator(emit: callable, passed: bool, rejections: list[str]) -> None:
+    emit_event(emit, "validator", {
+        "passed": passed,
+        "rejections": rejections
+    })
+
+
+def emit_plan(emit: callable, plan: list[dict[str, Any]]) -> None:
+    emit_event(emit, "plan", {"plan": plan})
+
+
+def emit_step_started(emit: callable, tool: str) -> None:
+    emit_event(emit, "step_started", {"tool": tool})
+
+
+def emit_step_completed(emit: callable, tool: str, result: dict[str, Any]) -> None:
+    emit_event(emit, "step_completed", {"tool": tool, "result": result})
+
+
+def emit_agreement(emit: callable, winning_modality: str, explanation: str) -> None:
+    emit_event(emit, "agreement", {
+        "winning_modality": winning_modality,
+        "explanation": explanation
+    })
+
+
+def emit_fusion(emit: callable, fused_answer: str, confidence: float) -> None:
+    emit_event(emit, "fusion", {
+        "fused_answer": fused_answer,
+        "confidence": confidence
+    })
+
+
+def emit_done(emit: callable, query_id: str) -> None:
+    emit_event(emit, "done", {"query_id": query_id})

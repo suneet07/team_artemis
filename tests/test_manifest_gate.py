@@ -25,27 +25,49 @@ def cartosat_mx() -> BandInventory:
 
 
 def test_registry_loads_builtin_manifests(registry):
-    expected_tools = [
+    """Every tool section 4.6 names has a manifest, adapter or no adapter.
+
+    The manifest is the contract the section 4.5.4 gate enforces against, so a
+    learned tool needs one before its weights exist. Without it the gate rejects
+    a perfectly legitimate plan as "not in the registry" and the query refuses
+    instead of degrading to the deterministic path.
+    """
+    assert set(registry.names()) == {
+        # deterministic (P6)
         "centroid_prior",
-        "change_map",
         "change_stats",
-        "change_vqa",
         "coreg_check",
-        "dummy_tool",
-        "lulc_classifier",
         "object_box_fallback",
-        "optsar_fusion",
-        "rs_ground_caption",
-        "rs_vqa",
         "sar_backscatter",
         "spectral_index",
         "texture_seg",
         "tile_scorer",
-    ]
-    for expected in expected_tools:
-        assert expected in registry.names()
-        manifest = registry.get(expected)
-        assert manifest.name == expected
+        # learned (4.6.1) - manifests ship ahead of the adapters
+        "change_map",
+        "change_vqa",
+        "lulc_classifier",
+        "optsar_fusion",
+        "rs_ground_caption",
+        "rs_vqa",
+        # phase 0 scaffold
+        "dummy_tool",
+    }
+
+
+def test_every_manifest_declaring_a_mask_declares_it_full_scene(registry):
+    """C18: a mask is a graded artifact, so its contract must say so."""
+    offenders = []
+    for name in registry.names():
+        manifest = registry.get(name)
+        for output, spec in manifest.outputs.items():
+            if spec.get("type") != "geotiff":
+                continue
+            if spec.get("crs") != "source" or spec.get("resolution") != "full_scene":
+                offenders.append(f"{name}.{output}: {spec}")
+    assert not offenders, (
+        "Every mask output must be declared in the source CRS at full scene "
+        "resolution (C18): " + "; ".join(offenders)
+    )
 
 
 def test_valid_params_pass(dummy):
@@ -129,13 +151,9 @@ def test_band_check_skipped_without_inventory(spectral):
 
 
 def test_modality_mismatch_rejected(spectral):
-    result = check_parameters(
-        spectral, {"index": "NDVI"}, cartosat_mx(), modalities=["sar"]
-    )
+    result = check_parameters(spectral, {"index": "NDVI"}, cartosat_mx(), modalities=["sar"])
     assert not result.passed
-    assert any(
-        "requires modality 'optical'" in r and "'sar'" in r for r in result.rejected
-    )
+    assert any("requires modality 'optical'" in r and "'sar'" in r for r in result.rejected)
 
 
 def test_modality_match_passes(spectral):
@@ -146,9 +164,7 @@ def test_modality_match_passes(spectral):
 
 
 def test_modality_accepts_single_string(spectral):
-    result = check_parameters(
-        spectral, {"index": "NDWI"}, cartosat_mx(), modalities="optical"
-    )
+    result = check_parameters(spectral, {"index": "NDWI"}, cartosat_mx(), modalities="optical")
     assert result.passed
 
 
@@ -164,17 +180,3 @@ def test_duplicate_registration_raises(registry, dummy):
 def test_unknown_tool_lookup_raises(registry):
     with pytest.raises(KeyError):
         registry.get("does_not_exist")
-
-
-def test_pair_modality_enforced_single_image_rejected(registry):
-    change_tool = registry.get("change_map")
-    result = check_parameters(change_tool, {"mode": "semantic"}, modalities=["optical"])
-    assert not result.passed
-    assert any("requires a pair of images" in r for r in result.rejected)
-
-
-def test_pair_modality_pair_images_passed(registry):
-    change_tool = registry.get("change_map")
-    result = check_parameters(change_tool, {"mode": "semantic"}, modalities=["optical", "optical"])
-    assert result.passed
-

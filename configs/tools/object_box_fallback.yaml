@@ -1,15 +1,22 @@
 name: object_box_fallback
-description: Proposes bounding boxes for out-of-vocabulary nouns via classical morphological filters.
-version: 1
-required_modalities: [any]
+description: Deterministic box proposer for object classes outside the trained grounding vocabulary. Connected components over a texture or sigma-nought response, morphologically opened and filtered by a shape prior keyed to the query noun. Low-confidence proposer - never learned grounding.
+version: 2
+required_modalities: [optical, sar]
+modality_mode: any
 confidence_source: deterministic_fallback
 low_confidence_proposer: true
-expected_latency_ms: 400
+expected_latency_ms: 600
 permitted_parameters:
-  target_class:
-    type: enum
-    values: [bridge, tank, vehicle, harbour, runway, other]
-    default: other
+  target:
+    type: string
+  max_boxes:
+    type: int
+    range: [1, 32]
+    default: 8
 outputs:
   boxes:
     type: bbox_list
+  mask_uri:
+    type: geotiff
+    crs: source
+    resolution: full_scene

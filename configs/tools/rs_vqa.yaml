@@ -1,25 +1,18 @@
 name: rs_vqa
-description: Visual question answering on optical satellite imagery via learned VLM adapter.
+description: Single-image visual question answering and captioning on the base VLM with the rs_vqa LoRA adapter. Text answer plus answer log-probability.
 version: 1
-required_modalities: [any]
+required_modalities: [optical, sar]
+modality_mode: any
 confidence_source: learned_logprob
-expected_latency_ms: 1200
+expected_latency_ms: 4000
 permitted_parameters:
-  question:
+  adapter:
     type: string
     optional: true
-  max_tokens:
+  max_new_tokens:
     type: int
     range: [1, 512]
-    default: 64
-    optional: true
-  temperature:
-    type: float
-    range: [0.0, 1.0]
-    default: 0.0
-    optional: true
+    default: 128
 outputs:
   answer:
     type: text
-  confidence:
-    type: float

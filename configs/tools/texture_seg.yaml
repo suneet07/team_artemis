@@ -1,16 +1,26 @@
 name: texture_seg
-description: Computes local texture statistics and edge density.
-version: 1
-required_modalities: [any]
-confidence_source: heuristic
-expected_latency_ms: 300
+description: Edge-density and local-variance segmentation for optical sources with no usable spectral bands (RGB-only or pan-only). Morphological evidence only - it separates structure from smoothness, never materials.
+version: 2
+required_modalities: [optical]
+confidence_source: threshold_statistics
+expected_latency_ms: 400
 permitted_parameters:
-  window_size:
+  target:
+    type: enum
+    values: [built-up, builtup, structure, smooth, water, vegetation]
+    default: built-up
+  window_px:
     type: int
     range: [3, 31]
-    default: 5
+    optional: true
+  threshold_method:
+    type: enum
+    values: [otsu, fixed]
+    default: otsu
 outputs:
-  response_map:
+  mask_uri:
     type: geotiff
     crs: source
     resolution: full_scene
+  area_km2:
+    type: float

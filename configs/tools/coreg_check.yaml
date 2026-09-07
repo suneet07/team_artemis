@@ -1,17 +1,16 @@
 name: coreg_check
-description: Wraps co-registration checking between image pairs to verify spatial alignment in the trace.
+description: P3 co-registration exposed as a tool so its execution appears in the trace. Phase cross-correlation within a modality, mutual information across optical and SAR. Verify-only on pre-co-registered pairs.
 version: 1
-required_modalities: [pair]
-confidence_source: heuristic
-expected_latency_ms: 100
+required_modalities: [optical, sar]
+modality_mode: any
+confidence_source: threshold_statistics
+expected_latency_ms: 1500
 permitted_parameters:
-  max_rmse_px:
-    type: float
-    range: [0.1, 10.0]
-    default: 1.5
-    optional: true
+  verify_only:
+    type: bool
+    default: true
 outputs:
-  coregistered:
-    type: text
   rmse_px:
     type: float
+  checks_passed:
+    type: stats

@@ -1,0 +1,20 @@
+{
+ "summary": {
+  "checked": 3000,
+  "verified": 3000,
+  "mismatched": 0,
+  "order_errors": 0,
+  "unresolved": 0,
+  "by_task": {
+   "change_magnitude": 500,
+   "change_where": 500,
+   "change_compare": 500,
+   "change_count": 500,
+   "change_presence": 500,
+   "change_direction": 500
+  }
+ },
+ "mismatches": [],
+ "order_errors": [],
+ "unresolved": []
+}

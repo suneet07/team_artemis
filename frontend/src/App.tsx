@@ -15,6 +15,11 @@ const ReportScreen = lazy(() =>
     default: m.ReportScreen,
   })),
 );
+const GalleryScreen = lazy(() =>
+  import("./features/gallery/GalleryScreen").then((m) => ({
+    default: m.GalleryScreen,
+  })),
+);
 const SystemScreen = lazy(() =>
   import("./features/system/SystemScreen").then((m) => ({
     default: m.SystemScreen,
@@ -63,6 +68,7 @@ export function App() {
                 path="/workspace/:bundleId/report/:queryId"
                 element={<ReportScreen />}
               />
+              <Route path="/gallery" element={<GalleryScreen />} />
               <Route path="/system" element={<SystemScreen />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

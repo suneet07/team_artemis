@@ -1,0 +1,3796 @@
+{
+ "pipeline": "dino_vlm",
+ "vlm": "Qwen/Qwen3-VL-4B-Instruct",
+ "detector": "IDEA-Research/grounding-dino-base",
+ "sam": null,
+ "rows": 150,
+ "overall": {
+  "acc@0.5": 0.3467,
+  "acc@0.7": 0.24,
+  "mean_iou": 0.3385,
+  "unparsable": 0.0067
+ },
+ "by_slice": {
+  "large": {
+   "n": 3,
+   "acc@0.5": 0.3333,
+   "acc@0.7": 0.3333,
+   "mean_iou": 0.3505,
+   "unparsable": 0.0
+  },
+  "small": {
+   "n": 115,
+   "acc@0.5": 0.3652,
+   "acc@0.7": 0.2435,
+   "mean_iou": 0.3521,
+   "unparsable": 0.0087
+  },
+  "unique:False": {
+   "n": 90,
+   "acc@0.5": 0.3,
+   "acc@0.7": 0.1778,
+   "mean_iou": 0.3023,
+   "unparsable": 0.0
+  },
+  "unique:True": {
+   "n": 60,
+   "acc@0.5": 0.4167,
+   "acc@0.7": 0.3333,
+   "mean_iou": 0.3928,
+   "unparsable": 0.0167
+  },
+  "unspecified": {
+   "n": 32,
+   "acc@0.5": 0.2812,
+   "acc@0.7": 0.2188,
+   "mean_iou": 0.2884,
+   "unparsable": 0.0
+  }
+ },
+ "records": [
+  {
+   "question_id": 614,
+   "image_id": "P0309_0004.png",
+   "question": "The harbor structure along the lower edge of the image has a long, narrow pathway extending into the water.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.4585,
+   "hit": false,
+   "box": [
+    0.16740024089813232,
+    0.6269881129264832,
+    0.8647325038909912,
+    0.8649491667747498
+   ],
+   "reference": [
+    0.15,
+    0.58,
+    0.65,
+    0.81
+   ],
+   "candidates": 11,
+   "reply": "10",
+   "picked": 10
+  },
+  {
+   "question_id": 642,
+   "image_id": "P0331_0008.png",
+   "question": "The small vehicle is at the bottom-middle of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.3816,
+   "hit": false,
+   "box": [
+    0.38798245787620544,
+    0.8229100704193115,
+    0.41909220814704895,
+    0.8607624769210815
+   ],
+   "reference": [
+    0.37,
+    0.81,
+    0.43,
+    0.86
+   ],
+   "candidates": 12,
+   "reply": "8",
+   "picked": 8
+  },
+  {
+   "question_id": 763,
+   "image_id": "P0368_0000.png",
+   "question": "The small vehicle located between houses towards the top middle of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.3646,
+   "hit": false,
+   "box": [
+    0.46151357889175415,
+    0.1884819120168686,
+    0.5108572244644165,
+    0.2308599203824997
+   ],
+   "reference": [
+    0.44,
+    0.16,
+    0.51,
+    0.24
+   ],
+   "candidates": 12,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 791,
+   "image_id": "P0374_0007.png",
+   "question": "The small vehicle is located at the bottom right corner of the image, partially extending beyond the image frame.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.9469745755195618,
+    0.9380989074707031,
+    1.0004476308822632,
+    0.99174964427948
+   ],
+   "reference": [
+    0.91,
+    0.88,
+    1.0,
+    0.93
+   ],
+   "candidates": 12,
+   "reply": "11",
+   "picked": 11
+  },
+  {
+   "question_id": 812,
+   "image_id": "P0382_0002.png",
+   "question": "The tennis court in the top-most relative position to other courts of the same category and situated on the right.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.1016,
+   "hit": false,
+   "box": [
+    0.35846981406211853,
+    -0.0004937946796417236,
+    1.0042498111724854,
+    0.9994280338287354
+   ],
+   "reference": [
+    0.84,
+    0.04,
+    1.0,
+    0.45
+   ],
+   "candidates": 5,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 950,
+   "image_id": "P0491_0001.png",
+   "question": "The baseball diamond, characterized by its infield dirt, is located towards the bottom left section of the image with a curved path leading to it.",
+   "obj_cls": "baseball-diamond",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.8016,
+   "hit": true,
+   "box": [
+    0.16724348068237305,
+    0.524367094039917,
+    0.6800451278686523,
+    1.0014708042144775
+   ],
+   "reference": [
+    0.14,
+    0.58,
+    0.71,
+    1.0
+   ],
+   "candidates": 5,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 968,
+   "image_id": "P0499_0005.png",
+   "question": "The vehicle located on the left side of the image, which is the bottom-most among the parked vehicles.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.0005970895290374756,
+    0.6585872173309326,
+    0.04741808772087097,
+    0.7859864234924316
+   ],
+   "reference": [
+    0.06,
+    0.59,
+    0.14,
+    0.67
+   ],
+   "candidates": 12,
+   "reply": "11",
+   "picked": 11
+  },
+  {
+   "question_id": 976,
+   "image_id": "P0499_0008.png",
+   "question": "The bottom-most small vehicle on the left side.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.5552837252616882,
+    0.9488598108291626,
+    0.5987027287483215,
+    0.9956780672073364
+   ],
+   "reference": [
+    0.0,
+    0.59,
+    0.08,
+    0.67
+   ],
+   "candidates": 12,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 994,
+   "image_id": "P0524_0001.png",
+   "question": "The ship is centered in the image, positioned on the water between the two small harbors.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.2926,
+   "hit": false,
+   "box": [
+    0.533258855342865,
+    0.5536684989929199,
+    0.6031407713890076,
+    0.6319222450256348
+   ],
+   "reference": [
+    0.55,
+    0.56,
+    0.59,
+    0.6
+   ],
+   "candidates": 8,
+   "reply": "8",
+   "picked": 8
+  },
+  {
+   "question_id": 1013,
+   "image_id": "P0525_0000.png",
+   "question": "The harbor located at the bottom section of the picture.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.1106,
+   "hit": false,
+   "box": [
+    0.32756996154785156,
+    0.6954182386398315,
+    0.37282800674438477,
+    0.7349923849105835
+   ],
+   "reference": [
+    0.25,
+    0.66,
+    0.43,
+    0.75
+   ],
+   "candidates": 12,
+   "reply": "10",
+   "picked": 10
+  },
+  {
+   "question_id": 1028,
+   "image_id": "P0526_0002.png",
+   "question": "The object is a small-sized harbor that stretches from the bottom to the top of the image.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.5366,
+   "hit": true,
+   "box": [
+    0.6521801948547363,
+    0.0014918744564056396,
+    0.7231664657592773,
+    0.9546505212783813
+   ],
+   "reference": [
+    0.62,
+    0.0,
+    0.75,
+    0.97
+   ],
+   "candidates": 8,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 1064,
+   "image_id": "P0550_0002.png",
+   "question": "The ship on the left side in this waterfront scene.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.6768,
+   "hit": true,
+   "box": [
+    0.0919484943151474,
+    0.6378251910209656,
+    0.15335610508918762,
+    0.6841122508049011
+   ],
+   "reference": [
+    0.09,
+    0.63,
+    0.16,
+    0.69
+   ],
+   "candidates": 12,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 1126,
+   "image_id": "P0559_0003.png",
+   "question": "Central in the image is the right-most large vehicle.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.6918072700500488,
+    0.8968072533607483,
+    0.7428549528121948,
+    0.9456804394721985
+   ],
+   "reference": [
+    0.33,
+    0.33,
+    0.47,
+    0.47
+   ],
+   "candidates": 12,
+   "reply": "10",
+   "picked": 10
+  },
+  {
+   "question_id": 1144,
+   "image_id": "P0577_0003.png",
+   "question": "The harbor is visible on the left side of the image.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.6691,
+   "hit": true,
+   "box": [
+    0.0042861104011535645,
+    0.6578807830810547,
+    0.32257920503616333,
+    0.9867870807647705
+   ],
+   "reference": [
+    0.0,
+    0.65,
+    0.28,
+    0.92
+   ],
+   "candidates": 12,
+   "reply": "12",
+   "picked": 12
+  },
+  {
+   "question_id": 1186,
+   "image_id": "P0589_0002.png",
+   "question": "The harbor structure with a narrow pier at the bottom of the image extends into the water.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.5288,
+   "hit": true,
+   "box": [
+    0.3049062490463257,
+    0.8624911308288574,
+    1.0012446641921997,
+    1.0021039247512817
+   ],
+   "reference": [
+    0.15,
+    0.82,
+    0.88,
+    1.0
+   ],
+   "candidates": 10,
+   "reply": "8",
+   "picked": 8
+  },
+  {
+   "question_id": 1199,
+   "image_id": "P0604_0003.png",
+   "question": "The harbor structure located at the top-left of the image.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.1757,
+   "hit": false,
+   "box": [
+    0.08695448935031891,
+    0.0019713789224624634,
+    0.3058922290802002,
+    0.21973317861557007
+   ],
+   "reference": [
+    0.0,
+    0.07,
+    0.21,
+    0.43
+   ],
+   "candidates": 12,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 1271,
+   "image_id": "P0651_0001.png",
+   "question": "The rightmost tennis court is located on the right edge of the image.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0666,
+   "hit": false,
+   "box": [
+    0.24397388100624084,
+    -0.005177021026611328,
+    0.9936314821243286,
+    0.6477611660957336
+   ],
+   "reference": [
+    0.9,
+    0.23,
+    1.0,
+    0.58
+   ],
+   "candidates": 4,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 1341,
+   "image_id": "P0683_0004.png",
+   "question": "The small vehicle located in the bottom-right corner of the image near the dock.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": true,
+   "iou": 0.0063,
+   "hit": false,
+   "box": [
+    0.6129918694496155,
+    0.5239232182502747,
+    0.9975400567054749,
+    0.855974018573761
+   ],
+   "reference": [
+    0.87,
+    0.68,
+    0.91,
+    0.7
+   ],
+   "candidates": 4,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 1408,
+   "image_id": "P0725_0005.png",
+   "question": "The vehicle located on the top left edge.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.744,
+   "hit": true,
+   "box": [
+    -0.00020635686814785004,
+    0.22224727272987366,
+    0.03977019339799881,
+    0.27357402443885803
+   ],
+   "reference": [
+    0.0,
+    0.21,
+    0.04,
+    0.27
+   ],
+   "candidates": 12,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 1486,
+   "image_id": "P0814_0000.png",
+   "question": "The tennis court is aligned vertically near the center of the image.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.2341,
+   "hit": false,
+   "box": [
+    0.4309854805469513,
+    0.01607334613800049,
+    0.9993448257446289,
+    0.6316218376159668
+   ],
+   "reference": [
+    0.5,
+    0.13,
+    0.71,
+    0.52
+   ],
+   "candidates": 7,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 1533,
+   "image_id": "P0822_0005.png",
+   "question": "The tennis court located on the center.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.3940865993499756,
+    0.6732189059257507,
+    0.9718093872070312,
+    1.001306414604187
+   ],
+   "reference": [
+    0.43,
+    0.2,
+    0.64,
+    0.59
+   ],
+   "candidates": 4,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 1542,
+   "image_id": "P0833_0005.png",
+   "question": "The tennis court located at the upper right section of the image.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    -0.0002870708703994751,
+    0.0012784674763679504,
+    0.3590930104255676,
+    0.2094630002975464
+   ],
+   "reference": [
+    0.46,
+    0.0,
+    0.83,
+    0.3
+   ],
+   "candidates": 4,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 1596,
+   "image_id": "P0844_0003.png",
+   "question": "The tennis court on the left side of the image has part of its playing area not visible within the image frame.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0962,
+   "hit": false,
+   "box": [
+    3.1113624572753906e-05,
+    -0.0007602274417877197,
+    1.0000211000442505,
+    0.9992297887802124
+   ],
+   "reference": [
+    0.0,
+    0.5,
+    0.26,
+    0.87
+   ],
+   "candidates": 3,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 1688,
+   "image_id": "P0910_0004.png",
+   "question": "The harbor located at themiddle-left part of the image.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.7802,
+   "hit": true,
+   "box": [
+    0.04279933124780655,
+    0.4359157681465149,
+    0.20776644349098206,
+    0.7502725720405579
+   ],
+   "reference": [
+    0.01,
+    0.43,
+    0.2,
+    0.75
+   ],
+   "candidates": 12,
+   "reply": "7",
+   "picked": 7
+  },
+  {
+   "question_id": 1929,
+   "image_id": "P0961_0019.png",
+   "question": "The harbor located in the middle-right side of the image.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.6577,
+   "hit": true,
+   "box": [
+    0.6300573348999023,
+    0.034598976373672485,
+    0.7587298154830933,
+    0.6238514184951782
+   ],
+   "reference": [
+    0.62,
+    0.05,
+    0.75,
+    0.49
+   ],
+   "candidates": 12,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 1934,
+   "image_id": "P0961_0022.png",
+   "question": "The small vehicle is parked at the bottom edge of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.8682244420051575,
+    0.977595865726471,
+    0.8958343863487244,
+    0.9986289143562317
+   ],
+   "reference": [
+    0.39,
+    0.97,
+    0.42,
+    1.0
+   ],
+   "candidates": 12,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 2028,
+   "image_id": "P0970_0011.png",
+   "question": "The harbor is positioned in the top-right corner.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.7108,
+   "hit": true,
+   "box": [
+    0.8624740839004517,
+    0.0032179951667785645,
+    0.9852924346923828,
+    0.29930946230888367
+   ],
+   "reference": [
+    0.86,
+    0.0,
+    0.97,
+    0.25
+   ],
+   "candidates": 12,
+   "reply": "9",
+   "picked": 9
+  },
+  {
+   "question_id": 2181,
+   "image_id": "P0998_0007.png",
+   "question": "The ship positioned in the top-left cornef of the image.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.1704,
+   "hit": false,
+   "box": [
+    0.0360821932554245,
+    0.00012930482625961304,
+    0.2776200771331787,
+    0.1605236530303955
+   ],
+   "reference": [
+    0.05,
+    0.04,
+    0.11,
+    0.15
+   ],
+   "candidates": 8,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 2363,
+   "image_id": "P1022_0006.png",
+   "question": "The harbor positioned at the bottom-middle of the image.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.5998,
+   "hit": true,
+   "box": [
+    0.4580368101596832,
+    0.6115952134132385,
+    0.5940130352973938,
+    0.9961665272712708
+   ],
+   "reference": [
+    0.44,
+    0.67,
+    0.64,
+    1.0
+   ],
+   "candidates": 12,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 2471,
+   "image_id": "P1030_0021.png",
+   "question": "The harbor located on the leftmost side of the image.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.913,
+   "hit": true,
+   "box": [
+    -5.7874247431755066e-05,
+    0.5522788166999817,
+    0.05540670454502106,
+    0.7699874043464661
+   ],
+   "reference": [
+    0.0,
+    0.55,
+    0.06,
+    0.77
+   ],
+   "candidates": 12,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 2490,
+   "image_id": "P1065_0006.png",
+   "question": "The small harbor is situated near some greenery on the water's edge.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.5344,
+   "hit": true,
+   "box": [
+    0.6425737738609314,
+    0.17020247876644135,
+    0.737432062625885,
+    0.3126644492149353
+   ],
+   "reference": [
+    0.64,
+    0.23,
+    0.74,
+    0.32
+   ],
+   "candidates": 12,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 2702,
+   "image_id": "P1101_0000.png",
+   "question": "The top-most tennis court positioned on the left side of the image.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.5189939141273499,
+    0.34561216831207275,
+    0.9941914677619934,
+    0.9967132806777954
+   ],
+   "reference": [
+    0.04,
+    0.23,
+    0.33,
+    0.61
+   ],
+   "candidates": 7,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 2945,
+   "image_id": "P1184_0028.png",
+   "question": "The soccer ball field can be identified by its white markings and is situated adjacent to a road.",
+   "obj_cls": "soccer-ball-field",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.7084,
+   "hit": true,
+   "box": [
+    0.0035715103149414062,
+    0.0024920403957366943,
+    0.45721831917762756,
+    0.33854106068611145
+   ],
+   "reference": [
+    0.06,
+    0.01,
+    0.42,
+    0.31
+   ],
+   "candidates": 6,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 2961,
+   "image_id": "P1213_0022.png",
+   "question": "The small ship is situated towards the top-right section of the image.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0012,
+   "hit": false,
+   "box": [
+    -0.00024449825286865234,
+    0.000896155834197998,
+    0.9997454881668091,
+    1.0008862018585205
+   ],
+   "reference": [
+    0.98,
+    0.15,
+    1.0,
+    0.21
+   ],
+   "candidates": 2,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 3078,
+   "image_id": "P1242_0061.png",
+   "question": "The small bridge located in the top-right corner of the image.",
+   "obj_cls": "bridge",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.3581838607788086,
+    -0.0017470791935920715,
+    0.6791871786117554,
+    0.11822064965963364
+   ],
+   "reference": [
+    0.83,
+    0.09,
+    0.89,
+    0.15
+   ],
+   "candidates": 7,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 3374,
+   "image_id": "P1342_0058.png",
+   "question": "The bridge located at the bottom of the image.",
+   "obj_cls": "bridge",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0733,
+   "hit": false,
+   "box": [
+    0.0007030963897705078,
+    0.8707698583602905,
+    1.0006930828094482,
+    1.001663088798523
+   ],
+   "reference": [
+    0.65,
+    0.92,
+    0.77,
+    1.0
+   ],
+   "candidates": 11,
+   "reply": "10",
+   "picked": 10
+  },
+  {
+   "question_id": 3517,
+   "image_id": "P1376_0002.png",
+   "question": "The small vehicle located at the top-right of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.7486,
+   "hit": true,
+   "box": [
+    0.9671195149421692,
+    0.1608516424894333,
+    0.9992762207984924,
+    0.20740945637226105
+   ],
+   "reference": [
+    0.96,
+    0.16,
+    1.0,
+    0.21
+   ],
+   "candidates": 3,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 3622,
+   "image_id": "P1380_0006.png",
+   "question": "The swimming pool located at the top of the image.",
+   "obj_cls": "swimming-pool",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0554,
+   "hit": false,
+   "box": [
+    0.6484918594360352,
+    0.03902876377105713,
+    0.7175513505935669,
+    0.09823313355445862
+   ],
+   "reference": [
+    0.63,
+    0.0,
+    0.68,
+    0.05
+   ],
+   "candidates": 12,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 3657,
+   "image_id": "P1380_0067.png",
+   "question": "The small circular storage tank is located in the bottom right of the image.",
+   "obj_cls": "storage-tank",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.22625748813152313,
+    0.9549466371536255,
+    0.29487764835357666,
+    0.9999568462371826
+   ],
+   "reference": [
+    0.73,
+    0.7,
+    0.78,
+    0.75
+   ],
+   "candidates": 5,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 3943,
+   "image_id": "P1390_0080.png",
+   "question": "The plane located at the bottom row of the group and furthest to the right.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.11299243569374084,
+    0.8418627977371216,
+    0.38013020157814026,
+    1.0013964176177979
+   ],
+   "reference": [
+    0.24,
+    0.27,
+    0.58,
+    0.54
+   ],
+   "candidates": 12,
+   "reply": "12",
+   "picked": 12
+  },
+  {
+   "question_id": 3999,
+   "image_id": "P1397_0036.png",
+   "question": "Toward the left, centered between the top and bottom edges.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.14147791266441345,
+    0.168218195438385,
+    0.3701935112476349,
+    0.4486817717552185
+   ],
+   "reference": [
+    0.06,
+    0.5,
+    0.19,
+    0.67
+   ],
+   "candidates": 12,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 4070,
+   "image_id": "P1397_0085.png",
+   "question": "The aircraft located at the top part of the image.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.6431047916412354,
+    0.2788839042186737,
+    0.7403289079666138,
+    0.3167831599712372
+   ],
+   "reference": [
+    0.38,
+    0.55,
+    0.73,
+    0.87
+   ],
+   "candidates": 12,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 4423,
+   "image_id": "P1471_0041.png",
+   "question": "The basketball court situated to the far left of the ground track field.",
+   "obj_cls": "basketball-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.1143,
+   "hit": false,
+   "box": [
+    0.17467769980430603,
+    0.0009908676147460938,
+    0.9978427886962891,
+    1.0009808540344238
+   ],
+   "reference": [
+    0.38,
+    0.0,
+    0.61,
+    0.41
+   ],
+   "candidates": 4,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 4663,
+   "image_id": "P1513_0010.png",
+   "question": "The plane partly located at the top-right corner of the image.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.7158,
+   "hit": true,
+   "box": [
+    0.8037291169166565,
+    0.007344529032707214,
+    0.9945835471153259,
+    0.17987355589866638
+   ],
+   "reference": [
+    0.77,
+    0.0,
+    1.0,
+    0.2
+   ],
+   "candidates": 12,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 4718,
+   "image_id": "P1529_0062.png",
+   "question": "The top-most plane is located at the top-left of the image.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.7372,
+   "hit": true,
+   "box": [
+    0.22931209206581116,
+    0.06413935124874115,
+    0.36685094237327576,
+    0.19277186691761017
+   ],
+   "reference": [
+    0.22,
+    0.05,
+    0.38,
+    0.2
+   ],
+   "candidates": 6,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 4745,
+   "image_id": "P1566_0030.png",
+   "question": "The bridge crossing over the seemingly straight path towards the central part of the image.",
+   "obj_cls": "bridge",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0048,
+   "hit": false,
+   "box": [
+    2.7418136596679688e-06,
+    -0.0010175108909606934,
+    0.9999927282333374,
+    0.998972475528717
+   ],
+   "reference": [
+    0.28,
+    0.49,
+    0.36,
+    0.55
+   ],
+   "candidates": 4,
+   "reply": "There is no bridge visible in the image",
+   "picked": 0,
+   "fell_back": true
+  },
+  {
+   "question_id": 4912,
+   "image_id": "P1643_0038.png",
+   "question": "The rounded storage-tank is located towards the bottom left corner of the image.",
+   "obj_cls": "storage-tank",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.4846,
+   "hit": false,
+   "box": [
+    0.1694353073835373,
+    0.8943958878517151,
+    0.2071928232908249,
+    0.9328847527503967
+   ],
+   "reference": [
+    0.17,
+    0.89,
+    0.2,
+    0.92
+   ],
+   "candidates": 7,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 4920,
+   "image_id": "P1643_0062.png",
+   "question": "The baseball diamond located towards the middle-right of the image.",
+   "obj_cls": "baseball-diamond",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.5273456573486328,
+    0.7964472770690918,
+    0.658047080039978,
+    0.9262034893035889
+   ],
+   "reference": [
+    0.88,
+    0.49,
+    0.98,
+    0.58
+   ],
+   "candidates": 8,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 5055,
+   "image_id": "P1738_0020.png",
+   "question": "The harbor facility can be found in the middle-right section of the image, adjacent to the water's edge.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.760222315788269,
+    0.7514102458953857,
+    0.9410892724990845,
+    0.9987665414810181
+   ],
+   "reference": [
+    0.92,
+    0.44,
+    1.0,
+    0.52
+   ],
+   "candidates": 9,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 5073,
+   "image_id": "P1738_0051.png",
+   "question": "The plane at the very top of the image, almost touching the upper edge of the frame.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.4093,
+   "hit": false,
+   "box": [
+    0.6237515807151794,
+    0.022312067449092865,
+    0.6532604098320007,
+    0.056986741721630096
+   ],
+   "reference": [
+    0.61,
+    0.01,
+    0.66,
+    0.06
+   ],
+   "candidates": 5,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 5141,
+   "image_id": "P1754_0050.png",
+   "question": "A roundabout is visible in the middle-left section of the image.",
+   "obj_cls": "roundabout",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.9116,
+   "hit": true,
+   "box": [
+    0.23038308322429657,
+    0.4006246328353882,
+    0.3019340932369232,
+    0.48430341482162476
+   ],
+   "reference": [
+    0.23,
+    0.4,
+    0.3,
+    0.48
+   ],
+   "candidates": 8,
+   "reply": "8",
+   "picked": 8
+  },
+  {
+   "question_id": 5147,
+   "image_id": "P1763_0016.png",
+   "question": "The small bridge in the bottom-right quadrant stands out due to its unique shape and position.",
+   "obj_cls": "bridge",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.1236,
+   "hit": false,
+   "box": [
+    0.4536418616771698,
+    0.6884129047393799,
+    0.9937676191329956,
+    1.0000358819961548
+   ],
+   "reference": [
+    0.68,
+    0.84,
+    0.81,
+    1.0
+   ],
+   "candidates": 2,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 5306,
+   "image_id": "P1829_0009.png",
+   "question": "The small vehicle is situated at the top left.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.0374,
+   "hit": false,
+   "box": [
+    0.11089751124382019,
+    0.13032342493534088,
+    0.14585402607917786,
+    0.16015885770320892
+   ],
+   "reference": [
+    0.1,
+    0.15,
+    0.21,
+    0.23
+   ],
+   "candidates": 12,
+   "reply": "10",
+   "picked": 10
+  },
+  {
+   "question_id": 5573,
+   "image_id": "P1854_0240.png",
+   "question": "The large vehicle can be seen at the top-left corner of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.3704489469528198,
+    0.062485188245773315,
+    0.40432918071746826,
+    0.12913529574871063
+   ],
+   "reference": [
+    0.0,
+    0.07,
+    0.02,
+    0.14
+   ],
+   "candidates": 12,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 5605,
+   "image_id": "P1860_0013.png",
+   "question": "The small vehicle positioned closest to the top middle of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.779,
+   "hit": true,
+   "box": [
+    0.603778064250946,
+    0.015879038721323013,
+    0.6517420411109924,
+    0.13151685893535614
+   ],
+   "reference": [
+    0.6,
+    0.0,
+    0.65,
+    0.13
+   ],
+   "candidates": 12,
+   "reply": "7",
+   "picked": 7
+  },
+  {
+   "question_id": 5628,
+   "image_id": "P1903_0005.png",
+   "question": "The baseball diamond, with its brown infield, is located towards the center portion of the image and is surrounded by grass and trees.",
+   "obj_cls": "baseball-diamond",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.7398,
+   "hit": true,
+   "box": [
+    0.3215648829936981,
+    0.1793128252029419,
+    0.5755976438522339,
+    0.47244298458099365
+   ],
+   "reference": [
+    0.3,
+    0.15,
+    0.61,
+    0.47
+   ],
+   "candidates": 7,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 5738,
+   "image_id": "P2027_0006.png",
+   "question": "The large white vehicle located to the immediate left of the central large vehicle in the bottom-left area of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.568647027015686,
+    0.6579648852348328,
+    0.6086736917495728,
+    0.7496948838233948
+   ],
+   "reference": [
+    0.06,
+    0.83,
+    0.11,
+    1.0
+   ],
+   "candidates": 12,
+   "reply": "12",
+   "picked": 12
+  },
+  {
+   "question_id": 5925,
+   "image_id": "P2220_0002.png",
+   "question": "The relatively larger airplane positioned near the right edge of the image can be found in the bottom-right corner.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.2957,
+   "hit": false,
+   "box": [
+    0.8546900153160095,
+    0.6595890522003174,
+    1.0015782117843628,
+    0.7637084722518921
+   ],
+   "reference": [
+    0.83,
+    0.53,
+    1.0,
+    0.83
+   ],
+   "candidates": 12,
+   "reply": "9",
+   "picked": 9
+  },
+  {
+   "question_id": 5992,
+   "image_id": "P2255_0003.png",
+   "question": "The baseball diamond situated at the bottom right of the cross-like formation.",
+   "obj_cls": "baseball-diamond",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0139,
+   "hit": false,
+   "box": [
+    0.7541341781616211,
+    0.3751649856567383,
+    0.906574010848999,
+    0.5506124496459961
+   ],
+   "reference": [
+    0.59,
+    0.53,
+    0.8,
+    0.73
+   ],
+   "candidates": 12,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 6102,
+   "image_id": "P2330_0033.png",
+   "question": "In the left-hand part of the image, the ship is situated closer to the top edge.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.891,
+   "hit": true,
+   "box": [
+    0.16221614181995392,
+    0.281302273273468,
+    0.28720206022262573,
+    0.3326522707939148
+   ],
+   "reference": [
+    0.16,
+    0.28,
+    0.29,
+    0.33
+   ],
+   "candidates": 6,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 6476,
+   "image_id": "P2563_0006.png",
+   "question": "Among the basketball courts, there is the one situated at the bottom-middle.",
+   "obj_cls": "basketball-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.3017,
+   "hit": false,
+   "box": [
+    0.20322388410568237,
+    0.7933263778686523,
+    0.6199997663497925,
+    1.0001248121261597
+   ],
+   "reference": [
+    0.49,
+    0.8,
+    0.62,
+    1.0
+   ],
+   "candidates": 6,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 6507,
+   "image_id": "P2571_0007.png",
+   "question": "The tennis court located on the left side towards the bottom of the image has a reddish-brown playing surface and is partial due to the image frame.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    -0.0038549304008483887,
+    0.0006269514560699463,
+    0.64986252784729,
+    0.4423450231552124
+   ],
+   "reference": [
+    0.0,
+    0.52,
+    0.25,
+    0.95
+   ],
+   "candidates": 5,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 6858,
+   "image_id": "P2678_0025.png",
+   "question": "The small harbor is located on the water's edge.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.6025,
+   "hit": true,
+   "box": [
+    0.4370519518852234,
+    0.0023148059844970703,
+    0.8983379006385803,
+    0.47176146507263184
+   ],
+   "reference": [
+    0.56,
+    0.08,
+    0.9,
+    0.48
+   ],
+   "candidates": 4,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 6859,
+   "image_id": "P2678_0030.png",
+   "question": "The vehicle parked at the top-most part of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    -0.00045792851597070694,
+    0.3362463414669037,
+    0.019197314977645874,
+    0.37405624985694885
+   ],
+   "reference": [
+    0.0,
+    0.22,
+    0.03,
+    0.26
+   ],
+   "candidates": 4,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 6875,
+   "image_id": "P2678_0044.png",
+   "question": "The storage tank situated towards the middle-right.",
+   "obj_cls": "storage-tank",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0006,
+   "hit": false,
+   "box": [
+    0.6233901977539062,
+    0.14127972722053528,
+    0.980358362197876,
+    0.5012792348861694
+   ],
+   "reference": [
+    0.91,
+    0.5,
+    0.97,
+    0.57
+   ],
+   "candidates": 7,
+   "reply": "7",
+   "picked": 7
+  },
+  {
+   "question_id": 6918,
+   "image_id": "P2701_0031.png",
+   "question": "The small ship occupies an area in the bottom-left quadrant of the image.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": null,
+   "reference": [
+    0.19,
+    0.91,
+    0.31,
+    1.0
+   ],
+   "candidates": 0
+  },
+  {
+   "question_id": 6964,
+   "image_id": "P2714_0002.png",
+   "question": "The sports field with a distinct soccer-ball pattern is situated in the middle-right section of the image.",
+   "obj_cls": "soccer-ball-field",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.6746466755867004,
+    0.6683360934257507,
+    0.7633104920387268,
+    0.7705720067024231
+   ],
+   "reference": [
+    0.88,
+    0.37,
+    0.92,
+    0.44
+   ],
+   "candidates": 7,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 7014,
+   "image_id": "P2721_0001.png",
+   "question": "Adjacent to the soccer field, there is a small ground track field with a red running track encircling it.",
+   "obj_cls": "ground-track-field",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0188,
+   "hit": false,
+   "box": [
+    0.2662394344806671,
+    0.019576042890548706,
+    1.0029637813568115,
+    0.9948403835296631
+   ],
+   "reference": [
+    0.69,
+    0.82,
+    0.78,
+    0.97
+   ],
+   "candidates": 5,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 7113,
+   "image_id": "P2733_0006.png",
+   "question": "The large vehicle situated on the right side of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.6591063737869263,
+    0.7418234348297119,
+    0.6875214576721191,
+    0.7689218521118164
+   ],
+   "reference": [
+    0.71,
+    0.38,
+    0.73,
+    0.42
+   ],
+   "candidates": 8,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 7310,
+   "image_id": "P2781_0010.png",
+   "question": "The unique small vehicle is positioned near the center of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.5611734390258789,
+    0.5856560468673706,
+    0.6158658266067505,
+    0.635054349899292
+   ],
+   "reference": [
+    0.69,
+    0.61,
+    0.79,
+    0.71
+   ],
+   "candidates": 12,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 7362,
+   "image_id": "P2789_0049.png",
+   "question": "The small ship is located at the centre of the image.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.9155,
+   "hit": true,
+   "box": [
+    0.3711729645729065,
+    0.2811238169670105,
+    0.7009410262107849,
+    0.5061269998550415
+   ],
+   "reference": [
+    0.36,
+    0.28,
+    0.69,
+    0.51
+   ],
+   "candidates": 12,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 7433,
+   "image_id": "P2791_0106.png",
+   "question": "A small plane is placed in the middle closer to top of the image.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.3041,
+   "hit": false,
+   "box": [
+    0.3916112780570984,
+    0.09388218820095062,
+    0.6393957734107971,
+    0.4386409521102905
+   ],
+   "reference": [
+    0.24,
+    0.0,
+    0.77,
+    0.53
+   ],
+   "candidates": 12,
+   "reply": "8",
+   "picked": 8
+  },
+  {
+   "question_id": 7483,
+   "image_id": "P2794_0049.png",
+   "question": "The small ship situated on the left of the image, closer to the top.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.5929,
+   "hit": true,
+   "box": [
+    0.0826810672879219,
+    0.04450105130672455,
+    0.23833873867988586,
+    0.3545684218406677
+   ],
+   "reference": [
+    0.03,
+    0.0,
+    0.25,
+    0.37
+   ],
+   "candidates": 12,
+   "reply": "10",
+   "picked": 10
+  },
+  {
+   "question_id": 7637,
+   "image_id": "P3107_0000.png",
+   "question": "The ground track field can be identified by its distinct rectangular shape with slightly curved ends located in the middle-right area of the image.",
+   "obj_cls": "ground-track-field",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.5702633857727051,
+    0.20205573737621307,
+    0.9043623208999634,
+    0.5047988295555115
+   ],
+   "reference": [
+    0.96,
+    0.36,
+    1.0,
+    0.45
+   ],
+   "candidates": 6,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 7776,
+   "image_id": "P4151_0073.png",
+   "question": "The small vehicle found on the road towards the top-right portion of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.5419,
+   "hit": true,
+   "box": [
+    0.7485392689704895,
+    0.00022822432219982147,
+    0.8197370171546936,
+    0.045893602073192596
+   ],
+   "reference": [
+    0.7,
+    0.0,
+    0.82,
+    0.05
+   ],
+   "candidates": 12,
+   "reply": "12",
+   "picked": 12
+  },
+  {
+   "question_id": 8021,
+   "image_id": "P5789_1301.png",
+   "question": "A ship is situated along the right edge of the image, with its stern extending beyond the frame.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0225,
+   "hit": false,
+   "box": [
+    7.796287536621094e-05,
+    0.0015848875045776367,
+    1.000067949295044,
+    1.0015748739242554
+   ],
+   "reference": [
+    0.85,
+    0.25,
+    1.0,
+    0.4
+   ],
+   "candidates": 2,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 8121,
+   "image_id": "P5789_2028.png",
+   "question": "The plane located near the left edge overlaps the bottom and left boundaries of the image.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.8283,
+   "hit": true,
+   "box": [
+    0.0004688166081905365,
+    0.2578192949295044,
+    0.10403662919998169,
+    0.390255331993103
+   ],
+   "reference": [
+    0.0,
+    0.24,
+    0.11,
+    0.39
+   ],
+   "candidates": 5,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 8143,
+   "image_id": "P5789_2197.png",
+   "question": "The left smallest storage-tank positioned in the top-left section of the image.",
+   "obj_cls": "storage-tank",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.5551,
+   "hit": true,
+   "box": [
+    0.023765074089169502,
+    0.2720184922218323,
+    0.05747547000646591,
+    0.30632418394088745
+   ],
+   "reference": [
+    0.02,
+    0.27,
+    0.05,
+    0.3
+   ],
+   "candidates": 8,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 8147,
+   "image_id": "P5789_2216.png",
+   "question": "The harbor located further south features an extended pier on its eastern edge.",
+   "obj_cls": "harbor",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.01713648810982704,
+    0.49437394738197327,
+    0.08018362522125244,
+    0.5467796921730042
+   ],
+   "reference": [
+    0.08,
+    0.57,
+    0.16,
+    0.64
+   ],
+   "candidates": 8,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 8323,
+   "image_id": "P6687_0102.png",
+   "question": "The topmost small vehicle positioned in the top-right corner of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.6403,
+   "hit": true,
+   "box": [
+    0.8034871816635132,
+    0.07456409931182861,
+    0.8761105537414551,
+    0.1539148986339569
+   ],
+   "reference": [
+    0.79,
+    0.06,
+    0.88,
+    0.16
+   ],
+   "candidates": 12,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 8397,
+   "image_id": "P6769_0130.png",
+   "question": "The small light-colored vehicle is situated at the top-middle of the image and is partially hidden behind a building.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.42815759778022766,
+    0.3651428818702698,
+    0.4951781928539276,
+    0.46237123012542725
+   ],
+   "reference": [
+    0.51,
+    0.09,
+    0.6,
+    0.23
+   ],
+   "candidates": 12,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 8614,
+   "image_id": "P8656_0045.png",
+   "question": "The left-most small vehicle towards the middle-left of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.795,
+   "hit": true,
+   "box": [
+    0.028736170381307602,
+    0.4473888874053955,
+    0.12560991942882538,
+    0.5429356098175049
+   ],
+   "reference": [
+    0.02,
+    0.44,
+    0.13,
+    0.54
+   ],
+   "candidates": 12,
+   "reply": "7",
+   "picked": 7
+  },
+  {
+   "question_id": 8721,
+   "image_id": "P8656_0123.png",
+   "question": "The other small vehicle can be found towards the bottom of the lot, within the area shadowed by trees.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.7592499256134033,
+    0.9036693572998047,
+    0.8245279788970947,
+    1.0016118288040161
+   ],
+   "reference": [
+    0.47,
+    0.58,
+    0.55,
+    0.69
+   ],
+   "candidates": 12,
+   "reply": "10",
+   "picked": 10
+  },
+  {
+   "question_id": 8790,
+   "image_id": "05869_0000.png",
+   "question": "The large oval-shaped stadium located towards the middle right of the image.",
+   "obj_cls": "stadium",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.4262,
+   "hit": false,
+   "box": [
+    0.5886101126670837,
+    0.5618852972984314,
+    0.85536128282547,
+    0.9933176636695862
+   ],
+   "reference": [
+    0.45,
+    0.5,
+    0.99,
+    1.0
+   ],
+   "candidates": 12,
+   "reply": "10",
+   "picked": 10
+  },
+  {
+   "question_id": 8869,
+   "image_id": "05941_0000.png",
+   "question": "The airplane situated at the center of the tarmac.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.9368,
+   "hit": true,
+   "box": [
+    0.43327105045318604,
+    0.1985303908586502,
+    0.7399301528930664,
+    0.4987035393714905
+   ],
+   "reference": [
+    0.45,
+    0.2,
+    0.74,
+    0.5
+   ],
+   "candidates": 12,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 8985,
+   "image_id": "06037_0000.png",
+   "question": "The overpass positioned closer to the top of the image.",
+   "obj_cls": "overpass",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.3173,
+   "hit": false,
+   "box": [
+    0.0021802186965942383,
+    -0.002532780170440674,
+    1.0021048784255981,
+    0.9974572062492371
+   ],
+   "reference": [
+    0.31,
+    0.44,
+    0.88,
+    1.0
+   ],
+   "candidates": 4,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 9039,
+   "image_id": "06083_0000.png",
+   "question": "The tennis court is located to the bottom right of the image.",
+   "obj_cls": "tennis-court",
+   "size_group": "unspecified",
+   "unique": true,
+   "iou": 0.9732,
+   "hit": true,
+   "box": [
+    0.7741697430610657,
+    0.6400608420372009,
+    1.0005841255187988,
+    1.002249002456665
+   ],
+   "reference": [
+    0.77,
+    0.64,
+    1.0,
+    1.0
+   ],
+   "candidates": 11,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 9131,
+   "image_id": "06157_0000.png",
+   "question": "The tennis court situated at the right side of the frame.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.0003272891044616699,
+    0.9450302720069885,
+    1.0002894401550293,
+    0.9994694590568542
+   ],
+   "reference": [
+    0.75,
+    0.31,
+    0.98,
+    0.8
+   ],
+   "candidates": 3,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 9154,
+   "image_id": "06177_0000.png",
+   "question": "The tennis court located at the center of the image.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.2319,
+   "hit": false,
+   "box": [
+    0.29170170426368713,
+    0.26113712787628174,
+    0.9986151456832886,
+    0.9986572265625
+   ],
+   "reference": [
+    0.37,
+    0.37,
+    0.68,
+    0.76
+   ],
+   "candidates": 5,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 9190,
+   "image_id": "06212_0000.png",
+   "question": "The airplane positioned in the lower right quadrant of the image.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0002,
+   "hit": false,
+   "box": [
+    0.9689704179763794,
+    0.4143037497997284,
+    1.0002896785736084,
+    0.5813090801239014
+   ],
+   "reference": [
+    0.58,
+    0.58,
+    1.0,
+    1.0
+   ],
+   "candidates": 12,
+   "reply": "11",
+   "picked": 11
+  },
+  {
+   "question_id": 9257,
+   "image_id": "06268_0000.png",
+   "question": "The expressway-service-area featuring parking areas is seen occupying the right side of the image.",
+   "obj_cls": "expressway-service-area",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0422,
+   "hit": false,
+   "box": [
+    0.7963287830352783,
+    0.47978711128234863,
+    0.9948304891586304,
+    0.6112995147705078
+   ],
+   "reference": [
+    0.28,
+    0.14,
+    1.0,
+    1.0
+   ],
+   "candidates": 10,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 9275,
+   "image_id": "06280_0000.png",
+   "question": "The larger windmill situated at the very bottom edge of the image.",
+   "obj_cls": "windmill",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.1377,
+   "hit": false,
+   "box": [
+    0.5112591981887817,
+    0.9164827466011047,
+    0.5833443403244019,
+    0.9970722794532776
+   ],
+   "reference": [
+    0.55,
+    0.97,
+    0.58,
+    1.0
+   ],
+   "candidates": 9,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 9364,
+   "image_id": "06350_0000.png",
+   "question": "The airplane is positioned in the middle-right of the image.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.9239,
+   "hit": true,
+   "box": [
+    0.45919865369796753,
+    0.48705044388771057,
+    0.8152201771736145,
+    0.8968648910522461
+   ],
+   "reference": [
+    0.45,
+    0.5,
+    0.81,
+    0.9
+   ],
+   "candidates": 9,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 9369,
+   "image_id": "06353_0000.png",
+   "question": "The expressway service area in the image is located to the left of a straight highway.",
+   "obj_cls": "expressway-service-area",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.1859,
+   "hit": false,
+   "box": [
+    0.23512499034404755,
+    0.6192566752433777,
+    0.37389302253723145,
+    0.9675236344337463
+   ],
+   "reference": [
+    0.2,
+    0.48,
+    0.7,
+    1.0
+   ],
+   "candidates": 12,
+   "reply": "9",
+   "picked": 9
+  },
+  {
+   "question_id": 9399,
+   "image_id": "06380_0000.png",
+   "question": "The overpass is the large diagonal structure crossing the image.",
+   "obj_cls": "overpass",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.3114,
+   "hit": false,
+   "box": [
+    0.48022085428237915,
+    0.5701518058776855,
+    0.8853693604469299,
+    0.9890875816345215
+   ],
+   "reference": [
+    0.32,
+    0.1,
+    0.86,
+    0.97
+   ],
+   "candidates": 10,
+   "reply": "9",
+   "picked": 9
+  },
+  {
+   "question_id": 9422,
+   "image_id": "06405_0000.png",
+   "question": "The right-most vehicle located on the bottom-right of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.8003,
+   "hit": true,
+   "box": [
+    0.8945540189743042,
+    0.6538122296333313,
+    0.9992489814758301,
+    0.8304261565208435
+   ],
+   "reference": [
+    0.9,
+    0.67,
+    1.0,
+    0.82
+   ],
+   "candidates": 9,
+   "reply": "9",
+   "picked": 9
+  },
+  {
+   "question_id": 9466,
+   "image_id": "06438_0000.png",
+   "question": "The overpass with barriers running vertically through the center of the image.",
+   "obj_cls": "overpass",
+   "size_group": "unspecified",
+   "unique": true,
+   "iou": 0.1654,
+   "hit": false,
+   "box": [
+    0.3107065260410309,
+    0.35952696204185486,
+    0.40040650963783264,
+    0.9729926586151123
+   ],
+   "reference": [
+    0.35,
+    0.26,
+    0.57,
+    1.0
+   ],
+   "candidates": 10,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 9480,
+   "image_id": "06453_0000.png",
+   "question": "The left-most tennis court is located near the top left corner of the image.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0747,
+   "hit": false,
+   "box": [
+    0.16753068566322327,
+    0.06862375140190125,
+    0.7203590869903564,
+    0.32296431064605713
+   ],
+   "reference": [
+    0.19,
+    0.12,
+    0.26,
+    0.27
+   ],
+   "candidates": 4,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 9512,
+   "image_id": "06482_0000.png",
+   "question": "The windmill located towards the top-middle of the image.",
+   "obj_cls": "windmill",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.1222,
+   "hit": false,
+   "box": [
+    0.4450199604034424,
+    0.2327653467655182,
+    0.6412825584411621,
+    0.357817679643631
+   ],
+   "reference": [
+    0.53,
+    0.32,
+    0.63,
+    0.35
+   ],
+   "candidates": 8,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 9539,
+   "image_id": "06504_0000.png",
+   "question": "The tennis court located at the bottom edge of the image.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.3451,
+   "hit": false,
+   "box": [
+    0.5464805960655212,
+    0.587185263633728,
+    0.991263210773468,
+    0.984899640083313
+   ],
+   "reference": [
+    0.58,
+    0.83,
+    1.0,
+    1.0
+   ],
+   "candidates": 6,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 9559,
+   "image_id": "06519_0000.png",
+   "question": "The airplane towards the bottom of the image.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.8795,
+   "hit": true,
+   "box": [
+    0.6408103108406067,
+    0.6243351101875305,
+    1.0014289617538452,
+    0.9973343014717102
+   ],
+   "reference": [
+    0.64,
+    0.65,
+    1.0,
+    0.98
+   ],
+   "candidates": 9,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 9562,
+   "image_id": "06522_0000.png",
+   "question": "The smaller ship located at the top middle corner of the image is another visible object.",
+   "obj_cls": "ship",
+   "size_group": "large",
+   "unique": false,
+   "iou": 0.0376,
+   "hit": false,
+   "box": [
+    0.5053921937942505,
+    0.05302666872739792,
+    0.5583512783050537,
+    0.09402099996805191
+   ],
+   "reference": [
+    0.33,
+    0.0,
+    0.67,
+    0.17
+   ],
+   "candidates": 12,
+   "reply": "12",
+   "picked": 12
+  },
+  {
+   "question_id": 9604,
+   "image_id": "06548_0000.png",
+   "question": "The vehicle situated on the bottom-right.",
+   "obj_cls": "vehicle",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.795028805732727,
+    0.7790176272392273,
+    0.8560202121734619,
+    0.862567126750946
+   ],
+   "reference": [
+    0.87,
+    0.63,
+    0.94,
+    0.71
+   ],
+   "candidates": 7,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 9750,
+   "image_id": "06683_0000.png",
+   "question": "The dam displayed in the image stretches from the left-center towards the bottom-right of the frame, showcasing its arched structure.",
+   "obj_cls": "dam",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.1029,
+   "hit": false,
+   "box": [
+    0.39752694964408875,
+    0.5796640515327454,
+    0.7193734645843506,
+    0.6694175601005554
+   ],
+   "reference": [
+    0.26,
+    0.46,
+    0.78,
+    1.0
+   ],
+   "candidates": 10,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 9989,
+   "image_id": "06863_0000.png",
+   "question": "The bridge located at the middle-right of the image.",
+   "obj_cls": "bridge",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.1343,
+   "hit": false,
+   "box": [
+    0.43341049551963806,
+    0.6230593323707581,
+    0.9974976778030396,
+    0.9376571774482727
+   ],
+   "reference": [
+    0.37,
+    0.4,
+    1.0,
+    0.7
+   ],
+   "candidates": 6,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 10153,
+   "image_id": "06997_0000.png",
+   "question": "The expressway-service-area occupying a central to left portion of the image.",
+   "obj_cls": "expressway-service-area",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.1677,
+   "hit": false,
+   "box": [
+    0.43575188517570496,
+    0.4792562425136566,
+    0.6049320697784424,
+    0.830385684967041
+   ],
+   "reference": [
+    0.38,
+    0.23,
+    0.84,
+    1.0
+   ],
+   "candidates": 11,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 10291,
+   "image_id": "07110_0000.png",
+   "question": "The elliptical ground track field situated within the boundaries of the stadium.",
+   "obj_cls": "ground-track-field",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.9512,
+   "hit": true,
+   "box": [
+    0.6183236837387085,
+    0.5024616718292236,
+    0.9952133893966675,
+    0.999474287033081
+   ],
+   "reference": [
+    0.61,
+    0.51,
+    1.0,
+    1.0
+   ],
+   "candidates": 8,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 10344,
+   "image_id": "07149_0000.png",
+   "question": "The overpass spans across the bottom portion of the image.",
+   "obj_cls": "overpass",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.1418,
+   "hit": false,
+   "box": [
+    0.6167031526565552,
+    0.7414590120315552,
+    0.9979403018951416,
+    0.7789996862411499
+   ],
+   "reference": [
+    0.6,
+    0.76,
+    1.0,
+    0.87
+   ],
+   "candidates": 7,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 10479,
+   "image_id": "07249_0000.png",
+   "question": "The white vehicle positioned on the right within the central region of the parking lot.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.2372,
+   "hit": false,
+   "box": [
+    0.4940299689769745,
+    0.5801544785499573,
+    0.5296390652656555,
+    0.6178966164588928
+   ],
+   "reference": [
+    0.49,
+    0.55,
+    0.56,
+    0.61
+   ],
+   "candidates": 12,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 10614,
+   "image_id": "07354_0000.png",
+   "question": "The tennis court is green with a net visible in the center stretching across the court.",
+   "obj_cls": "tennis-court",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.2413,
+   "hit": false,
+   "box": [
+    0.3109021782875061,
+    0.4340721666812897,
+    0.9993146061897278,
+    0.9974521398544312
+   ],
+   "reference": [
+    0.38,
+    0.59,
+    0.61,
+    1.0
+   ],
+   "candidates": 2,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 10676,
+   "image_id": "07406_0000.png",
+   "question": "The dam with a distinctive geometric shape is located at the bottom-right section of the satellite image.",
+   "obj_cls": "dam",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0058,
+   "hit": false,
+   "box": [
+    0.24375542998313904,
+    0.003233194351196289,
+    0.7676131725311279,
+    0.9061818718910217
+   ],
+   "reference": [
+    0.73,
+    0.83,
+    0.85,
+    1.0
+   ],
+   "candidates": 9,
+   "reply": "8",
+   "picked": 8
+  },
+  {
+   "question_id": 10893,
+   "image_id": "07570_0000.png",
+   "question": "The ship is located at the middle-right of the image.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.8754861354827881,
+    0.6136593818664551,
+    0.9491199254989624,
+    0.8116837739944458
+   ],
+   "reference": [
+    0.86,
+    0.39,
+    0.93,
+    0.58
+   ],
+   "candidates": 12,
+   "reply": "12",
+   "picked": 12
+  },
+  {
+   "question_id": 10960,
+   "image_id": "07637_0000.png",
+   "question": "The ship docked on the right side of the image.",
+   "obj_cls": "ship",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.1141,
+   "hit": false,
+   "box": [
+    0.9472354054450989,
+    0.08415037393569946,
+    0.9999187588691711,
+    0.9820221066474915
+   ],
+   "reference": [
+    0.75,
+    0.41,
+    0.98,
+    1.0
+   ],
+   "candidates": 12,
+   "reply": "12",
+   "picked": 12
+  },
+  {
+   "question_id": 11159,
+   "image_id": "07783_0000.png",
+   "question": "The right-most tennis court with a vertical orientation.",
+   "obj_cls": "tennis-court",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.2354,
+   "hit": false,
+   "box": [
+    0.5167398452758789,
+    0.21200382709503174,
+    1.0013309717178345,
+    0.8431369066238403
+   ],
+   "reference": [
+    0.82,
+    0.32,
+    1.0,
+    0.72
+   ],
+   "candidates": 5,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 11173,
+   "image_id": "07792_0000.png",
+   "question": "The larger vehicle is positioned close to the bottom edge of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.8067,
+   "hit": true,
+   "box": [
+    0.5328699350357056,
+    0.731758177280426,
+    0.9995002746582031,
+    1.000087022781372
+   ],
+   "reference": [
+    0.54,
+    0.78,
+    1.0,
+    1.0
+   ],
+   "candidates": 11,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 11185,
+   "image_id": "07806_0000.png",
+   "question": "The overpass in the image crosses over the highway and is surrounded by vegetation.",
+   "obj_cls": "overpass",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.8792,
+   "hit": true,
+   "box": [
+    0.5972985029220581,
+    0.4644942283630371,
+    1.0010854005813599,
+    1.0028079748153687
+   ],
+   "reference": [
+    0.61,
+    0.51,
+    1.0,
+    1.0
+   ],
+   "candidates": 6,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 11403,
+   "image_id": "07986_0000.png",
+   "question": "The windmill situated near the bottom-right edge of the image.",
+   "obj_cls": "windmill",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.1497,
+   "hit": false,
+   "box": [
+    0.6878641247749329,
+    0.6139602661132812,
+    0.7223328948020935,
+    0.7169386148452759
+   ],
+   "reference": [
+    0.7,
+    0.67,
+    0.75,
+    0.76
+   ],
+   "candidates": 7,
+   "reply": "7",
+   "picked": 7
+  },
+  {
+   "question_id": 11432,
+   "image_id": "08013_0000.png",
+   "question": "The train station is visible as an elongated structure with multiple tracks and lies on the right side of the image.",
+   "obj_cls": "trainstation",
+   "size_group": "unspecified",
+   "unique": true,
+   "iou": 0.9557,
+   "hit": true,
+   "box": [
+    0.6498138904571533,
+    0.5569514036178589,
+    0.8625333309173584,
+    0.998886227607727
+   ],
+   "reference": [
+    0.65,
+    0.57,
+    0.86,
+    1.0
+   ],
+   "candidates": 8,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 11464,
+   "image_id": "08037_0000.png",
+   "question": "The small airplane is easily identified as it is located on the grassy area.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.6069,
+   "hit": true,
+   "box": [
+    0.40566548705101013,
+    0.5792981386184692,
+    0.9537969827651978,
+    0.9974789619445801
+   ],
+   "reference": [
+    0.56,
+    0.62,
+    0.93,
+    1.0
+   ],
+   "candidates": 5,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 11505,
+   "image_id": "08075_0000.png",
+   "question": "The left-most small basketball court, found in the upper left section of the image.",
+   "obj_cls": "basketball-court",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.2395,
+   "hit": false,
+   "box": [
+    0.04493935406208038,
+    0.40101391077041626,
+    0.2734884023666382,
+    0.6691047549247742
+   ],
+   "reference": [
+    0.01,
+    0.42,
+    0.12,
+    0.64
+   ],
+   "candidates": 5,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 11679,
+   "image_id": "08204_0000.png",
+   "question": "The expressway-service-area encompassing a substantial portion of the middle-right areas.",
+   "obj_cls": "expressway-service-area",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.8234,
+   "hit": true,
+   "box": [
+    0.48531636595726013,
+    0.1650562286376953,
+    1.0021322965621948,
+    0.6806780099868774
+   ],
+   "reference": [
+    0.48,
+    0.18,
+    1.0,
+    0.61
+   ],
+   "candidates": 6,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 11753,
+   "image_id": "08263_0000.png",
+   "question": "The vehicle located at the top-right.",
+   "obj_cls": "vehicle",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.36632832884788513,
+    0.36624568700790405,
+    0.3979596793651581,
+    0.4236353039741516
+   ],
+   "reference": [
+    0.59,
+    0.15,
+    0.62,
+    0.23
+   ],
+   "candidates": 12,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 11963,
+   "image_id": "08418_0000.png",
+   "question": "The concrete overpass located on the right side of the image extends from the top to the bottom.",
+   "obj_cls": "overpass",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    -9.904243052005768e-05,
+    0.7842637896537781,
+    0.062146373093128204,
+    1.0057772397994995
+   ],
+   "reference": [
+    0.72,
+    0.18,
+    0.88,
+    0.82
+   ],
+   "candidates": 8,
+   "reply": "8",
+   "picked": 8
+  },
+  {
+   "question_id": 11991,
+   "image_id": "08449_0000.png",
+   "question": "The smaller airplane located near towards the bottom of the image, right near the edge.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.9657,
+   "hit": true,
+   "box": [
+    0.4199184477329254,
+    0.8317196369171143,
+    0.6313386559486389,
+    0.996973991394043
+   ],
+   "reference": [
+    0.42,
+    0.83,
+    0.63,
+    1.0
+   ],
+   "candidates": 6,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 12417,
+   "image_id": "08772_0000.png",
+   "question": "The overpass located in the right side of the image.",
+   "obj_cls": "overpass",
+   "size_group": "unspecified",
+   "unique": true,
+   "iou": 0.7084,
+   "hit": true,
+   "box": [
+    0.4639347791671753,
+    0.5504494309425354,
+    0.9869922399520874,
+    0.9719012379646301
+   ],
+   "reference": [
+    0.37,
+    0.55,
+    1.0,
+    0.9
+   ],
+   "candidates": 8,
+   "reply": "8",
+   "picked": 8
+  },
+  {
+   "question_id": 12539,
+   "image_id": "08870_0000.png",
+   "question": "The storage tank is positioned on the upper part of the image.",
+   "obj_cls": "storage-tank",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.3445,
+   "hit": false,
+   "box": [
+    0.2548564076423645,
+    0.04639727622270584,
+    0.5218356251716614,
+    0.2810817360877991
+   ],
+   "reference": [
+    0.29,
+    0.14,
+    0.55,
+    0.39
+   ],
+   "candidates": 10,
+   "reply": "10",
+   "picked": 10
+  },
+  {
+   "question_id": 12747,
+   "image_id": "09046_0000.png",
+   "question": "The windmill positioned towards the bottom right corner.",
+   "obj_cls": "windmill",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.07409732788801193,
+    0.4947744607925415,
+    0.1544700264930725,
+    0.5791071653366089
+   ],
+   "reference": [
+    0.7,
+    0.64,
+    0.76,
+    0.71
+   ],
+   "candidates": 6,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 12789,
+   "image_id": "09075_0000.png",
+   "question": "The tennis court located closer to the bottom edge of the image.",
+   "obj_cls": "tennis-court",
+   "size_group": "large",
+   "unique": false,
+   "iou": 0.2284,
+   "hit": false,
+   "box": [
+    0.4487447738647461,
+    0.3477244973182678,
+    0.7861330509185791,
+    0.6891936659812927
+   ],
+   "reference": [
+    0.58,
+    0.49,
+    0.91,
+    0.81
+   ],
+   "candidates": 5,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 12941,
+   "image_id": "09183_0000.png",
+   "question": "The large vehicle parked on the paved area near the bottom-middle of the image, adjacent to the building.",
+   "obj_cls": "vehicle",
+   "size_group": "large",
+   "unique": true,
+   "iou": 0.7856,
+   "hit": true,
+   "box": [
+    0.5059388875961304,
+    0.6783720850944519,
+    0.6291431188583374,
+    0.8118688464164734
+   ],
+   "reference": [
+    0.5,
+    0.68,
+    0.61,
+    0.81
+   ],
+   "candidates": 5,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 13028,
+   "image_id": "09259_0000.png",
+   "question": "The vehicle in the bottom-right corner of the image significantly larger than the other visible vehicles.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": false,
+   "iou": 0.3834,
+   "hit": false,
+   "box": [
+    0.7751212120056152,
+    0.9432144165039062,
+    0.8203909397125244,
+    1.00083589553833
+   ],
+   "reference": [
+    0.79,
+    0.95,
+    0.81,
+    1.0
+   ],
+   "candidates": 7,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 13069,
+   "image_id": "09290_0000.png",
+   "question": "The bridge located in the bottom half  of the image spans the entire width, crossing over a body of water.",
+   "obj_cls": "bridge",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.8955,
+   "hit": true,
+   "box": [
+    -0.0014411211013793945,
+    0.6525079011917114,
+    0.9985206127166748,
+    0.9056222438812256
+   ],
+   "reference": [
+    0.0,
+    0.63,
+    1.0,
+    0.9
+   ],
+   "candidates": 1,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 13384,
+   "image_id": "09544_0000.png",
+   "question": "The airplane located on the tarmac in the bottom-right of the image.",
+   "obj_cls": "airplane",
+   "size_group": "unspecified",
+   "unique": true,
+   "iou": 0.2863,
+   "hit": false,
+   "box": [
+    0.353179931640625,
+    0.6508063077926636,
+    0.7790074348449707,
+    0.8324087858200073
+   ],
+   "reference": [
+    0.45,
+    0.61,
+    0.94,
+    1.0
+   ],
+   "candidates": 12,
+   "reply": "12",
+   "picked": 12
+  },
+  {
+   "question_id": 13420,
+   "image_id": "09569_0000.png",
+   "question": "The white vehicle situated at the bottom-right of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.638,
+   "hit": true,
+   "box": [
+    0.7172131538391113,
+    0.8833693861961365,
+    0.7764818668365479,
+    0.9384481310844421
+   ],
+   "reference": [
+    0.71,
+    0.87,
+    0.77,
+    0.94
+   ],
+   "candidates": 12,
+   "reply": "9",
+   "picked": 9
+  },
+  {
+   "question_id": 13468,
+   "image_id": "09613_0000.png",
+   "question": "The circular storage tank with a white top is situated at the bottom-right of the image.",
+   "obj_cls": "storage-tank",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.26094451546669006,
+    0.1858334243297577,
+    0.3077481687068939,
+    0.2361360788345337
+   ],
+   "reference": [
+    0.72,
+    0.74,
+    0.97,
+    0.98
+   ],
+   "candidates": 11,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 13479,
+   "image_id": "09621_0000.png",
+   "question": "The windmill situated in the bottom-left of the image.",
+   "obj_cls": "windmill",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.25617507100105286,
+    0.8357231616973877,
+    0.41130098700523376,
+    0.9993743896484375
+   ],
+   "reference": [
+    0.31,
+    0.66,
+    0.37,
+    0.75
+   ],
+   "candidates": 9,
+   "reply": "8",
+   "picked": 8
+  },
+  {
+   "question_id": 13560,
+   "image_id": "09682_0000.png",
+   "question": "The brown vehicle situated on the bottom-right of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.6101,
+   "hit": true,
+   "box": [
+    0.6619468927383423,
+    0.8298634886741638,
+    0.799669623374939,
+    0.9053520560264587
+   ],
+   "reference": [
+    0.66,
+    0.84,
+    0.79,
+    0.89
+   ],
+   "candidates": 12,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 13775,
+   "image_id": "09849_0000.png",
+   "question": "The small airport with its runway is located on the right side of the image.",
+   "obj_cls": "airport",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.7655534744262695,
+    0.3183444142341614,
+    0.9982016086578369,
+    0.5579673051834106
+   ],
+   "reference": [
+    0.73,
+    0.63,
+    0.95,
+    1.0
+   ],
+   "candidates": 6,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 14078,
+   "image_id": "10098_0000.png",
+   "question": "The vehicle is centered in the image, located on a pathway between industrial buildings.",
+   "obj_cls": "vehicle",
+   "size_group": "unspecified",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.8664701581001282,
+    0.5687428116798401,
+    0.9490109086036682,
+    0.6312863230705261
+   ],
+   "reference": [
+    0.46,
+    0.53,
+    0.58,
+    0.58
+   ],
+   "candidates": 5,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 14351,
+   "image_id": "10301_0000.png",
+   "question": "The overpass in the image spans from the center of the left edge to the right edge.",
+   "obj_cls": "overpass",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.7334,
+   "hit": true,
+   "box": [
+    0.3174605071544647,
+    0.002396225929260254,
+    1.002596378326416,
+    1.0023812055587769
+   ],
+   "reference": [
+    0.33,
+    0.25,
+    1.0,
+    1.0
+   ],
+   "candidates": 3,
+   "reply": "3",
+   "picked": 3
+  },
+  {
+   "question_id": 14356,
+   "image_id": "10305_0000.png",
+   "question": "A vehicle located in the bottom-middle of the image.",
+   "obj_cls": "vehicle",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.8185,
+   "hit": true,
+   "box": [
+    0.34191760420799255,
+    0.7778893709182739,
+    0.39766761660575867,
+    0.8900126218795776
+   ],
+   "reference": [
+    0.34,
+    0.78,
+    0.39,
+    0.89
+   ],
+   "candidates": 12,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 14917,
+   "image_id": "10748_0000.png",
+   "question": "The airplane in the image is centered between the left and right sides of the image and positioned towards the top.",
+   "obj_cls": "airplane",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.8945,
+   "hit": true,
+   "box": [
+    0.2344871461391449,
+    0.2909735441207886,
+    0.7408653497695923,
+    0.6300615668296814
+   ],
+   "reference": [
+    0.26,
+    0.3,
+    0.74,
+    0.62
+   ],
+   "candidates": 12,
+   "reply": "2",
+   "picked": 2
+  },
+  {
+   "question_id": 15142,
+   "image_id": "10923_0000.png",
+   "question": "The overpass bridge crosses the image diagonally from the left side to the right side.",
+   "obj_cls": "overpass",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.775,
+   "hit": true,
+   "box": [
+    0.450298547744751,
+    0.6826658248901367,
+    0.9960018396377563,
+    0.8895280361175537
+   ],
+   "reference": [
+    0.35,
+    0.69,
+    1.0,
+    0.9
+   ],
+   "candidates": 6,
+   "reply": "6",
+   "picked": 6
+  },
+  {
+   "question_id": 15303,
+   "image_id": "11047_0000.png",
+   "question": "The dam is visible as a long structure on the lower right side of the image, separating the water body from the neighboring fields.",
+   "obj_cls": "dam",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.7718,
+   "hit": true,
+   "box": [
+    0.4742375314235687,
+    0.5103505849838257,
+    0.9903601408004761,
+    0.9215693473815918
+   ],
+   "reference": [
+    0.45,
+    0.5,
+    1.0,
+    1.0
+   ],
+   "candidates": 5,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 15490,
+   "image_id": "11199_0000.png",
+   "question": "The overpass situated at the bottom-right portion of the frame.",
+   "obj_cls": "overpass",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.5701608657836914,
+    0.9437103271484375,
+    0.6656684875488281,
+    1.0002638101577759
+   ],
+   "reference": [
+    0.76,
+    0.68,
+    0.94,
+    0.81
+   ],
+   "candidates": 10,
+   "reply": "9",
+   "picked": 9
+  },
+  {
+   "question_id": 15536,
+   "image_id": "11237_0000.png",
+   "question": "The vehicle positioned towards the middle-right side of the image is the top-most among other vehicles.",
+   "obj_cls": "vehicle",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.4876,
+   "hit": false,
+   "box": [
+    0.741161584854126,
+    0.5158669352531433,
+    0.8430182933807373,
+    0.5691842436790466
+   ],
+   "reference": [
+    0.74,
+    0.53,
+    0.83,
+    0.56
+   ],
+   "candidates": 12,
+   "reply": "8",
+   "picked": 8
+  },
+  {
+   "question_id": 15540,
+   "image_id": "11238_0000.png",
+   "question": "The bottom-most vehicle is parked at the bottom end of the image, separated from other vehicles.",
+   "obj_cls": "vehicle",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.5508,
+   "hit": true,
+   "box": [
+    0.6180740594863892,
+    0.8436383605003357,
+    0.6610612869262695,
+    0.8752985596656799
+   ],
+   "reference": [
+    0.61,
+    0.85,
+    0.66,
+    0.87
+   ],
+   "candidates": 12,
+   "reply": "1",
+   "picked": 1
+  },
+  {
+   "question_id": 15542,
+   "image_id": "11240_0000.png",
+   "question": "The bridge spans across the image from the bottom left corner to the upper right corner, appearing to cross over a water body or a dry riverbed.",
+   "obj_cls": "bridge",
+   "size_group": "unspecified",
+   "unique": true,
+   "iou": 0.2436,
+   "hit": false,
+   "box": [
+    0.00016498565673828125,
+    0.0005656182765960693,
+    1.0000871419906616,
+    0.5914068222045898
+   ],
+   "reference": [
+    0.0,
+    0.22,
+    0.4,
+    0.58
+   ],
+   "candidates": 5,
+   "reply": "5",
+   "picked": 5
+  },
+  {
+   "question_id": 15774,
+   "image_id": "11412_0000.png",
+   "question": "The vehicle parked closest to the bottom edge of the image on the left side.",
+   "obj_cls": "vehicle",
+   "size_group": "small",
+   "unique": false,
+   "iou": 0.0,
+   "hit": false,
+   "box": [
+    0.008219646289944649,
+    0.7922289371490479,
+    0.06459080427885056,
+    0.8470505475997925
+   ],
+   "reference": [
+    0.09,
+    0.55,
+    0.14,
+    0.66
+   ],
+   "candidates": 12,
+   "reply": "8",
+   "picked": 8
+  },
+  {
+   "question_id": 16007,
+   "image_id": "11602_0000.png",
+   "question": "The overpass is situated in the lower part of the image, running horizontally across the image.",
+   "obj_cls": "overpass",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.4137,
+   "hit": false,
+   "box": [
+    -0.002216815948486328,
+    0.7037063241004944,
+    0.9965655207633972,
+    0.8382582068443298
+   ],
+   "reference": [
+    0.41,
+    0.73,
+    1.0,
+    0.87
+   ],
+   "candidates": 4,
+   "reply": "4",
+   "picked": 4
+  },
+  {
+   "question_id": 16072,
+   "image_id": "11655_0000.png",
+   "question": "The stadium in the image can be identified by its distinct geometric shape located at the lower right quadrant of the image.",
+   "obj_cls": "stadium",
+   "size_group": "small",
+   "unique": true,
+   "iou": 0.9572,
+   "hit": true,
+   "box": [
+    0.5732121467590332,
+    0.5931994915008545,
+    0.9599775075912476,
+    0.9992907047271729
+   ],
+   "reference": [
+    0.57,
+    0.59,
+    0.95,
+    1.0
+   ],
+   "candidates": 8,
+   "reply": "2",
+   "picked": 2
+  }
+ ]
+}

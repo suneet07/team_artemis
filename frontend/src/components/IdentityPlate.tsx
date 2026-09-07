@@ -19,6 +19,7 @@ import { StatusLamp, Tip } from "./primitives";
 const NAV = [
   { to: "/", label: "Sessions", code: "S1" },
   { to: "/upload", label: "Receiving", code: "S2" },
+  { to: "/gallery", label: "Testing corpus", code: "S8" },
   { to: "/system", label: "System", code: "S7" },
 ];
 
