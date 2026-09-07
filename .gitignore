@@ -194,3 +194,11 @@ node_modules/
 npm-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# --- Internal working documents ---
+# Kept locally, not shipped. The planning tree, the per-capability
+# engineering record, the paper material and the deck are working
+# documents; TEAM_CONTEXT.md is onboarding notes including the mistake
+# log. None of it is part of the product.
+/docs/
+TEAM_CONTEXT.md

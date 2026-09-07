@@ -56,7 +56,7 @@ system gets **without looking at the image**.
 our one loss and is reported as such.
 
 > Scored with the in-repo comparator, not the official scorers — stated on every
-> report. See [`docs/paper/09-evaluation-method.md`](docs/paper/09-evaluation-method.md).
+> report.
 
 ---
 
@@ -146,14 +146,6 @@ scripts/                staging · training · evaluation · deployment
 ├── verify_routes.py    every endpoint, every task, one executed query
 └── deploy_verify.sh    tests → snapshot → deploy → verify
 
-docs/
-├── paper/              the full account: method, results, failure atlas, limits
-├── segments/           per-capability engineering record
-├── ppt/                SIH idea-submission deck, one file per slide
-├── 01-plan/            master plan
-├── 02-data/            dataset specs, question generation
-└── 03-compute/         cost model, Modal runbook
-
 configs/                preprocessing.yaml · per-tool manifests · trace schema
 tests/                  440 tests, incl. the licence blocklist gate
 logs/                   curated measurement reports -- every number traces here
@@ -165,14 +157,8 @@ logs/                   curated measurement reports -- every number traces here
 
 | you want | read |
 |---|---|
-| **the whole story, properly** | [`docs/paper/`](docs/paper/) — 15 files |
-| the headline argument | [`docs/paper/14-the-case.md`](docs/paper/14-the-case.md) |
-| every number with its baseline | [`docs/paper/12-results.md`](docs/paper/12-results.md) |
-| **what we cannot claim** | [`docs/paper/13-limitations.md`](docs/paper/13-limitations.md) |
-| nine bugs and what each proved | [`docs/paper/11-failure-atlas.md`](docs/paper/11-failure-atlas.md) |
-| which question routes where | [`docs/segments/06-routing.md`](docs/segments/06-routing.md) |
+| every number with the run behind it | [`logs/`](logs/) |
 | *"what's yours and what isn't?"* | [`CREDITS.md`](CREDITS.md) |
-| onboarding as a teammate | [`TEAM_CONTEXT.md`](TEAM_CONTEXT.md) |
 
 ---
 
