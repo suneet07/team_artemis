@@ -4,7 +4,10 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
@@ -16,5 +19,11 @@
         }
       ]
     }
-  ]
+  ],
+  "build": {
+    "env": {
+      "VITE_API_BASE": "https://suneet-sharan-ug25--satquery-phase0-ml-api-web.modal.run/api/v1",
+      "VITE_USE_MOCKS": "0"
+    }
+  }
 }
