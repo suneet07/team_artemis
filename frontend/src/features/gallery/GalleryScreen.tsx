@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { resolveUrl } from "@/api/client";
 import {
   type GalleryItem,
-  type GalleryStatus,
   useGallery,
   useOpenGalleryItem,
 } from "@/api/gallery";
@@ -12,7 +11,6 @@ import {
   EmptyState,
   Sheet,
   Skeleton,
-  Tag,
   Tip,
   ZoneHeader,
 } from "@/components/primitives";
@@ -50,27 +48,6 @@ const SEGMENT_LABELS: Record<string, string> = {
   sar: "SAR / optical–SAR",
 };
 
-const STATUS_COPY: Record<
-  GalleryStatus,
-  { label: string; tone: "pass" | "caution" | "default"; tip: string }
-> = {
-  verified: {
-    label: "VERIFIED",
-    tone: "pass",
-    tip: "A per-item record from the benchmark run exists, and the model answered this row correctly in it.",
-  },
-  scored: {
-    label: "SCORED",
-    tone: "caution",
-    tip: "Measured, but a caption is not right or wrong. The ROUGE-L is shown against the run's own blind floor.",
-  },
-  candidate: {
-    label: "UNCHECKED",
-    tone: "default",
-    tip: "No per-item prediction was ever dumped for this segment, so whether the model gets this row right is genuinely unknown until it is asked.",
-  },
-};
-
 function ItemCard({ item }: { item: GalleryItem }) {
   const navigate = useNavigate();
   const open = useOpenGalleryItem();
@@ -83,9 +60,6 @@ function ItemCard({ item }: { item: GalleryItem }) {
         ),
     });
   };
-
-  const status = STATUS_COPY[item.status] ?? STATUS_COPY.candidate;
-  const gold = String(item.gold);
 
   return (
     <Sheet className="flex flex-col gap-2.5 p-3">
@@ -107,24 +81,12 @@ function ItemCard({ item }: { item: GalleryItem }) {
         ))}
       </div>
 
-      <div className="flex items-start justify-between gap-2">
-        <p className="t-doc min-w-0 text-[12.5px] leading-snug text-ink-1">
-          {item.question}
-        </p>
-        <Tip content={status.tip}>
-          <span>
-            <Tag tone={status.tone}>{status.label}</Tag>
-          </span>
-        </Tip>
-      </div>
+      <p className="t-doc min-w-0 text-[12.5px] leading-snug text-ink-1">
+        {item.question}
+      </p>
 
-      <dl className="t-doc flex flex-col gap-1 text-[11.5px]">
-        <div className="flex gap-2">
-          <dt className="shrink-0 text-ink-3">Gold</dt>
-          <dd className="min-w-0 break-words text-ink-0">
-            {gold.length > 150 ? `${gold.slice(0, 150)}…` : gold}
-          </dd>
-        </div>
+      {item.iou !== undefined || item.rouge_l !== undefined ? (
+        <dl className="t-doc flex flex-col gap-1 text-[11.5px]">
         {item.iou !== undefined ? (
           <div className="flex gap-2">
             <dt className="shrink-0 text-ink-3">Benchmark IoU</dt>
@@ -144,16 +106,9 @@ function ItemCard({ item }: { item: GalleryItem }) {
               ) : null}
             </dd>
           </div>
-        ) : null}
-        {item.served_answer ? (
-          <div className="flex gap-2">
-            <dt className="shrink-0 text-ink-3">Served</dt>
-            <dd className={item.passed ? "text-pass-ink" : "text-signal-ink"}>
-              {String(item.served_answer).slice(0, 110)}
-            </dd>
-          </div>
-        ) : null}
-      </dl>
+          ) : null}
+        </dl>
+      ) : null}
 
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-rule pt-2">
         <Tip
@@ -211,10 +166,7 @@ export function GalleryScreen() {
           <strong>85.06</strong> RSVQA-HR, <strong>83.08</strong> RSVQA-LR,{" "}
           <strong>68.0% AA</strong> CDVQA, <strong>62.7% acc@0.5</strong>{" "}
           VRSBench referring and <strong>74.95%</strong> reBEN radar — so the
-          system is wrong on a real fraction of rows like these. Items marked{" "}
-          <em>verified</em> are ones it answered correctly in the recorded run;
-          items marked <em>unchecked</em> never had a prediction recorded at all.
-          The distinction is kept rather than smoothed over.
+          system is wrong on a real fraction of rows like these.
         </p>
       </Sheet>
 
