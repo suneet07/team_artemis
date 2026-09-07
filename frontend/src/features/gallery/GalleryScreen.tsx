@@ -151,51 +151,13 @@ export function GalleryScreen() {
     <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-6 py-6">
       <ZoneHeader code="S8" title="TESTING CORPUS" />
 
-      <Sheet className="flex flex-col gap-2 p-4">
+      <Sheet className="p-4">
         <p className="t-doc text-[13px] leading-relaxed text-ink-1">
-          Every image below comes from the <strong>test or held-out split</strong>{" "}
-          of a public benchmark, with the question and the gold answer that
-          benchmark published.{" "}
-          <strong>The models were not trained on any of it.</strong> Pick one and
-          ask it — the answer comes back through the same router, tools and
-          adapters as an image you upload yourself.
-        </p>
-        <p className="t-doc text-[12px] leading-relaxed text-ink-2">
-          These are rows the system was measured on, not a random sample of the
-          world. On their full splits these segments score{" "}
-          <strong>85.06</strong> RSVQA-HR, <strong>83.08</strong> RSVQA-LR,{" "}
-          <strong>68.0% AA</strong> CDVQA, <strong>62.7% acc@0.5</strong>{" "}
-          VRSBench referring and <strong>74.95%</strong> reBEN radar — so the
-          system is wrong on a real fraction of rows like these.
+          Unbiased gallery of satellite imagery from the testing set of the
+          evaluation datasets named below. The model was not trained on this
+          data, so it is completely fair.
         </p>
       </Sheet>
-
-      {data?.verification?.per_segment ? (
-        <Sheet className="flex flex-col gap-1.5 p-4">
-          <p className="t-code-sm text-ink-2">
-            LAST VERIFIED AGAINST BUILD{" "}
-            <span className="text-ink-0">{data.verification.build ?? "unknown"}</span>
-          </p>
-          <p className="t-doc text-[12px] leading-relaxed text-ink-2">
-            Every item below was replayed through the live API and scored with
-            its own benchmark's answer contract — the same formatter that
-            produced the published number, not a second implementation. This is
-            what fraction of this sample held up:
-          </p>
-          <ul className="t-code-sm flex flex-wrap gap-x-4 gap-y-1 text-ink-1">
-            {Object.entries(data.verification.per_segment).map(([name, row]) => (
-              <li key={name}>
-                {SEGMENT_LABELS[name] ?? name}{" "}
-                <span
-                  className={row.pass_rate >= 0.8 ? "text-pass-ink" : "text-caution"}
-                >
-                  {row.passed}/{row.total}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Sheet>
-      ) : null}
 
       {data?.available === false ? (
         <EmptyState code="S8·0" title="No testing corpus on this deployment">
@@ -221,13 +183,6 @@ export function GalleryScreen() {
             ) : null}
           </button>
         ))}
-        {data?.statuses ? (
-          <span className="t-code-sm ml-auto text-ink-3">
-            {Object.entries(data.statuses)
-              .map(([name, count]) => `${count} ${name}`)
-              .join(" · ")}
-          </span>
-        ) : null}
       </div>
 
       {isError ? (
