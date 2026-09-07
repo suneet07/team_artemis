@@ -1,0 +1,15 @@
+name: centroid_prior
+description: Computes connected components on a mask and returns the normalized centroid.
+version: 1
+required_modalities: [optical]
+confidence_source: heuristic
+expected_latency_ms: 100
+permitted_parameters:
+  min_area_px:
+    type: int
+    range: [1, 10000]
+    default: 10
+    optional: true
+outputs:
+  centroid:
+    type: stats

@@ -50,6 +50,7 @@ class TraceBuilder:
         if isinstance(router_path, RouterPath):
             router_path = router_path.value
         self._router_path = router_path
+        self._trace["router_path"] = router_path
         return self
 
     def set_inputs(self, inputs: list[dict[str, Any]]) -> "TraceBuilder":
@@ -88,6 +89,13 @@ class TraceBuilder:
     def set_tools_invoked(self, tools: list[str]) -> "TraceBuilder":
         self._tools_invoked = tools
         return self
+
+    def get_planned_steps(self) -> list[dict[str, Any]]:
+        """Returns a copy of the accumulated planned-step records.
+
+        Prefer this over accessing trace._plan directly from external callers.
+        """
+        return list(self._plan)
 
     def add_step(
         self,
@@ -184,6 +192,10 @@ class TraceBuilder:
             if key == "query_text":
                 ordered["graded"] = graded
                 ordered["steps"] = self._steps
+        if "evidence" not in ordered:
+            ordered["evidence"] = []
+        if "warnings" not in ordered:
+            ordered["warnings"] = []
         validate_trace(ordered)
         return ordered
 

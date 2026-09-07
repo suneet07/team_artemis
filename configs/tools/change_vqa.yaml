@@ -1,0 +1,20 @@
+name: change_vqa
+description: Bi-temporal change question answering across two registered images via learned VLM adapter.
+version: 1
+required_modalities: [pair]
+confidence_source: learned_logprob
+expected_latency_ms: 1800
+permitted_parameters:
+  question:
+    type: string
+    optional: true
+  max_tokens:
+    type: int
+    range: [1, 512]
+    default: 64
+    optional: true
+outputs:
+  answer:
+    type: text
+  confidence:
+    type: float

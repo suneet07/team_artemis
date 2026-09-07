@@ -225,6 +225,40 @@ class TilingConfig:
 
 
 @dataclass(frozen=True)
+class AgentConfig:
+    """Agent thresholds and tile budget (§10, §12, §14)."""
+
+    learned_tool_tile_budget: int
+    spectral_thresholds: dict[str, float]
+    sar_threshold_db: float
+    rmse_threshold_px: float
+
+    @classmethod
+    def from_dict(cls, raw: Any) -> "AgentConfig":
+        where = "agent"
+        keys = (
+            "learned_tool_tile_budget",
+            "spectral_thresholds",
+            "sar_threshold_db",
+            "rmse_threshold_px",
+        )
+        raw = _mapping(raw, keys, where)
+        budget = raw["learned_tool_tile_budget"]
+        if not isinstance(budget, int) or isinstance(budget, bool) or budget < 1:
+            raise ConfigError(f"{where}.learned_tool_tile_budget: expected positive int")
+        thresh_raw = raw["spectral_thresholds"]
+        if not isinstance(thresh_raw, dict):
+            raise ConfigError(f"{where}.spectral_thresholds: expected mapping")
+        spectral_thresh = {k: float(v) for k, v in thresh_raw.items()}
+        return cls(
+            learned_tool_tile_budget=budget,
+            spectral_thresholds=spectral_thresh,
+            sar_threshold_db=_number(raw, "sar_threshold_db", where),
+            rmse_threshold_px=_number(raw, "rmse_threshold_px", where),
+        )
+
+
+@dataclass(frozen=True)
 class PreprocessingConfig:
     version: int
     ingest: IngestConfig
@@ -233,10 +267,11 @@ class PreprocessingConfig:
     bands: BandsConfig
     sar: SarConfig
     tiling: TilingConfig
+    agent: AgentConfig
 
     @classmethod
     def from_dict(cls, raw: Any) -> "PreprocessingConfig":
-        keys = ("version", "ingest", "radiometry", "modality", "bands", "sar", "tiling")
+        keys = ("version", "ingest", "radiometry", "modality", "bands", "sar", "tiling", "agent")
         raw = _mapping(raw, keys, "preprocessing.yaml")
         version = raw["version"]
         if not isinstance(version, int) or isinstance(version, bool) or version < 1:
@@ -251,7 +286,9 @@ class PreprocessingConfig:
             bands=BandsConfig.from_dict(raw["bands"]),
             sar=SarConfig.from_dict(raw["sar"]),
             tiling=TilingConfig.from_dict(raw["tiling"]),
+            agent=AgentConfig.from_dict(raw["agent"]),
         )
+
 
 
 def load_preprocessing_config(path: Path | str | None = None) -> PreprocessingConfig:

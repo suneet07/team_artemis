@@ -1,0 +1,26 @@
+name: sar_backscatter
+description: Computes thresholded masks from calibrated SAR backscatter.
+version: 1
+required_modalities: [sar]
+confidence_source: threshold_statistics
+expected_latency_ms: 250
+permitted_parameters:
+  pol:
+    type: enum
+    values: [VV, VH, HH, HV]
+    default: VV
+  threshold_method:
+    type: enum
+    values: [otsu, fixed]
+    default: otsu
+  threshold_db:
+    type: float
+    range: [-50.0, 10.0]
+    optional: true
+outputs:
+  mask_uri:
+    type: geotiff
+    crs: source
+    resolution: full_scene
+  area_km2:
+    type: float

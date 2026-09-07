@@ -1,0 +1,4 @@
+{
+  "bitemporal": "<image>{t0}</image><image>{t1}</image>\n[sensor: optical | GSD: 4.0 m] [sensor: optical | GSD: 4.0 m]\nWhat changed between these two acquisitions?",
+  "grounding_with_prior": "<image>{single}</image>\n[sensor: optical | GSD: 0.5 m]\n[prior: (0.450, 0.625)] Where is the aircraft?"
+}

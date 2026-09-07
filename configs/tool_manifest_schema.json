@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "satquery/tool_manifest_schema-v1.json",
+  "$id": "satquery/tool_manifest_schema-v2.json",
   "title": "SatQuery Tool Manifest",
   "description": "Enforceable contract for every tool in the registry (master plan sections 4.6 and 4.5.4). The parameter gate validates planned steps against this data; a parameter not declared here cannot be set.",
   "type": "object",
@@ -12,9 +12,9 @@
     "version": { "type": "integer", "minimum": 1, "default": 1 },
     "required_modalities": {
       "type": "array",
-      "minItems": 1,
-      "items": { "enum": ["optical", "sar"] }
+      "items": { "enum": ["optical", "sar", "any", "pair"] }
     },
+
     "confidence_source": {
       "enum": ["learned_logprob", "threshold_statistics", "heuristic", "deterministic_fallback"]
     },

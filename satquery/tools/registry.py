@@ -33,13 +33,24 @@ def check_parameters(
     rejected: list[str] = []
 
     provided_modalities = _normalise_modalities(modalities)
+    img_count = len(modalities) if isinstance(modalities, list) else (1 if modalities else 0)
     if provided_modalities is not None:
-        missing = [m for m in manifest.required_modalities if m not in provided_modalities]
-        for required in missing:
-            rejected.append(
-                f"tool '{manifest.name}' requires modality '{required}' "
-                f"but the query context provides {sorted(provided_modalities)}"
-            )
+        for required in manifest.required_modalities:
+            if required in ("any", "-"):
+                continue
+            if required == "pair":
+                if img_count < 2:
+                    rejected.append(
+                        f"tool '{manifest.name}' requires a pair of images "
+                        f"(required_modalities: ['pair']), but only {img_count} image(s) provided"
+                    )
+                continue
+            if required not in provided_modalities:
+                rejected.append(
+                    f"tool '{manifest.name}' requires modality '{required}' "
+                    f"but the query context provides {sorted(provided_modalities)}"
+                )
+
 
     for name, value in params.items():
         spec = manifest.permitted_parameters.get(name)
