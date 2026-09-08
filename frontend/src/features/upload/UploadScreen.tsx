@@ -391,7 +391,12 @@ export function UploadScreen() {
         pair_type: pairType,
         label: label.trim() || undefined,
       });
-      navigate(`/prepare/${response.bundle_id}`);
+      // Straight to the workspace. Preparation is synchronous on the server --
+      // `answer_query` loads and validates the scenes when a question is asked --
+      // so the bundle is ready the moment this POST returns. The old /prepare
+      // screen polled a /jobs endpoint that does not exist, so its four stages
+      // sat at QUEUED and 0% forever while the clock counted up.
+      navigate(`/workspace/${response.bundle_id}`);
     } catch (error) {
       setSubmitError(
         error instanceof ApiFailure

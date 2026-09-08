@@ -5,7 +5,6 @@ import { Skeleton, TipProvider } from "./components/primitives";
 import { useWorkspace } from "./store/workspace";
 import { LandingScreen } from "./features/landing/LandingScreen";
 import { UploadScreen } from "./features/upload/UploadScreen";
-import { PrepareScreen } from "./features/prepare/PrepareScreen";
 import { WorkspaceScreen } from "./features/workspace/WorkspaceScreen";
 
 // Lazy: the report route and the reliability diagram carry Recharts, which
@@ -59,7 +58,6 @@ export function App() {
             <Routes>
               <Route path="/" element={<LandingScreen />} />
               <Route path="/upload" element={<UploadScreen />} />
-              <Route path="/prepare/:bundleId" element={<PrepareScreen />} />
               <Route
                 path="/workspace/:bundleId"
                 element={<WorkspaceScreen />}
