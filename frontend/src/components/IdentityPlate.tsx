@@ -1,9 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { useHealth } from "@/api/meta";
 import { USE_MOCKS } from "@/api/client";
-import { useWorkspace } from "@/store/workspace";
 import { cn } from "@/lib/cn";
-import { IconChip, IconGrid } from "./icons";
+import { IconChip } from "./icons";
 import { StatusLamp, Tip } from "./primitives";
 
 /**
@@ -39,16 +38,14 @@ function PlateRivet({ className }: { className?: string }) {
 
 export function IdentityPlate() {
   const { data: health, isError } = useHealth();
-  const armature = useWorkspace((s) => s.armature);
-  const toggleArmature = useWorkspace((s) => s.toggleArmature);
   const location = useLocation();
 
-  const degraded =
-    isError ||
-    !health ||
-    health.status !== "ok" ||
-    !health.gpu ||
-    health.serving !== "vllm";
+  // Only an unreachable or unhealthy API. Serving mode and GPU presence used
+  // to count as degraded, which meant the banner was permanently on: the
+  // adapters are served in-process by VLMRunner, so `serving` is always
+  // "local" and never "vllm". A warning that is always showing warns about
+  // nothing, and it was the first thing on screen.
+  const degraded = isError || !health || health.status !== "ok";
 
   return (
     <header className="m-plate relative z-30 border-x-0 border-t-0 print:hidden">
@@ -167,21 +164,6 @@ export function IdentityPlate() {
             </span>
           </Tip>
 
-          <button
-            type="button"
-            onClick={toggleArmature}
-            aria-pressed={armature}
-            title="Show the layout grid and tiling partition used to build this screen"
-            className={cn(
-              "t-code-sm flex items-center gap-1.5 border px-1.5 py-[4px] transition-colors",
-              armature
-                ? "border-signal bg-signal text-white"
-                : "m-engraved border-plate-edge/50 hover:border-plate-edge hover:bg-plate-1",
-            )}
-          >
-            <IconGrid size={11} />
-            REGISTRATION
-          </button>
         </div>
       </div>
 
@@ -192,9 +174,8 @@ export function IdentityPlate() {
             DEGRADED MODE
           </span>
           <span className="text-[12px] leading-tight text-ink-1">
-            {isError || !health
-              ? "The API health endpoint is unreachable. Deterministic tools and cached bundles still work; generated answers do not."
-              : `Serving ${health.serving}${health.gpu ? "" : " without a GPU"}. Query latency will exceed the 20 s budget — the measured value on screen is the real one.`}
+            The API health endpoint is unreachable. Deterministic tools and
+            cached bundles still work; generated answers do not.
           </span>
         </div>
       ) : null}
