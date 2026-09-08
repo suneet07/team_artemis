@@ -229,7 +229,6 @@ export function ReportScreen() {
       {/* ── generation controls ─────────────────────────────────────── */}
       <section className="m-sheet p-4 no-print">
         <ZoneHeader
-          code="S6·G"
           title="Generate"
           className="-mx-4 -mt-4 mb-4 border-t-0"
         />

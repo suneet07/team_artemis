@@ -124,7 +124,7 @@ export function GalleryScreen() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-6 py-6">
-      <ZoneHeader code="S8" title="TESTING CORPUS" />
+      <ZoneHeader title="TESTING CORPUS" />
 
       <Sheet className="p-4">
         <p className="t-doc text-[13px] leading-relaxed text-ink-1">
@@ -135,7 +135,7 @@ export function GalleryScreen() {
       </Sheet>
 
       {data?.available === false ? (
-        <EmptyState code="S8·0" title="No testing corpus on this deployment">
+        <EmptyState title="No testing corpus on this deployment">
           The gallery manifest has not been uploaded to the volume yet.
         </EmptyState>
       ) : null}
@@ -161,7 +161,7 @@ export function GalleryScreen() {
       </div>
 
       {isError ? (
-        <EmptyState code="S8·E" title="Could not load the testing corpus">
+        <EmptyState title="Could not load the testing corpus">
           {(error as Error)?.message ?? "The gallery endpoint did not respond."}
         </EmptyState>
       ) : null}
@@ -181,7 +181,7 @@ export function GalleryScreen() {
       )}
 
       {!isLoading && !isError && shown.length === 0 && data?.available !== false ? (
-        <EmptyState code="S8·1" title="Nothing in this segment">
+        <EmptyState title="Nothing in this segment">
           Try another filter.
         </EmptyState>
       ) : null}

@@ -116,7 +116,7 @@ export function SystemScreen() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {/* ── serving state ────────────────────────────────────────── */}
         <section className="m-sheet">
-          <ZoneHeader code="S7·A" title="Serving" />
+          <ZoneHeader title="Serving" />
           <div className="px-4 py-3">
             {isError ? (
               <p className="border border-signal/40 bg-signal-wash px-2.5 py-2 text-[12.5px] leading-[1.45] text-ink-0">
@@ -192,7 +192,7 @@ export function SystemScreen() {
 
         {/* ── client configuration ─────────────────────────────────── */}
         <section className="m-sheet">
-          <ZoneHeader code="S7·B" title="This client" />
+          <ZoneHeader title="This client" />
           <div className="px-4 py-1">
             <FieldRow label="DATA SOURCE">
               {USE_MOCKS ? (
@@ -233,7 +233,6 @@ export function SystemScreen() {
         {/* ── calibration ──────────────────────────────────────────── */}
         <section className="m-sheet">
           <ZoneHeader
-            code="S7·C"
             title="Confidence calibration"
             actions={
               <Tag tone={calibrated ? "pass" : "caution"}>
@@ -254,7 +253,6 @@ export function SystemScreen() {
         {/* ── disagreement causes ──────────────────────────────────── */}
         <section className="m-sheet">
           <ZoneHeader
-            code="S7·D"
             title="Disagreement causes the system can name"
             actions={
               <span className="t-code-sm text-ink-3">
@@ -291,7 +289,6 @@ export function SystemScreen() {
       {/* ── tool manifests ─────────────────────────────────────────── */}
       <section className="m-sheet mt-5">
         <ZoneHeader
-          code="S7·E"
           title="Tool manifests — what each tool is permitted to do"
           actions={
             <span className="t-code-sm text-ink-3">
@@ -401,7 +398,7 @@ export function SystemScreen() {
 
       {/* ── task table ─────────────────────────────────────────────── */}
       <section className="m-sheet mt-5">
-        <ZoneHeader code="S7·F" title="Tasks the router can select" />
+        <ZoneHeader title="Tasks the router can select" />
         <ul className="flex flex-col divide-y divide-rule-hair">
           {(tasks?.tasks ?? []).map((task) => (
             <li

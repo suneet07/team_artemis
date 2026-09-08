@@ -17,10 +17,10 @@ import { StatusLamp, Tip } from "./primitives";
  */
 
 const NAV = [
-  { to: "/", label: "Sessions", code: "S1" },
-  { to: "/upload", label: "Receiving", code: "S2" },
-  { to: "/gallery", label: "Testing corpus", code: "S8" },
-  { to: "/system", label: "System", code: "S7" },
+  { to: "/", label: "Sessions" },
+  { to: "/upload", label: "Receiving" },
+  { to: "/gallery", label: "Testing corpus" },
+  { to: "/system", label: "System" },
 ];
 
 function PlateRivet({ className }: { className?: string }) {
@@ -94,7 +94,6 @@ export function IdentityPlate() {
                 )}
               >
                 <span className={active ? "text-panel-2/60" : "opacity-60"}>
-                  {item.code}
                 </span>
                 {item.label}
               </Link>

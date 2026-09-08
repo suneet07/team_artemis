@@ -111,7 +111,6 @@ export function LandingScreen() {
       {/* ── this session ────────────────────────────────────────────── */}
       <section className="mb-10">
         <ZoneHeader
-          code="S1·B"
           title="Prepared in this session"
           className="m-sheet border-b-0"
         />
@@ -173,7 +172,7 @@ export function LandingScreen() {
             </span>
           </span>
           <span className="t-code shrink-0 border border-rule-heavy bg-plate-1 px-3 py-2 text-ink-0 transition-colors group-hover:bg-plate-0">
-            S2 · Open
+            Open
           </span>
         </Link>
       </section>

@@ -85,7 +85,7 @@ export function EvidencePanel({ bundle }: { bundle: Bundle }) {
 
   return (
     <aside className="flex h-full min-h-0 flex-col border-r border-rule bg-panel-1">
-      <ZoneHeader code="S4·L" title="Layers & evidence" />
+      <ZoneHeader title="Layers & evidence" />
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {/* ── base imagery ─────────────────────────────────────────── */}

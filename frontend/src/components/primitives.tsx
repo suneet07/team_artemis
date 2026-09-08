@@ -11,18 +11,11 @@ import { cn } from "@/lib/cn";
 
 /* ── zone chrome ─────────────────────────────────────────────────────── */
 
-/**
- * Every pane on this instrument carries a stencilled zone code, the way a
- * real panel labels its sections. It is not decoration: the code is what the
- * user says out loud when pointing at a region during a demo.
- */
 export function ZoneHeader({
-  code,
   title,
   actions,
   className,
 }: {
-  code: string;
   title: string;
   actions?: ReactNode;
   className?: string;
@@ -34,9 +27,6 @@ export function ZoneHeader({
         className,
       )}
     >
-      <span className="t-code-sm shrink-0 border border-rule bg-panel-sunk px-1.5 py-[3px] text-ink-2">
-        {code}
-      </span>
       <h2 className="t-code min-w-0 flex-1 truncate text-ink-1">{title}</h2>
       {actions ? (
         <div className="flex shrink-0 items-center gap-1">{actions}</div>
@@ -409,16 +399,18 @@ export function EmptyState({
   children,
   action,
 }: {
-  code: string;
+  code?: string;
   title: string;
   children?: ReactNode;
   action?: ReactNode;
 }) {
   return (
     <div className="flex flex-col items-start gap-2.5 border border-dashed border-rule bg-panel-1 px-4 py-5">
-      <span className="t-code-sm border border-rule bg-panel-sunk px-1.5 py-[3px] text-ink-3">
-        {code}
-      </span>
+      {code ? (
+        <span className="t-code-sm border border-rule bg-panel-sunk px-1.5 py-[3px] text-ink-3">
+          {code}
+        </span>
+      ) : null}
       <p className="t-plate text-[13px] text-ink-1">{title}</p>
       {children ? (
         <div className="t-doc text-[12.5px] text-ink-2">{children}</div>

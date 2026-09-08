@@ -151,7 +151,6 @@ export function WorkspaceScreen() {
 
         <div className="order-1 flex min-h-[380px] flex-col border-b border-rule lg:order-2 lg:min-h-0 lg:border-b-0">
           <ZoneHeader
-            code="S4·C"
             title={
               georeferenced
                 ? `Imagery window · ${bundle.pair_compatibility?.common_crs ?? "WGS84"}`

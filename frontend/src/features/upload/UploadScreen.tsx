@@ -520,7 +520,6 @@ export function UploadScreen() {
       {drafts.length > 0 ? (
         <section className="mb-5">
           <ZoneHeader
-            code="S2"
             title="Scenes in this bundle"
             className="m-sheet border-b-0"
             actions={
