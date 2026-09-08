@@ -21,10 +21,15 @@ function ModalityColumn({
   modality,
   asset,
   trusted,
+  contested,
 }: {
   modality: "optical" | "sar";
   asset: AssetRef | undefined;
   trusted: boolean;
+  /** Whether either sensor was actually trusted. With no winner, neither
+   *  sensor superseded the other and labelling both SUPERSEDED says the
+   *  opposite of what happened. */
+  contested: boolean;
 }) {
   const Mark = modality === "sar" ? IconSar : IconOptical;
   return (
@@ -44,9 +49,9 @@ function ModalityColumn({
             <StatusLamp state="pass" />
             TRUSTED
           </Tag>
-        ) : (
+        ) : contested ? (
           <Tag className="ml-auto">SUPERSEDED</Tag>
-        )}
+        ) : null}
       </div>
 
       <figure className="m-window mx-2.5 mt-2.5 aspect-[4/3] overflow-hidden">
@@ -181,11 +186,13 @@ export function DisagreementPanel({
           modality="optical"
           asset={opticalAsset}
           trusted={trusted === "optical"}
+          contested={trusted !== null}
         />
         <ModalityColumn
           modality="sar"
           asset={sarAsset}
           trusted={trusted === "sar"}
+          contested={trusted !== null}
         />
       </div>
 

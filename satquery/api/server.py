@@ -340,7 +340,19 @@ def _replay_events(emit, trace: dict[str, Any]) -> None:
         emit(
             "agreement",
             {
-                "winning_modality": agreement.get("verdict"),
+                # The verdict, not the winner, used to be sent here. `verdict`
+                # is "consistent" | "partial" | "conflict" | "single_modality"
+                # while the contract types this field `Modality` -- "optical" |
+                # "sar" | "unknown" -- so the console rendered "CONFLICT
+                # TRUSTED" and, because neither column matched "conflict",
+                # marked *both* sensors SUPERSEDED on the same panel.
+                #
+                # The trace's Agreement block carries no winner (its schema is
+                # additionalProperties:false), so this is null unless one is
+                # ever added. Null is what the console wants: it falls back to
+                # the cause's `trusted_modality` from /meta/disagreement-causes,
+                # which is the same 5-rule table this would otherwise duplicate.
+                "winning_modality": agreement.get("winning_modality"),
                 "explanation": agreement.get("disagreement_cause") or "",
             },
         )
