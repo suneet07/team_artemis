@@ -85,31 +85,6 @@ function ItemCard({ item }: { item: GalleryItem }) {
         {item.question}
       </p>
 
-      {item.iou !== undefined || item.rouge_l !== undefined ? (
-        <dl className="t-doc flex flex-col gap-1 text-[11.5px]">
-        {item.iou !== undefined ? (
-          <div className="flex gap-2">
-            <dt className="shrink-0 text-ink-3">Benchmark IoU</dt>
-            <dd className="t-code-sm text-ink-1">{item.iou.toFixed(3)}</dd>
-          </div>
-        ) : null}
-        {item.rouge_l !== undefined ? (
-          <div className="flex gap-2">
-            <dt className="shrink-0 text-ink-3">ROUGE-L</dt>
-            <dd className="t-code-sm text-ink-1">
-              {item.rouge_l.toFixed(3)}
-              {item.blind_floor_rouge_l !== undefined ? (
-                <span className="text-ink-3">
-                  {" "}
-                  · floor {item.blind_floor_rouge_l.toFixed(3)}
-                </span>
-              ) : null}
-            </dd>
-          </div>
-          ) : null}
-        </dl>
-      ) : null}
-
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-rule pt-2">
         <Tip
           content={`${item.corpus} · ${item.split} split · Modal workspace ${item.account}`}

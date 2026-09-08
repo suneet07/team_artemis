@@ -5,7 +5,6 @@ import { SlaGauge, type GaugeTrack } from "@/components/SlaGauge";
 import {
   Button,
   EmptyState,
-  Skeleton,
   ZoneHeader,
 } from "@/components/primitives";
 import { IconTray } from "@/components/icons";
@@ -17,11 +16,13 @@ import { BundleRecord } from "./BundleRecord";
  *
  * The first viewport has one job: make the two-SLA model legible before
  * anything is clicked, because that is the claim the whole system rests on.
- * The gauge sits above the fold with the last measured values on it; the
- * pre-warmed records are the three-second path to a working demo.
+ * The gauge sits above the fold with the last measured values on it.
  */
 export function LandingScreen() {
-  const { data: demoBundles, isLoading: loadingDemo } = useDemoBundles();
+  // Still fetched: session bundles are de-duplicated against these, and the
+  // gauge falls back to a demo bundle's recorded prep time. They are no
+  // longer listed as a section of their own.
+  const { data: demoBundles } = useDemoBundles();
   const { data: sessionBundles } = useBundles();
   const runs = useRuns((s) => s.runs);
   const navigate = useNavigate();
@@ -104,36 +105,6 @@ export function LandingScreen() {
             run against the prepared bundle and are the fast one. They are
             reported separately because averaging them would hide both.
           </p>
-        </div>
-      </section>
-
-      {/* ── pre-warmed records ──────────────────────────────────────── */}
-      <section className="mb-10">
-        <ZoneHeader
-          code="S1·A"
-          title="Pre-warmed bundles — ready without preparation"
-          className="m-sheet border-b-0"
-          actions={
-            <span className="t-code-sm text-ink-3">
-              {demoBundles?.length ?? 0} AVAILABLE
-            </span>
-          }
-        />
-        <div className="flex flex-col gap-4 pt-4">
-          {loadingDemo ? (
-            <>
-              <Skeleton className="h-[200px] w-full" />
-              <Skeleton className="h-[200px] w-full" />
-            </>
-          ) : (
-            (demoBundles ?? []).map((bundle, index) => (
-              <BundleRecord
-                key={bundle.bundle_id}
-                bundle={bundle}
-                index={index}
-              />
-            ))
-          )}
         </div>
       </section>
 
