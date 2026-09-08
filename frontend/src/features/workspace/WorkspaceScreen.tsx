@@ -176,8 +176,8 @@ export function WorkspaceScreen() {
             <Tabs.List className="flex shrink-0 border-b border-rule bg-panel-1 no-print">
               {(
                 [
-                  { value: "chat", code: "S4·R", label: "Chat" },
-                  { value: "trace", code: "S5", label: "Trace" },
+                  { value: "chat", label: "Chat" },
+                  { value: "trace", label: "Trace" },
                 ] as const
               ).map((item) => (
                 <Tabs.Trigger
@@ -189,7 +189,6 @@ export function WorkspaceScreen() {
                     "data-[state=inactive]:text-ink-2 data-[state=inactive]:hover:bg-panel-2",
                   )}
                 >
-                  <span className="opacity-55">{item.code}</span>
                   {item.label}
                 </Tabs.Trigger>
               ))}

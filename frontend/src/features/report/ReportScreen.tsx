@@ -106,7 +106,6 @@ export function ReportScreen() {
           ← WORKSPACE
         </Link>
         <h1 className="t-plate text-[20px] text-ink-0">Report</h1>
-        <Tag className="ml-auto">S6</Tag>
       </div>
 
       {/* ── the document itself ─────────────────────────────────────── */}

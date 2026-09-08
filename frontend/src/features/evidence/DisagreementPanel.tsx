@@ -42,7 +42,7 @@ function ModalityColumn({
       <div className="flex items-center gap-2 border-b border-inherit px-2.5 py-2">
         <Mark size={14} className="shrink-0 text-ink-1" />
         <span className="t-code text-ink-0">
-          {modality === "sar" ? "SAR says" : "Optical says"}
+          {modality === "sar" ? "SAR extent" : "Optical extent"}
         </span>
         {trusted ? (
           <Tag tone="pass" className="ml-auto">
@@ -72,7 +72,7 @@ function ModalityColumn({
 
       <div className="flex flex-col gap-2 px-2.5 py-2.5">
         <Field
-          label="EXTENT"
+          label="AREA"
           value={formatArea(asset?.stats?.area_km2)}
           title={
             asset?.stats?.area_km2 !== undefined
@@ -224,8 +224,11 @@ export function DisagreementPanel({
               △
             </span>
             The reported confidence is lowered because the two sensors did not
-            corroborate each other. The trusted extent is the one carried into
-            the answer.
+            corroborate each other.
+            {trusted
+              ? " The trusted extent is the one carried into the answer."
+              : " Neither extent was preferred over the other, so no rule in" +
+                " the physical table matched this pair."}
           </p>
         </div>
       ) : null}
