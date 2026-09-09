@@ -11,7 +11,7 @@ the answer.
 | ✅ CLEARED | licence verified against a primary source; shippable |
 | 📊 EVAL ONLY | may be measured on, permanently barred from training |
 | ⚠ PENDING | licence not yet verified at the primary source |
-| ❌ REJECTED | excluded, with the reason recorded in §7 |
+| ❌ REJECTED | excluded, with the reason recorded in §8 |
 
 The barrier is **enforced mechanically**, not by convention:
 `tests/test_license_blocklist.py` fails the build if an excluded source appears
@@ -33,7 +33,7 @@ project:
 - **Benchmark evaluation and reported research numbers** are **academic use**,
   which is exactly what academic-only terms grant. Read-only evaluation does not
   enter the weights and is not redistributed.
-- **ShareAlike is permitted** in both, with an obligation attached — see §6.
+- **ShareAlike is permitted** in both, with an obligation attached — see §7.
 
 **The limit of this position.** It holds only while the evaluation stays
 academic. If a benchmark number is later used as a commercial claim — a sales
@@ -51,16 +51,16 @@ Everything the deployed system loads.
 | `Qwen3-VL-4B-Instruct` | Alibaba / HuggingFace | Base VLM. One copy, shared by both LoRA adapters and the untrained grounding and captioning paths | Apache 2.0 | ✅ CLEARED |
 | `rs_vqa` LoRA | **ours** | Single-image VQA. r=16 α=32, 40,271,872 params (0.899%) | — | ours |
 | `change_vqa` LoRA | **ours** | Bi-temporal change VQA. Same shape | — | ours |
-| `BIFOLD-BigEarthNetv2-0/resnet50-s1` | TU Berlin / BIFOLD | `lulc_classifier` — 19-class radar land cover, used as published, untrained by us | See the note below | ⚠ PENDING |
+| `BIFOLD-BigEarthNetv2-0/resnet50-s1-v0.2.0` | TU Berlin / BIFOLD | `lulc_classifier` — 19-class radar land cover, used as published, untrained by us | MIT | ✅ CLEARED |
 | SAM / SAM2 | Meta | Optional mask refinement | Apache 2.0 | ✅ CLEARED |
 
-**The `resnet50-s1` licence needs one verbatim check.** Two records in this
-project disagree: the deck and README state **MIT**, while the master plan's C57
-records the BIFOLD/TU Berlin BigEarthNet weights as **CDLA-Permissive-1.0** — and
-C57 was written about the *ViT*, a different artifact from the ResNet-50 we
-actually serve. Both licences are permissive and either would clear, so nothing
-shipped is at risk; what is missing is a reading of the model card for the exact
-repository. Marked ⚠ until someone reads it and records the finding in §8.
+**On the BIFOLD weights.** The model card for
+`BIFOLD-BigEarthNetv2-0/resnet50-s1-v0.2.0` declares **MIT**, verified against
+the Hub metadata on 2026-09-10 (§10). Plan item C57 records CDLA-Permissive-1.0
+for "BigEarthNet ViT weights" — a different artifact, and not what is served.
+Both facts stand: the **weights** are MIT, while the **BigEarthNet v2.0 data**
+they were trained on is CDLA-Permissive 1.0 (§3). Conflating the two is what
+produced the disagreement.
 
 Substitutes evaluated and available if the above were ever restricted:
 **torchgeo** pretrained S1/S2 weights (MIT) · **DOFA** wavelength-aware encoder
@@ -68,24 +68,34 @@ Substitutes evaluated and available if the above were ever restricted:
 
 ---
 
-## 3. Datasets we trained on
+## 3. Datasets the shipped adapters were trained on
 
-| Dataset | What it contributes | Licence | Status |
-|---|---|---|---|
-| **BigEarthNet.txt** (arXiv 2603.29630) | Primary adaptation corpus — 40,000 rows, 10 m | CDLA-Permissive 1.0 (annotation layer verified) | ✅ CLEARED |
-| **BigEarthNet v2.0 / reBEN** | The underlying imagery for the manifest subset | CDLA-Permissive 1.0; no restriction on results of computational use | ✅ CLEARED |
-| **RSVQA-HR** (train split) | 20,529 rows at 0.30 m — the only sub-metre optical in the whole inventory | USGS imagery public domain; annotations CC BY 4.0 | ✅ CLEARED |
-| **RSVQA-LR** (train split) | 10,000 rows at 10 m | CC BY 4.0 | ✅ CLEARED |
-| **CDVQA** (arXiv 2112.06343) | The whole `change_vqa` adapter | Apache 2.0 | ✅ CLEARED |
-| RarePlanes | Aircraft grounding at 30 cm | CC BY-SA 4.0 | ✅ CLEARED · SA |
-| SpaceNet 6 MSAW | X-band quad-pol cross-modal pairs at 0.5 m | CC BY-SA 4.0 | ✅ CLEARED · SA |
-| SpaceNet 7 / MUDS | 11M building footprints; change source | CC BY-SA 4.0 | ✅ CLEARED · SA |
-| OpenEarthMap-SAR | Sub-metre cross-modal, single-pol validation | SAR: Umbra Lab CC BY 4.0 · optical: NAIP public domain, IGN France CC BY 2.0, GSI Japan | ✅ CLEARED |
-| OSCD — **imagery only** | AOI and date seeds, re-fetched from Copernicus | Modified Copernicus data, open. *Its change labels are rejected — see §7* | ✅ CLEARED |
-| HRSCD — **imagery only** | 0.5 m aerial over France | IGN *licence ouverte*. 2006 images are non-redistributable and must come from IGN directly. *Its annotations are rejected — see §7* | ✅ CLEARED |
-| SRTM / Copernicus DEM | Terrain correction | Open | ✅ CLEARED |
-| Open India proxy | Sentinel over Indian AOIs — India holdout v0 | Open | ✅ CLEARED |
-| Bhoonidhi (NRSC) | Cartosat-2S + RISAT samples — India holdout v1 | ISRO terms | ⚠ PENDING |
+**These four, and nothing else.** Two adapters ship; this is everything that
+went into them.
+
+### `rs_vqa` — single-image VQA
+
+| Dataset | Rows | Native GSD | Licence | Status |
+|---|---|---|---|---|
+| **BigEarthNet.txt** (arXiv 2603.29630) | 40,000 | 10 m | CDLA-Permissive 1.0 (annotation layer verified) | ✅ CLEARED |
+| **RSVQA-HR** — official train split | 20,529 | 0.30 m | USGS imagery public domain; annotations CC BY 4.0 | ✅ CLEARED |
+| **RSVQA-LR** — official train split | 10,000 | 10 m | CC BY 4.0 | ✅ CLEARED |
+
+BigEarthNet v2.0 / reBEN supplies the underlying imagery for the BigEarthNet.txt
+manifest subset, under the same CDLA-Permissive 1.0, with no restriction on the
+results of computational use.
+
+### `change_vqa` — bi-temporal change VQA
+
+| Dataset | Licence | Status |
+|---|---|---|
+| **CDVQA** (arXiv 2112.06343) | Apache 2.0 | ✅ CLEARED |
+
+### Nothing was trained for grounding, captioning or SAR
+
+- **Grounding and captioning** run on the base model with a written prompt. No
+  adapter, no corpus, zero parameters changed.
+- **SAR land cover** uses BIFOLD's published checkpoint as-is (§2).
 
 ### The RSVQA train splits, declared plainly
 
@@ -121,7 +131,39 @@ row carries its own rule in the prompt prefix, keyed on source.
 
 ---
 
-## 4. Datasets we evaluated on only
+## 4. Datasets staged but not in any shipped weight
+
+Held under a verified licence and used during the project, but **none of these
+reached the two adapters that ship**. Listed so the previous section can be read
+literally.
+
+### Trained on, then discarded
+
+| Dataset | What happened | Licence | Status |
+|---|---|---|---|
+| **SpaceNet 7 / MUDS** | Trained the **first** `change_vqa` adapter — 51,956 rows, 10,976 steps, AA 43.5. Discarded and retrained from CDVQA instead. Those weights are not served | CC BY-SA 4.0 | ✅ CLEARED · SA · **discarded** |
+
+### Staged for a capability we ended up not training
+
+| Dataset | What happened | Licence | Status |
+|---|---|---|---|
+| **RarePlanes** | Aircraft grounding corpus at 30 cm, 19,896 rows. Grounding was won by prompting the base model instead, so no adapter was ever trained on it | CC BY-SA 4.0 | ✅ CLEARED · SA |
+
+### Validation, preprocessing and holdout
+
+| Dataset | Role | Licence | Status |
+|---|---|---|---|
+| SpaceNet 6 MSAW | Cross-modal D1 validation at 0.5 m; also the source imagery behind the regenerated SAR text | CC BY-SA 4.0 | ✅ CLEARED · SA |
+| OpenEarthMap-SAR | Sub-metre cross-modal, single-pol validation | SAR: Umbra Lab CC BY 4.0 · optical: NAIP public domain, IGN France CC BY 2.0, GSI Japan | ✅ CLEARED |
+| OSCD — **imagery only** | AOI and date seeds re-fetched from Copernicus. *Its change labels are rejected — §8* | Modified Copernicus data, open | ✅ CLEARED |
+| HRSCD — **imagery only** | 0.5 m aerial over France. *Its annotations are rejected — §8* | IGN *licence ouverte*; the 2006 images are non-redistributable and must come from IGN directly | ✅ CLEARED |
+| SRTM / Copernicus DEM | Terrain correction during preprocessing | Open | ✅ CLEARED |
+| Open India proxy | Sentinel over Indian AOIs — India holdout v0 | Open | ✅ CLEARED |
+| Bhoonidhi (NRSC) | Cartosat-2S + RISAT samples — India holdout v1 | ISRO terms | ⚠ PENDING |
+
+---
+
+## 5. Datasets we evaluated on only
 
 Measured against, never trained on. The barrier is enforced by
 `scripts/stage_benchmarks.py` (`eval_only`, `train_forbidden`) and by
@@ -133,7 +175,7 @@ Measured against, never trained on. The barrier is enforced by
 
 ---
 
-## 5. Libraries
+## 6. Libraries
 
 **Geospatial** — GDAL (MIT/X) · rasterio (BSD-3) · rioxarray / xarray (Apache 2.0)
 · pyproj (MIT) · torchgeo (MIT) · AROSICS (Apache 2.0, pinned `>=1.0.0`) ·
@@ -154,7 +196,7 @@ codebase outside the GPL boundary. Enforced by `test_snap_is_never_imported`.
 
 ---
 
-## 6. Papers and methods
+## 7. Papers and methods
 
 ### Read and reimplemented, not cloned
 
@@ -184,30 +226,38 @@ isotonic calibration.
 - DOTA — arXiv 1711.10398
 - SpaceNet 6, SpaceNet 7, RarePlanes, OpenEarthMap-SAR — dataset papers and DOIs
 
-### ShareAlike: permitted, but not obligation-free
+### ShareAlike: carried by three corpora, none of them in a shipped weight
 
-Three train-eligible corpora carry CC BY-SA 4.0 — **RarePlanes**,
-**SpaceNet 6 MSAW**, **SpaceNet 7 / MUDS**.
+Three datasets here are CC BY-SA 4.0 — **RarePlanes**, **SpaceNet 6 MSAW** and
+**SpaceNet 7 / MUDS**. Reading §3 against §4 settles what that costs:
 
-SA permits commercial use. Its obligation is that **publicly shared adaptations
-carry the same licence**, and it triggers on public sharing rather than on
-training. Whether LoRA weights trained on SA imagery are an "adaptation" is
-unsettled; Creative Commons' own guidance notes that cases where model weights
-are held to be derivative works are considered quite limited, while allowing that
-"adapted material" could be read to reach trained models.
+**No ShareAlike data entered either shipped adapter.** `rs_vqa` trained on
+BigEarthNet.txt and the two RSVQA train splits; `change_vqa` trained on CDVQA.
+All four are CDLA-Permissive, CC BY or Apache — none are SA. RarePlanes was
+staged for a grounding adapter that was never trained, SpaceNet 6 was validation,
+and SpaceNet 7 trained the `change_vqa` attempt that was **discarded**.
 
-Three consequences, and the second needs a decision rather than a lookup:
+SA permits commercial use regardless. Its obligation is that **publicly shared
+adaptations carry the same licence**, and it triggers on public sharing rather
+than on training. Whether LoRA weights trained on SA imagery are an "adaptation"
+is unsettled — Creative Commons' own guidance notes that cases where model
+weights are held to be derivative works are considered quite limited, while
+allowing that "adapted material" could be read to reach trained models. That
+question does not have to be answered here, because the shipped weights never
+touched SA data.
 
-1. **Attribution is not optional and is not contested.** It must appear in the
-   deliverable itself, not only in this file.
-2. **If the adapters are released publicly, decide in advance whether they ship
-   under CC BY-SA.** Deciding after release is not a position that can be
-   recovered.
-3. If the adapters stay private, SA is not triggered at all.
+What remains:
+
+1. **Attribution is still required and is not contested.** These datasets were
+   used, and the obligation attaches to the use, not only to redistribution. It
+   must appear in the deliverable, not only in this file.
+2. **The discarded SpaceNet 7 `change_vqa` adapter did train on SA data.** If it
+   were ever published, the unsettled question above would apply to it. It is not
+   served, and it should not be released without deciding that first.
 
 ---
 
-## 7. What we rejected, and why
+## 8. What we rejected, and why
 
 Grouped by the reason. **Do not reintroduce** any of these without re-reading the
 primary source and recording the finding in §8.
@@ -247,7 +297,7 @@ primary source and recording the finding in §8.
 
 ---
 
-## 8. Standing rules
+## 9. Standing rules
 
 1. **Provenance Traceability Rule.** Before any dataset enters a training
    manifest, trace it to the **imagery programme** it originates from, not merely
@@ -263,7 +313,7 @@ primary source and recording the finding in §8.
 5. **Attribution for ShareAlike sources appears in the deliverable**, not only
    in this file.
 
-## 9. Verification log
+## 10. Verification log
 
 Checks performed against primary sources. Every row is re-checkable.
 
@@ -280,4 +330,4 @@ Checks performed against primary sources. Every row is re-checkable.
 | DOTA (via VRSBench) | DOTA terms; arXiv 1711.10398 | Academic purposes only; commercial use prohibited | 2026-08-29 |
 | CC BY-SA and trained weights | creativecommons.org guidance on CC-licensed works for AI training | SA triggers on public sharing of adaptations; whether weights are adaptations is unsettled | 2026-08-29 |
 | Dual-character determination | Project decision | Shipping = commercial use; evaluation and research reporting = academic use | 2026-08-29 |
-| `resnet50-s1` model card | **not yet read** | Open: MIT per README/deck vs CDLA-Permissive-1.0 per plan C57 (written about the ViT). Either clears | ⚠ outstanding |
+| `resnet50-s1` weights | HuggingFace Hub metadata for `BIFOLD-BigEarthNetv2-0/resnet50-s1-v0.2.0` | `license: mit`, tag `license:mit`. Same for the `-s2` variant. Resolves the MIT vs CDLA-Permissive disagreement: C57 was about the ViT, and CDLA-Permissive covers the training **data**, not these weights | 2026-09-10 |
