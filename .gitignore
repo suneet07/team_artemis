@@ -200,5 +200,11 @@ pnpm-debug.log*
 # engineering record, the paper material and the deck are working
 # documents; TEAM_CONTEXT.md is onboarding notes including the mistake
 # log. None of it is part of the product.
-/docs/
+# `/docs/*`, not `/docs/`: git does not descend into an excluded directory, so
+# a negation inside one can never take effect. Excluding the contents instead
+# leaves the directory readable and lets the one file below be re-included.
+/docs/*
+# The benchmark comparison is the one document a reviewer asks for, and the
+# README links to it. The rest of docs/ stays local.
+!/docs/BENCHMARKS.md
 TEAM_CONTEXT.md
