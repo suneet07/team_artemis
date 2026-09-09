@@ -350,21 +350,6 @@ with no retraining.
 
 **Component benchmarks do not measure a system.**
 
-## Ground rules
-
-Each of these has been violated at least once, and each cost real time.
-
-1. **Never quote a score without its blind baseline.** RSVQA presence is 76.3%
-   "yes" — a model that never opens the image scores that.
-2. **Trace a dataset's provenance to the imagery programme**, not to the paper
-   that published it. A permissive badge on a repo says nothing about the pixels.
-3. **Manifest first.** Annotations → manifest → only the patches it names.
-4. **Train on exactly what deployment sees.** Parity is asserted by test, not
-   assumed — served views are checked pixel-for-pixel against training views.
-5. **A falling loss is not evidence of training.** Check the opening loss against
-   `ln(vocab)`. Check your images are not black.
-6. **Treat every ✅ as a claim to re-verify**, not as authority.
-
 ## Licence
 
 Every model, dataset, library and method is recorded in
