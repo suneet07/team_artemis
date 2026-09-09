@@ -3,7 +3,21 @@ import type { ApiError, ApiErrorEnvelope } from "@contracts/types";
 export const API_BASE: string =
   import.meta.env.VITE_API_BASE ?? "http://localhost:8000/api/v1";
 
-export const USE_MOCKS: boolean = import.meta.env.VITE_USE_MOCKS !== "0";
+/**
+ * Mocks are opt-in for a built bundle, and on by default only while developing.
+ *
+ * This was `!== "0"`, which meant a production build with no environment
+ * configured served MSW fixtures: fabricated answers, fabricated imagery, and
+ * a console that looked entirely healthy while showing none of the real
+ * system. A deployment that forgets one variable should fail visibly, not
+ * quietly invent data.
+ *
+ * `import.meta.env.DEV` is compile-time, so `npm run dev` keeps mocks without
+ * anyone setting anything, and `vite build` cannot switch them on by accident.
+ */
+export const USE_MOCKS: boolean =
+  import.meta.env.VITE_USE_MOCKS === "1" ||
+  (import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS !== "0");
 
 export const MAX_UPLOAD_BYTES: number = Number(
   import.meta.env.VITE_MAX_UPLOAD_BYTES ?? 4 * 1024 * 1024 * 1024,
