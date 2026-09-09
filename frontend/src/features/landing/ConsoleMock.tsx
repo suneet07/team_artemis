@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
-import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { StatusLamp, Tag, Tip, WarningList } from "@/components/primitives";
 import { formatDuration } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -24,7 +23,7 @@ import { EXEMPLARS, type Exemplar } from "./hero.data";
  * - It is **labelled an illustration** in the panel head, and the window
  *   carries its own `SYNTHETIC` tag. Nothing here is a recorded session.
  * - The cross-modal exemplar is the mock API's fixture verbatim — the same
- *   thresholds, colours, warning and confidence the running app would show.
+ *   thresholds, colours and warnings the running app would show.
  * - Motion reuses the trace's own line printer rather than inventing a second
  *   idea: rows print in sequence, and nothing else moves.
  *
@@ -116,10 +115,6 @@ function ExemplarPanel({ exemplar }: { exemplar: Exemplar }) {
 
       {/* ── what the answer cost, and how sure it is ──────────────── */}
       <div className="mt-2.5 flex flex-wrap items-center gap-2">
-        <ConfidenceBadge
-          value={exemplar.confidence}
-          basis={exemplar.confidenceBasis}
-        />
         <Tip content="Wall-clock for the whole query, against the < 20 s budget for a question asked of a prepared bundle.">
           <span className="t-code-sm inline-flex cursor-help items-center gap-1.5 border border-rule bg-panel-sunk px-1.5 py-[3px] text-ink-2">
             <StatusLamp state={exemplar.latencyMs < 20_000 ? "pass" : "caution"} />
@@ -216,7 +211,7 @@ export function ConsoleMock({ className }: { className?: string }) {
         <h2 className="t-code min-w-0 flex-1 text-ink-1">
           The console, answering
         </h2>
-        <Tip content="Four sessions recorded against the live API on real gallery imagery from public test splits. Answer, confidence, latency, tool order and per-tool timings are transcribed from the response, not written.">
+        <Tip content="Four sessions recorded against the live API on real gallery imagery from public test splits. Answer, latency, tool order and per-tool timings are transcribed from the response, not written.">
           <span className="cursor-help">
             <Tag tone="pass">RECORDED</Tag>
           </span>

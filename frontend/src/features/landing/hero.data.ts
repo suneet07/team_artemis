@@ -113,14 +113,8 @@ export const ORCHESTRATION = {
     {
       value: "100%",
       label: "Set arithmetic · 2,012 rows",
-      note: "the same questions, answered by tools",
+      note: "answered by measurement, not inference",
       muted: false,
-    },
-    {
-      value: "43.5%",
-      label: "The fine-tuned adapter · same rows",
-      note: "which is why the tool answers and the model does not",
-      muted: true,
     },
     {
       value: "285 / 285",
