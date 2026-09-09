@@ -214,3 +214,9 @@ configs/gallery_accounts.json
 # README links to it. The rest of docs/ stays local.
 !/docs/BENCHMARKS.md
 TEAM_CONTEXT.md
+.impeccable/
+.claude/
+# Frontend build & cache artifacts
+frontend/.vite/
+frontend/dist/
+frontend/*.tsbuildinfo
