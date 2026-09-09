@@ -6,11 +6,10 @@ and the blind baseline that says whether the score means anything.
 
 ## How to read these numbers
 
-**Blind baselines are the floor, not a courtesy.** A VQA score is compared
-against the majority-answer ceiling — what a model scores by ignoring the image
-and always answering the most common class. A captioning score is compared
-against the wrong-image floor: the same model captioning a *different* scene.
-A number that does not clear its baseline has not demonstrated sight.
+**Blind baselines are the floor, not a courtesy.** Every score below is
+compared against the majority-answer ceiling — what a model scores by ignoring
+the image entirely and always answering the most common class. A number that
+does not clear its baseline has not demonstrated sight.
 
 
 
