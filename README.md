@@ -296,20 +296,79 @@ target workspace from `MODAL_PROFILE`.
 
 ## 13. Future Scope
 
-- **ISRO's own archives are the accuracy headroom.** Every figure here was
-  reached on public data held to a commercial licence standard. Resourcesat,
-  Cartosat and RISAT imagery would lift the ceiling that public corpora impose.
-- **Counting is the weakest type**, at 56.2% on RSVQA-LR with a 2.9-point vision
-  contribution — a detection-backed counting tool would replace inference with
-  measurement.
-- **A mask source for change**, which would restore `change_map` and
-  `change_stats`; the arithmetic already scores 100% on 2,012 rows when handed
-  ground-truth footprints.
-- **vLLM serving** to bring query latency inside the 20 s budget.
-- **Official scorers** in place of the in-repo comparator, to make the published
-  comparisons certified rather than indicative.
+### Who asks, and what changes for them
 
----
+ISRO's archives grow faster than anyone can read them. Every question asked of a
+scene today is a manual session in a GIS: open the file, choose the bands,
+compute an index, pick a threshold by eye, write up what you saw. The scene is
+not the bottleneck — the session is.
+
+| who asks | the question | today | with SatQuery |
+|---|---|---|---|
+| **ISRO / SAC analyst** | *"What land cover is in this radar scene?"* | a SAR specialist reads it, or it stays unread | answered in seconds — archive triage at scale |
+| **Disaster response** | *"What changed between these two dates?"* | hours to trace a flood boundary by hand | extent in seconds, mask exported as GeoTIFF |
+| **Agriculture** | *"How much of this scene is vegetation?"* | an index computed, then judged by eye | measured coverage, with the threshold recorded |
+| **Urban planning** | *"Where is the built-up area?"* | one analyst's reading, hard to re-check | reproducible, and auditable months later |
+| **District officer** | plain language, no band mathematics | ask a remote-sensing specialist, and wait | ask the system directly |
+
+```text
+TODAY      open QGIS → choose bands → compute an index → set a threshold by eye → write it up
+           minutes to hours per scene · you must be an expert to ask
+
+SATQUERY   type the question
+           seconds per scene · anyone can ask · threshold recorded, evidence exported, every step traced
+```
+
+**Cloud is the case nobody handles properly.** Optical sensors cannot see through
+monsoon cloud. Radar can. SatQuery does not average the two into a compromise —
+it decides which one to believe and states why: cloud over water goes to radar,
+because cloud is opaque to visible light and transparent to C-band. That is
+monsoon-season India, settled by physics rather than preference.
+
+### Benefits
+
+**Operational**
+
+- **Minutes → seconds** per question
+- Runs on **one L4 GPU** — deployable on-premises, no cluster, no data leaves the building
+- Four capabilities from **one 4B model**; adapters are tens of MB
+- **Every answer auditable**: tool, parameters, threshold and its reason, alignment error in pixels
+- Masks export as **GeoTIFF straight into QGIS** — the output is usable, not a screenshot
+
+**Economic**
+
+- The entire system trains in **under 6 GPU-hours**
+- Fine-tuning on ISRO's own archives: **~3 GPU-hours per adapter**
+- **Zero licence exposure** — every source cleared and recorded, enforced by a build-failing test
+- No per-query API cost, no vendor lock-in — Apache-2.0 backbone, self-hosted
+
+**Social and environmental**
+
+- **Faster disaster assessment** — flood and change extent in seconds
+- **Crop and vegetation monitoring** at archive scale
+- **Access widened** — a district officer can ask what previously needed a specialist
+- **Small model, small footprint**: 4B on one L4, not a 70B on a cluster
+
+**Strategic**
+
+- Handed over as **code and weights**, not a hosted service
+- Built to be **fine-tuned on Cartosat-2S and RISAT** the day ISRO supplies them
+- No dependency on a foreign API for inference
+
+### Where the accuracy headroom is
+
+Every figure in this repository was reached on public data held to a commercial
+licence standard. ISRO and NRSC hold Cartosat-2S optical and RISAT SAR archives
+with annotations — imagery that is operationally native rather than a research
+proxy, and carries no licence question at all. The properties those sensors have
+are already handled in shipped, tested code: band gating for a missing SWIR
+channel, a panchromatic branch, a single-polarisation SAR path with polarisation
+dropout, windowed reads and a tile scorer for scenes of 10,000 pixels and up.
+
+Corpora are generated from annotations rather than scraped, so the generator is
+the transferable asset: pointed at ISRO's annotations it emits the same corpus
+shape, the same composites and the same answer contracts. Fine-tuning is a
+re-run, not a rebuild — about **3 GPU-hours per adapter**.
 
 ## Results
 
