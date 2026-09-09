@@ -103,29 +103,91 @@ a single L4.**
 
 ## 6. Architecture
 
-```text
-question + imagery (GeoTIFF: optical / SAR / pair)
-                    │
-          ROUTER  (rules, not an LLM)         100% on 285 unambiguous cases
-          8 task branches                     15 of 16 need no LLM
-                    │
-          PARAMETER GATE                      refuses before running
-          manifest + band inventory           a plan the gate would reject
-                    │                         is never planned
-     ┌──────────────┼──────────────┐
-     ▼              ▼              ▼
-DETERMINISTIC   LEARNED        RADAR
-spectral_index  rs_vqa         lulc_classifier
-texture_seg     change_vqa     (BIFOLD, 74.95%)
-sar_backscatter rs_ground_caption
-coreg_check     (base + prompt)
-change_stats
-     └──────────────┼──────────────┘
-                    ▼
-          D1 DECISION FUSION                  5 physical rules
-          optical vs SAR                      no rule → agreed extent only
-                    ▼
-     ANSWER + EVIDENCE (GeoTIFF) + TRACE
+The full routing tree. **Read it in one direction: input shape decides first,
+question wording second, available bands third.** Cut components are drawn where
+they would have hung, with the measurement that cut them.
+
+```
+                              QUESTION  +  SCENE FILES
+                    ingest: modality · bands · GSD · CRS · nodata
+                                         │
+        ┌────────────────────────────────┼────────────────────────────────┐
+        │  ①  optical AND SAR?           │  ②  ≥2 same-modality images    │  ③  ONE IMAGE
+        │     input shape wins —         │     (or change words + ≥2)     │     words decide
+        │     no wording overrides       │                                │
+        ▼                                ▼                                ▼
+  ┌───────────┐                   ┌───────────┐              ┌─────────────────────────┐
+  │ wants a   │                   │ wants a   │              │ locate / where is /     │
+  │ mask or   │                   │ mask?     │              │ bbox / segment words,   │
+  │ a number? │                   │           │              │ OR a referring          │
+  └─┬───────┬─┘                   └─┬───────┬─┘              │ expression?             │
+    │yes    │no                     │yes    │no              │  (not a question ·      │
+    ▼       ▼                       ▼       ▼                │   ≥6 words · names a    │
+ CROSS-  CROSS-                  CHANGE_  how much/ratio?    │   known object · places │
+ MODAL_  MODAL_                  MAP      → CHANGE_VQA       │   it)  ← 12% → 80%      │
+ EXTRAC-  VQA                    ✗ cut    describe?          └─┬────────────────────┬──┘
+ TION                            F1 .29   → CHANGE_DESCR       │yes              no │
+    └───┬───┘                    wrong    else                 ▼                    ▼
+        │                        task     → CHANGE_VQA   SINGLE_GROUNDING    ┌──────────────┐
+        ▼                            └───────┬───────┘          │            │ describe /   │
+  coreg_check                                ▼                  │            │ caption      │
+  [alignment error, px]              coreg_check                │            │ words?       │
+        ▼                            [alignment error, px]      │            └─┬──────────┬─┘
+  lulc_classifier                            ▼                  │              │yes    no │
+  [19-class radar land cover]         change_vqa                │              ▼          ▼
+        ▼                             [trained LoRA,            │        ends in "?"   SINGLE_
+  ┌─────┴──────┐                       pair answers]            │        ┌────┴────┐    VQA
+  │            │                       AA 68.0                  │      no│         │yes   │
+  optical arm  radar arm                                        │        ▼         ▼      │
+  │            │                    change_stats not planned    │  SINGLE_    SINGLE_VQA  │
+  ▼            ▼                    — needs a class map         │  CAPTION    ⚡ THE ONLY │
+ ┌──────────────────────┐             nothing produces          │      │      LLM TIE-    │
+ │ D3 BAND LADDER       │             (100% on 2,012 rows       │      │      BREAK       │
+ │ water  MNDWI→NDWI→   │              given ground truth)      │      │      15 of 16    │
+ │        texture_seg   │                                       │      │      never reach │
+ │ veg    NDVI→         │                                       │      │      it          │
+ │        texture_seg   │                                       │      │         │        │
+ │ built  NDBI→SAR→     │                                       │      ▼         └────┬───┘
+ │        texture_seg   │                                       │  has SAR?           │
+ │ none of them → REFUSE│                                       │  ├yes→ lulc_        ▼
+ └──────────┬───────────┘                                       │  │     classifier  per target:
+            │                                                   │  ▼        ▼        D3 ladder
+            ▼                                                   │ rs_ground_caption      ▼
+  sar_backscatter                                               │ (mode=caption)    lulc_classifier
+  [radar brightness, dB]                                        │ [base model,       (if SAR)
+            │                                                   │  no adapter]           ▼
+            ▼                                                   ▼                  radar-only AND
+ ┌──────────────────────────┐                     noun in vocabulary?              names a known
+ │ D1 FUSION — both masks   │                     ├ yes → spectral_index /         class?
+ │ exist?                   │                     │       sar_backscatter          ├yes→ STOP.
+ │ IoU ≥0.60 union, conf ↑  │                     │            ▼                   │  classifier
+ │ IoU <0.60 → 5 rules,     │                     │       centroid_prior           │  answers
+ │   first match wins:      │                     │       [mask centre point] D2   │  alone
+ │   cloud/water   → SAR    │                     │            ▼                   └no→ rs_vqa
+ │   wet soil      → optical│                     └ no ──→ rs_ground_caption           [trained
+ │   radar shadow  → optical│                             (mode=grounding)             LoRA,
+ │   wind on water → optical│                             [base model +                single-
+ │   dry sand      → optical│                              PRECISE_PROMPT,             image]
+ │ no rule → INTERSECTION,  │                              no adapter]  62.7%          85.06
+ │   confidence × 0.6       │                     object_box_fallback ✗ removed
+ └──────────┬───────────────┘                                  │
+            │                                                  │
+            └──────────────────┬───────────────────────────────┘
+                               ▼
+              ┌────────────────────────────────────┐
+              │ COMPOSE — a learned adapter spoke? │
+              │   yes → its answer IS the answer   │
+              │   no  → deterministic sentences,   │
+              │         each naming its sensor     │
+              └────────────────┬───────────────────┘
+                               ▼
+              ANSWER  ·  EVIDENCE (GeoTIFF masks)  ·  TRACE
+              every step · threshold + why · RMSE px · IoU · warnings
+
+  ✗ REFUSAL TERMINALS, drawn in red wherever they hang off the tree:
+    change words + 1 image → "upload the second acquisition"   ·  SAR + colour
+    question → "radar measures backscatter, not light"  ·  cross-modal question
+    + 1 modality  ·  RGB/pan-only + "vegetation health"  ·  no band, no tool
 ```
 
 **One 4B backbone. Two LoRA adapters at 40.3M parameters each (0.899%). Four
