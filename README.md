@@ -417,14 +417,3 @@ barrier is **enforced by `tests/test_license_blocklist.py`, which fails the
 build**, not by convention.
 
 The backbone is Apache 2.0. Nothing encumbered enters the shipped weights.
-
----
-
-## Important
-
-This repository contains no passwords, API keys, access tokens or `.env` files.
-Credentials are loaded from `~/.satquery/credentials.env`, **outside the
-repository tree**, by `satquery/credentials.py` — which refuses to read a
-credential file from inside the repo. The reasoning is in that module's
-docstring: `.gitignore` only governs git, and zipping a folder for submission
-takes ignored files with it.
