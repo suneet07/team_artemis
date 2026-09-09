@@ -11,6 +11,8 @@
 [![base](https://img.shields.io/badge/base-Qwen3--VL--4B-blue)]()
 [![licence](https://img.shields.io/badge/sources-all%20cleared-blue)](CREDITS.md)
 
+**[Live console →](https://artemis-demo-167-suneet07s-projects.vercel.app)**
+
 </div>
 
 ---
@@ -25,6 +27,7 @@
 | **Category** | Software |
 | **Theme** | Space Technology |
 | **Organisation** | ISRO / Space Applications Centre (SAC) |
+| **Live console** | https://artemis-demo-167-suneet07s-projects.vercel.app |
 | **Team Name** | *(fill from portal — must match registration character for character)* |
 | **Team ID** | *(fill from portal)* |
 
