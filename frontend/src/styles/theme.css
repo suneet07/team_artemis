@@ -296,6 +296,21 @@ body {
   );
 }
 
+/* The blind floor on an evaluation scale: the region a system can reach
+   without looking at the image at all. Neutral hatching, deliberately not
+   the vermilion hazard — a score inside it is a finding about that system,
+   not a fault in ours. Drawn behind the marks so it reads as ruled paper. */
+.m-floor {
+  background-color: var(--color-panel-sunk);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgb(126 133 122 / 0.34) 0px,
+    rgb(126 133 122 / 0.34) 1px,
+    transparent 1px,
+    transparent 5px
+  );
+}
+
 /* Perforated edge of a printed record — used on refusal and trace slips. */
 .m-perforated {
   --perf: var(--color-rule);
@@ -360,6 +375,40 @@ body {
   animation: print-row 420ms var(--ease-print) both;
 }
 
+/* The plot draws itself: each bar is revealed upward out of the axis, the
+   way a plotter lays one down. Same clip-path reveal and same ease as the
+   trace's line printer — one motion idea, used in both places it belongs. */
+@keyframes plot-rise {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.plot-rise {
+  animation: plot-rise 560ms var(--ease-print) backwards;
+}
+
+/* The bar's value cannot live inside the bar: the reveal's clip-path
+   persists and would crop anything sitting above it. So it is a sibling,
+   and it settles once its bar has finished being drawn. */
+@keyframes plot-label {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.plot-label {
+  animation: plot-label 300ms var(--ease-print) backwards;
+}
+
 @keyframes carriage {
   0% {
     transform: translateX(-100%);
@@ -398,12 +447,17 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .print-row,
+  .plot-rise,
+  .plot-label,
   .carriage::after,
   .pulse-mark {
     animation: none !important;
   }
-  .print-row {
+  .print-row,
+  .plot-rise,
+  .plot-label {
     clip-path: none;
+    opacity: 1;
     transform: none;
   }
 }

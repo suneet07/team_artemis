@@ -108,6 +108,12 @@ CSS classes in `theme.css`, each modelling a real surface:
 - `.m-hazard` / `.m-hazard-soft` — diagonal striping. **Reserved** for states
   that genuinely warn: degraded serving, rejected parameters, an uncalibrated
   confidence badge. Never decorative.
+- `.m-floor` — neutral diagonal hatching on the sunk ground. The blind
+  baseline on an evaluation scale: the region a system reaches without looking
+  at the image. Deliberately *not* the vermilion hazard — a score inside it is
+  a finding about that system, not a fault in ours.
+- `.m-perforated` — the torn edge of a printed slip. Refusals and trace
+  fragments, including the refusal exemplar in the masthead's console mock.
 
 Rivets appear once, on the identity plate. A second use would make them a
 motif rather than a fastening.
@@ -136,8 +142,6 @@ lamp shape and a word. A colour-blind judge reads the same thing.
 - **The map is the dominant field.** In the workspace the panels are
   subordinate instruments around it: `288px | 1fr | 408px` at `lg`, stacking
   map-first below that.
-- **Every pane carries a stencilled zone code** — `S4·C`, `S1·A`, `S7·E`. Not
-  decoration: it is what a presenter says out loud while pointing.
 - **Records, not cards.** A bundle renders as a specimen record: dark imagery
   window left, printed marginalia right. Same-size icon-heading-text cards are
   the pattern this world exists to refuse.
@@ -149,6 +153,48 @@ lamp shape and a word. A colour-blind judge reads the same thing.
   `@container` for anything living in a pane.
 - **Never truncate a graded value.** CRS, tool names, parameters and
   identifiers wrap. `EPSG:326…` is precisely the thing the reader came to check.
+- **Never truncate a scale either.** The seven benchmark plots all share one
+  fixed 0–100 domain with a labelled y axis. A cropped axis is the
+  oldest way to make a small lead look large, and it is the first thing a
+  judge checks. Every bar also carries its own number, so the plot is read
+  rather than trusted.
+- **The blind baseline is a floor, not a bar.** It is drawn as a hatched band
+  under the bars, so a system scoring at chance is *seen* standing in it
+  rather than having to be argued about. On B-3 that is three published
+  remote-sensing VLMs at once, and it is the most useful single frame in the
+  record. The same floor material carries the blind-baseline strip at the
+  foot of the capability record, so the two read as one idea.
+- **The evaluation record does not hide behind interaction.** All seven plots
+  are on screen; nothing is tabbed, collapsed or paged. A judge with eight
+  minutes should reach the whole result by scrolling.
+
+### 6.1 The masthead (S1)
+
+S1 opens with front matter, and it reads as one argument in a fixed order:
+the docket line and the sentence, the drawn console beside it, the four
+capabilities and the orchestrator, the evaluation record, then the bundles.
+
+- **Editorial above, live below.** The masthead and the two records are
+  transcribed evidence that does not move; the bundle sections below them are
+  live state from this session. Numbers from before the venue and numbers from inside the
+  room are never mixed into one figure.
+- **The window is pixels; the evidence is vector.** `sceneRaster` paints the
+  scene per pixel through an optical or a radar sensor model — imagery has no
+  crisp edges and no flat fills, so it is not drawn with polygons — and
+  `SceneMock` lays the masks, the returned box and the instrument chrome over
+  it as vector. That is the same division the workspace has. Interim: the
+  raster stands in until real imagery is vendored, and swapping it in means
+  replacing the `<canvas>` in `SceneMock` with an `<img>`; the overlay
+  geometry is exported from `sceneRaster` and does not move.
+- **The mock is an illustration, and says so.** `SYNTHETIC · NOT OBSERVED
+  DATA` sits inside the frame and an `ILLUSTRATION` tag in the panel head. Its
+  cross-modal exemplar is the app's own fixture verbatim, so the masthead
+  cannot claim a threshold or a confidence the product does not produce.
+- **One of the four exemplars is a refusal.** A masthead that only ever shows
+  successes makes a claim the system does not make.
+- **The numerals are the argument.** On the proof rail and on every capability
+  row the score is a column of its own, with the score it beat printed under
+  it. Prose never carries a figure that a numeral could.
 
 ---
 
@@ -159,6 +205,16 @@ as the SSE stream arrives — `clip-path` reveal plus a 3px rise, 420ms on an
 exponential ease-out (`--ease-print`). It is the native motion of the world
 (a plotter emitting a record) and it happens exactly where the product's
 argument lives.
+
+The benchmark plots use the same reveal rather than a second idea:
+`.plot-rise` draws each bar upward out of its axis, staggered 55ms, and
+`.plot-label` settles the value once its bar is down. The console mock in
+the masthead prints its answer and its trace rows with the same `.print-row`
+the live trace uses. One motion, in the three places it belongs.
+
+The mock's tab rotation is a courtesy for an unattended screen, not an
+animation: 9s dwell, stopped by hover or by focus landing anywhere in the
+panel, and disabled outright under `prefers-reduced-motion`.
 
 Supporting, and deliberately minimal: `.carriage` for a running stage,
 `.pulse-mark` for a live indicator and the streaming caret. Nothing else

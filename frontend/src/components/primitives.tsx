@@ -211,17 +211,24 @@ export const Button = forwardRef<
   { className, variant = "panel", icon, children, ...rest },
   ref,
 ) {
+  // Every colour here carries the important modifier, and it is load-bearing
+  // rather than a shortcut: `.t-code` is the label voice and sets its own
+  // `color: ink-2`, which is authored outside Tailwind's layers and therefore
+  // beat every `text-*` on this button. A dark key with ink-2 lettering is
+  // 2.6:1 — a control that looks disabled while it works. The disabled colour
+  // is important too, so it can still win through `:disabled`, which carries
+  // the extra specificity.
   const variants: Record<ButtonVariant, string> = {
     // The primary control is a keyed switch: dark, engraved, unmistakable.
     primary:
-      "border-ink-0 bg-ink-0 text-panel-2 shadow-[inset_0_1px_0_rgb(255_255_255/0.16)] hover:bg-[#20282a] active:translate-y-px disabled:border-rule disabled:bg-panel-sunk disabled:text-ink-3 disabled:shadow-none",
+      "border-ink-0 bg-ink-0 text-panel-2! shadow-[inset_0_1px_0_rgb(255_255_255/0.16)] hover:bg-[#20282a] active:translate-y-px disabled:border-rule disabled:bg-panel-sunk disabled:text-ink-3! disabled:shadow-none",
     // The workhorse: a milled key on the panel.
     panel:
-      "border-rule-heavy bg-plate-1 text-ink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.65),inset_0_-1px_0_rgb(0_0_0/0.08)] hover:bg-plate-0 active:translate-y-px active:shadow-[inset_0_1px_2px_rgb(0_0_0/0.16)] disabled:border-rule disabled:bg-panel-sunk disabled:text-ink-3 disabled:shadow-none",
+      "border-rule-heavy bg-plate-1 text-ink-0! shadow-[inset_0_1px_0_rgb(255_255_255/0.65),inset_0_-1px_0_rgb(0_0_0/0.08)] hover:bg-plate-0 active:translate-y-px active:shadow-[inset_0_1px_2px_rgb(0_0_0/0.16)] disabled:border-rule disabled:bg-panel-sunk disabled:text-ink-3! disabled:shadow-none",
     ghost:
-      "border-transparent bg-transparent text-ink-1 hover:border-rule hover:bg-panel-1 active:translate-y-px disabled:text-ink-3",
+      "border-transparent bg-transparent text-ink-1! hover:border-rule hover:bg-panel-1 hover:text-ink-0! active:translate-y-px disabled:text-ink-3!",
     danger:
-      "border-signal bg-signal text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.2)] hover:bg-[#c8400f] active:translate-y-px disabled:border-rule disabled:bg-panel-sunk disabled:text-ink-3 disabled:shadow-none",
+      "border-signal bg-signal text-white! shadow-[inset_0_1px_0_rgb(255_255_255/0.2)] hover:bg-[#c8400f] active:translate-y-px disabled:border-rule disabled:bg-panel-sunk disabled:text-ink-3! disabled:shadow-none",
   };
 
   return (

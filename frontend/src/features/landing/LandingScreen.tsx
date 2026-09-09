@@ -1,110 +1,251 @@
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useBundles, useDemoBundles } from "@/api/bundles";
-import { SlaGauge, type GaugeTrack } from "@/components/SlaGauge";
 import {
   Button,
   EmptyState,
+  Skeleton,
+  Tip,
   ZoneHeader,
 } from "@/components/primitives";
-import { IconTray } from "@/components/icons";
-import { useRuns } from "@/store/runs";
+import { IconArrowRight, IconTray } from "@/components/icons";
 import { BundleRecord } from "./BundleRecord";
+import { BenchmarkRecord } from "./BenchmarkRecord";
+import { CapabilityRecord } from "./CapabilityRecord";
+import { ConsoleMock } from "./ConsoleMock";
+import { RECORD_SUMMARY } from "./benchmarks.data";
+import { PROOF_RAIL, SPEC_STRIP } from "./hero.data";
 
 /**
- * S1 — Sessions.
+ * S1 — Sessions, and the front page of the document.
  *
- * The first viewport has one job: make the two-SLA model legible before
- * anything is clicked, because that is the claim the whole system rests on.
- * The gauge sits above the fold with the last measured values on it.
+ * The screen reads top to bottom as one argument, and the order is the
+ * argument:
+ *
+ * 1. **Masthead** — what the system is, in one sentence, beside a drawing of
+ *    it answering. A judge who reads nothing else has seen a question, an
+ *    answer, the evidence and the trace.
+ * 2. **The capability record** — the four things it answers and the one
+ *    layer that decides which of them should.
+ * 3. **The evaluation record** — every score, every comparison system, every
+ *    blind floor, untruncated.
+ * 4. **The bundles** — pre-warmed and prepared-here, the three-second path to
+ *    asking it something yourself.
+ *
+ * The masthead and the two records are editorial and do not move; the bundle
+ * sections are live state from this session. That boundary is deliberate —
+ * the numbers measured before the venue and the numbers being measured in the
+ * room are never mixed into one figure.
  */
 export function LandingScreen() {
-  // Still fetched: session bundles are de-duplicated against these, and the
-  // gauge falls back to a demo bundle's recorded prep time. They are no
-  // longer listed as a section of their own.
-  const { data: demoBundles } = useDemoBundles();
+  const { data: demoBundles, isLoading: loadingDemo } = useDemoBundles();
   const { data: sessionBundles } = useBundles();
-  const runs = useRuns((s) => s.runs);
   const navigate = useNavigate();
 
   const recent = useMemo(
     () =>
       (sessionBundles ?? []).filter(
-        (bundle) => !(demoBundles ?? []).some((d) => d.bundle_id === bundle.bundle_id),
+        (bundle) =>
+          !(demoBundles ?? []).some((d) => d.bundle_id === bundle.bundle_id),
       ),
     [sessionBundles, demoBundles],
   );
 
-  // Both SLAs are reported from what this session actually measured; the
-  // pre-warmed bundle's recorded prep time stands in until a bundle is
-  // prepared here, and it is labelled as such.
-  const lastQuery = useMemo(() => {
-    const finished = Object.values(runs)
-      .filter((run) => run.totalLatencyMs !== null)
-      .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0));
-    return finished[0] ?? null;
-  }, [runs]);
-
-  const preparedHere = useMemo(
-    () => recent.find((bundle) => bundle.prep_ms !== null) ?? null,
-    [recent],
-  );
-
-  const tracks: GaugeTrack[] = [
-    {
-      code: "SLA-1",
-      label: "Scene preparation",
-      budgetMs: 300_000,
-      budgetLabel: "≤ 5 MIN PER SCENE",
-      measuredMs:
-        preparedHere?.prep_ms ?? demoBundles?.[0]?.prep_ms ?? null,
-      measuredNote: preparedHere
-        ? "MEASURED THIS SESSION · P1–P4"
-        : "RECORDED ON THE PRE-WARMED BUNDLE · P1–P4",
-    },
-    {
-      code: "SLA-2",
-      label: "Query latency",
-      budgetMs: 20_000,
-      budgetLabel: "< 20 S PER QUESTION",
-      measuredMs: lastQuery?.totalLatencyMs ?? null,
-      measuredNote: "MEASURED THIS SESSION · LAST QUERY",
-    },
-  ];
+  /** The three-second path: straight into a bundle that needs no preparation. */
+  const firstDemo = demoBundles?.[0] ?? null;
 
   return (
-    <div className="mx-auto w-full max-w-[1180px] px-6 pb-16 pt-9">
-      {/* ── thesis ──────────────────────────────────────────────────── */}
-      <section className="mb-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,46%)] lg:items-start">
-        <div>
-          <h1 className="t-plate max-w-[15ch] text-[clamp(30px,4.6vw,52px)] text-ink-0">
-            Every answer arrives with the record that produced it
+    <div className="mx-auto w-full max-w-[1180px] px-6 pb-16 pt-8">
+      {/* ── masthead ────────────────────────────────────────────────── */}
+      <section className="mb-10 grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,470px)] lg:items-start">
+        <div className="min-w-0">
+          {/* the docket line, the way a controlled document is stamped */}
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-rule pb-2.5">
+            <span className="t-code-sm border border-rule-heavy bg-panel-sunk px-1.5 py-[3px] text-ink-1">
+              PS SIH26167
+            </span>
+            <span className="t-code-sm text-ink-2">Space Technology</span>
+            <span aria-hidden="true" className="text-rule">
+              ·
+            </span>
+            <span className="t-code-sm text-ink-2">Software</span>
+            <span aria-hidden="true" className="text-rule">
+              ·
+            </span>
+            <span className="t-code-sm text-ink-2">
+              ISRO / Space Applications Centre
+            </span>
+          </div>
+
+          <h1 className="t-plate mt-5 max-w-[19ch] text-[clamp(27px,3.4vw,40px)] text-ink-0">
+            Ask satellite imagery a question.
+            {/* The second line is the promise, and it is set a size down: it
+                qualifies the first line rather than competing with it. */}
+            <span className="mt-2 block text-[0.72em] leading-[1.15] text-ink-2">
+              Get the answer, the evidence, and the reasoning.
+            </span>
           </h1>
+
           <p className="t-doc mt-5 text-[14.5px] text-ink-1">
-            Ask a question of optical, SAR, bi-temporal or cross-modal imagery.
-            A deterministic pipeline validates the inputs, selects the task,
-            enforces every tool parameter against its manifest, and fuses
-            optical with SAR — then hands back the mask, the statistic, and the
-            trace showing exactly how each was obtained.
+            SatQuery AI is a vision-language system for remote-sensing
+            interpretation: one 4-billion-parameter Apache-2.0 backbone, two
+            40.3M LoRA adapters, an MIT-licensed radar classifier and a
+            deterministic geospatial toolchain, bound together by a rules-first
+            orchestrator. It takes optical scenes, SAR scenes, before-and-after
+            pairs, or both sensors over the same ground, and answers questions
+            about them in plain language.
           </p>
           <p className="t-doc mt-3 text-[14.5px] text-ink-2">
-            When the imagery cannot honestly support a question, the system
-            says so and offers the fix. That refusal is a graded deliverable,
-            not an error.
+            Where a measurement can be computed, the orchestrator bypasses the
+            network and computes it — then hands back the mask as a GeoTIFF,
+            the threshold it chose and why, the alignment error in pixels, and
+            the trace of every step. Where two sensors disagree and no physical
+            rule explains it, the system reports only the agreed extent, at
+            reduced confidence, and says that it did. It is built to be
+            checked, and it says when it does not know.
           </p>
+
+          {/* ── the way in ──────────────────────────────────────────── */}
+          {/* The primary control is the one thing on this screen a judge is
+              meant to press, so it is sized as a keyed switch rather than as
+              a link: taller, wider, and carrying what happens next under it.
+              The other two are deliberately left at panel scale. */}
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Button
+              variant="primary"
+              disabled={!firstDemo}
+              onClick={() =>
+                firstDemo && navigate(`/workspace/${firstDemo.bundle_id}`)
+              }
+              icon={<IconArrowRight size={16} />}
+              className="min-h-[46px] gap-2.5 px-5 text-[12.5px] tracking-[0.13em]"
+            >
+              {firstDemo ? "Ask a prepared scene" : "Loading prepared scenes"}
+            </Button>
+            <Button
+              variant="panel"
+              onClick={() => navigate("/upload")}
+              icon={<IconTray size={14} />}
+              className="min-h-[46px] px-4 text-[11.5px]"
+            >
+              Receiving bay
+            </Button>
+            <a
+              href="#evaluation"
+              className="t-code border border-transparent px-1 py-[7px] text-ink-2 underline decoration-rule underline-offset-4 transition-colors hover:text-ink-0"
+            >
+              The evaluation record ↓
+            </a>
+          </div>
+          <p className="t-code-sm mt-2.5 text-ink-3">
+            No upload needed · answers in seconds
+          </p>
+
+          {/* ── the four numerals ───────────────────────────────────── */}
+          <div className="m-sheet armature-field mt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4">
+              {PROOF_RAIL.map((proof) => (
+                <div
+                  key={proof.benchmark}
+                  className="min-w-0 border-b border-r border-rule-hair px-3 py-2.5 last:border-r-0 sm:border-b-0 [&:nth-child(2)]:border-r-0 sm:[&:nth-child(2)]:border-r"
+                >
+                  <span className="t-data-strong block text-[21px] leading-none text-ink-0">
+                    {proof.value}
+                  </span>
+                  <span className="t-code-sm mt-1.5 block text-ink-1">
+                    {proof.benchmark}
+                  </span>
+                  <span className="mt-1 block text-[11px] leading-[1.35] text-ink-2">
+                    {proof.against}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="border-t border-rule-hair bg-panel-1 px-3 py-2 text-[11.5px] leading-[1.4] text-ink-2">
+              Measured on held-out public splits with the in-repo comparator,
+              and reported beside the score a system reaches{" "}
+              <em className="not-italic text-ink-0">without opening the image</em>.
+              The full record, including the one benchmark this system does not
+              win, is below.
+            </p>
+          </div>
+
+          {/* ── the specification plate ─────────────────────────────── */}
+          <dl className="mt-4 flex flex-wrap gap-x-5 gap-y-2.5 border-t border-rule pt-3">
+            {SPEC_STRIP.map((spec) => (
+              <div key={spec.label} className="min-w-0">
+                <dt className="t-code-sm text-ink-3">{spec.label}</dt>
+                <dd className="t-data mt-[3px] text-[11.5px] text-ink-1">
+                  {spec.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
-        <div className="m-sheet armature-field p-5">
-          <div className="mb-4 flex items-baseline justify-between gap-3 border-b border-rule pb-2.5">
-            <h2 className="t-code text-ink-1">Service budgets, measured</h2>
-            <span className="t-code-sm text-ink-3">TWO CLOCKS</span>
-          </div>
-          <SlaGauge tracks={tracks} />
-          <p className="mt-5 border-t border-rule-hair pt-3 text-[12px] leading-[1.5] text-ink-2">
-            Preparation runs once per scene and is the slow clock. Questions
-            run against the prepared bundle and are the fast one. They are
-            reported separately because averaging them would hide both.
-          </p>
+        {/* the instrument, doing the thing the sentence describes */}
+        <ConsoleMock />
+      </section>
+
+      {/* ── what it answers ─────────────────────────────────────────── */}
+      <section id="capabilities" className="mb-10 scroll-mt-4">
+        <ZoneHeader
+          title="What it answers — four capabilities, one orchestrator"
+          className="m-sheet border-b-0"
+          actions={
+            <span className="t-code-sm hidden text-ink-3 sm:inline">
+              ONE 4B BACKBONE · ADAPTERS HOT-SWAPPED
+            </span>
+          }
+        />
+        <div className="pt-4">
+          <CapabilityRecord />
+        </div>
+      </section>
+
+      {/* ── the evaluation record ───────────────────────────────────── */}
+      <section id="evaluation" className="mb-10 scroll-mt-4">
+        <ZoneHeader
+          title="Evaluation record"
+          className="m-sheet border-b-0"
+          actions={
+            <span className="t-code-sm hidden text-ink-3 sm:inline">
+              {RECORD_SUMMARY.benchmarks} BENCHMARKS · {RECORD_SUMMARY.systems}{" "}
+              SYSTEMS · {RECORD_SUMMARY.wins} WIN / {RECORD_SUMMARY.level} LEVEL
+            </span>
+          }
+        />
+        <div className="pt-4">
+          <BenchmarkRecord />
+        </div>
+      </section>
+
+      {/* ── pre-warmed records ──────────────────────────────────────── */}
+      <section id="bundles" className="mb-10 scroll-mt-4">
+        <ZoneHeader
+          title="Pre-warmed bundles — ready without preparation"
+          className="m-sheet border-b-0"
+          actions={
+            <span className="t-code-sm text-ink-3">
+              {demoBundles?.length ?? 0} AVAILABLE
+            </span>
+          }
+        />
+        <div className="flex flex-col gap-4 pt-4">
+          {loadingDemo ? (
+            <>
+              <Skeleton className="h-[200px] w-full" />
+              <Skeleton className="h-[200px] w-full" />
+            </>
+          ) : (
+            (demoBundles ?? []).map((bundle, index) => (
+              <BundleRecord
+                key={bundle.bundle_id}
+                bundle={bundle}
+                index={index}
+              />
+            ))
+          )}
         </div>
       </section>
 
@@ -171,9 +312,11 @@ export function LandingScreen() {
               scene is normal.
             </span>
           </span>
-          <span className="t-code shrink-0 border border-rule-heavy bg-plate-1 px-3 py-2 text-ink-0 transition-colors group-hover:bg-plate-0">
-            Open
-          </span>
+          <Tip content="Preparation is the slow clock: ingest, SAR normalisation, coregistration and tiling. It runs once per scene.">
+            <span className="t-code shrink-0 cursor-help border border-rule-heavy bg-plate-1 px-3 py-2 text-ink-0 transition-colors group-hover:bg-plate-0">
+              Open
+            </span>
+          </Tip>
         </Link>
       </section>
     </div>
