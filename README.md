@@ -65,20 +65,8 @@ physical rules to decide which sensor to trust.
 Every answer ships with the mask, the statistic, and a trace naming each tool,
 its parameters, the threshold chosen and why.
 
-```
-"Use the optical and SAR images together to identify built-up regions"
-
-  → crossmodal_vqa
-  → coreg_check          pair co-registered to 1.58 px (mutual_information)
-  → lulc_classifier      Inland waters 93% · Inland wetlands 90%
-  → texture_seg          by optical, builtup covers 19.0% (surface texture)
-  → sar_backscatter      by radar, builtup covers 0.3%
-  → D1 fusion            IoU 0.01 — no physical rule explains this disagreement;
-                         reporting the agreed extent, confidence × 0.6
-```
-
-That last line is the point: **the system says when it does not know.** A
-refusal is a graded deliverable, not an error.
+Where the imagery cannot support a question, the system says so and names the
+input that would answer it. A refusal is a graded output, not an error.
 
 ## 4. Key Features
 
