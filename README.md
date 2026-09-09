@@ -174,7 +174,6 @@ configs/                preprocessing.yaml · per-tool manifests · trace schema
 tests/                  451 tests, incl. the licence blocklist gate
 logs/                   curated measurement reports — every number traces here
 training/               LoRA training entry points and evaluation harnesses
-RUNBOOK.md              start / stop / verify the deployed system
 CREDITS.md              every model, dataset and method with its licence
 ```
 
@@ -241,8 +240,9 @@ python -m satquery.evalcli \
 cd frontend && npm run dev
 ```
 
-Deploying and stopping the GPU backend is documented in
-[`RUNBOOK.md`](RUNBOOK.md), including what each state costs.
+Deploying the GPU backend is an operator task; the serving entry points are
+`scripts/modal_phase0.py` and `scripts/deploy_verify.sh`, both of which take the
+target workspace from `MODAL_PROFILE`.
 
 ## 13. Future Scope
 

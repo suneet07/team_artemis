@@ -87,7 +87,7 @@ function ItemCard({ item }: { item: GalleryItem }) {
 
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-rule pt-2">
         <Tip
-          content={`${item.corpus} · ${item.split} split · Modal workspace ${item.account}`}
+          content={`${item.corpus} · ${item.split} split`}
         >
           <span className="t-code-sm min-w-0 truncate text-ink-3">
             {item.corpus}

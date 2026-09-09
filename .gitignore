@@ -203,6 +203,12 @@ pnpm-debug.log*
 # `/docs/*`, not `/docs/`: git does not descend into an excluded directory, so
 # a negation inside one can never take effect. Excluding the contents instead
 # leaves the directory readable and lets the one file below be re-included.
+# Operator files. These name Modal workspaces, deployment URLs and the
+# accounts behind them -- operational detail about whoever runs the system,
+# not part of the product.
+RUNBOOK.md
+configs/gallery_accounts.json
+
 /docs/*
 # The benchmark comparison is the one document a reviewer asks for, and the
 # README links to it. The rest of docs/ stays local.

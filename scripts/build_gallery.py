@@ -46,16 +46,23 @@ SRC = OUT / "_src"
 IMAGES = OUT / "images"
 MANIFEST = OUT / "manifest.json"
 
-#: Which Modal workspace holds each segment's imagery. Recorded on every item,
-#: because the three accounts hold different corpora and a gallery that implies
-#: one account would misstate where its evidence lives.
-ACCOUNTS = {
-    "grounding": "suneet-sharan-ug25",
-    "captioning": "suneet-sharan-ug25",
-    "rs_vqa": "suneet-sharan-ug25",
-    "change_vqa": "suneetsharan14",
-    "sar": "revanshu2473",
-}
+#: Which Modal workspace holds each segment's imagery, as
+#: ``{"segment": "workspace"}``. Read from a local file rather than written
+#: here: workspace names identify the operator's own accounts and do not belong
+#: in a public repository. The file is gitignored; see the error below for its
+#: shape. Only ``--fetch`` needs it, so building a manifest from cached images
+#: works without it.
+ACCOUNTS_FILE = ROOT / "configs" / "gallery_accounts.json"
+
+
+def _accounts() -> dict[str, str]:
+    if not ACCOUNTS_FILE.exists():
+        raise SystemExit(
+            f"{ACCOUNTS_FILE} is absent. It maps each segment to the Modal "
+            'workspace holding its imagery, e.g. {"rs_vqa": "<workspace>"}. '
+            "It is gitignored because workspace names identify an account."
+        )
+    return json.loads(ACCOUNTS_FILE.read_text(encoding="utf-8"))
 
 PER_SEGMENT = 50
 SEED = 20260906
@@ -330,7 +337,6 @@ def cmd_select(args) -> int:
     items += select_sar()
 
     for item in items:
-        item["account"] = ACCOUNTS[item["segment"]]
         item["trained_on"] = False
 
     manifest = {
@@ -338,7 +344,6 @@ def cmd_select(args) -> int:
         "seed": SEED,
         "counts": dict(Counter(item["segment"] for item in items)),
         "statuses": dict(Counter(item["status"] for item in items)),
-        "accounts": ACCOUNTS,
         "items": items,
     }
     MANIFEST.write_text(json.dumps(manifest, indent=1), encoding="utf-8")
@@ -348,7 +353,8 @@ def cmd_select(args) -> int:
 
 
 def cmd_fetch(args) -> int:
-    """Download only the images the manifest names, from each item's account."""
+    """Download only the images the manifest names, from each segment's workspace."""
+    accounts = _accounts()
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     wanted: dict[str, list[tuple[str, Path]]] = defaultdict(list)
     copies: list[tuple[Path, Path]] = []
@@ -362,7 +368,7 @@ def cmd_fetch(args) -> int:
             if target.exists():
                 continue
             if image.get("remote"):
-                wanted[item["account"]].append((image["remote"], target))
+                wanted[accounts[item["segment"]]].append((image["remote"], target))
             elif image.get("local_src"):
                 copies.append((ROOT / image["local_src"], target))
 
@@ -528,7 +534,6 @@ def cmd_topup(args) -> int:
             PER_SEGMENT = original
         chosen = candidates[:short]
         for row in chosen:
-            row["account"] = ACCOUNTS[row["segment"]]
             row["trained_on"] = False
             row["status"] = "candidate"
         added.extend(chosen)

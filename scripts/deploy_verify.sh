@@ -11,7 +11,13 @@
 # Every stage is bounded. Nothing here waits forever.
 set -uo pipefail
 
-PROFILE="${MODAL_PROFILE:-suneet-sharan-ug25}"
+# No default: a workspace name identifies an account and does not belong in a
+# public repository. Set MODAL_PROFILE, or pass --profile.
+PROFILE="${MODAL_PROFILE:-}"
+if [ -z "$PROFILE" ]; then
+  echo "set MODAL_PROFILE (or pass --profile NAME) to the workspace to deploy to" >&2
+  exit 2
+fi
 APP="satquery-phase0-ml"
 BASE="https://${PROFILE}--${APP}-api-web.modal.run/api/v1"
 SKIP_DEPLOY=0

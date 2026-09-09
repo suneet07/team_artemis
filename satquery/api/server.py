@@ -1083,7 +1083,11 @@ def build_app(
         the served answer matches a published one, and a viewer who cannot see
         what it is being matched against has to take that on trust.
         """
-        public = {k: v for k, v in item.items() if k != "images"}
+        # `account` is dropped: it names the Modal workspace the imagery was
+        # staged in, which identifies the operator's own accounts and has no
+        # bearing on whether the answer is right. Older manifests still carry
+        # it, so this strips rather than assuming it is absent.
+        public = {k: v for k, v in item.items() if k not in ("images", "account")}
         public["images"] = [
             {
                 "role": image.get("role"),
@@ -1106,7 +1110,6 @@ def build_app(
             "available": manifest.get("available", False),
             "counts": manifest.get("counts", {}),
             "statuses": manifest.get("statuses", {}),
-            "accounts": manifest.get("accounts", {}),
             "verification": manifest.get("verification"),
             "items": [_public_item(item) for item in manifest.get("items", [])],
         }
