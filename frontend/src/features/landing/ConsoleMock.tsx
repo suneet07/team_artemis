@@ -2,11 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { StatusLamp, Tag, Tip, WarningList } from "@/components/primitives";
-import { IconArrowRight } from "@/components/icons";
 import { formatDuration } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { EXEMPLARS, type Exemplar } from "./hero.data";
-import { SceneMock } from "./SceneMock";
 
 /**
  * The console, illustrated.
@@ -41,16 +39,29 @@ const DWELL_MS = 12_000;
 /* ── one exemplar ──────────────────────────────────────────────────── */
 
 function ExemplarPanel({ exemplar }: { exemplar: Exemplar }) {
-  const refused = exemplar.refusal !== null;
+  const refused = exemplar.refused;
 
   return (
     <div className="flex flex-col">
       {/* ── the window ────────────────────────────────────────────── */}
       <div className="m-window relative aspect-[320/220] w-full overflow-hidden">
-        <SceneMock
-          scene={exemplar.scene}
-          className="absolute inset-0 h-full w-full"
-        />
+        <div className="absolute inset-0 flex gap-px">
+          {exemplar.images.map((image) => (
+            <figure key={image.role} className="relative min-w-0 flex-1">
+              <img
+                src={image.src}
+                alt={`${image.role} scene the query ran against`}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+              {exemplar.images.length > 1 ? (
+                <figcaption className="t-code-sm absolute left-1 top-1 bg-window-0/80 px-1 py-[1px] text-[10px] text-window-ink">
+                  {image.role.toUpperCase()}
+                </figcaption>
+              ) : null}
+            </figure>
+          ))}
+        </div>
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-x border-b border-rule-hair bg-panel-1 px-2.5 py-1.5">
         <span className="t-code-sm text-ink-3">{exemplar.sceneNote}</span>
@@ -79,7 +90,7 @@ function ExemplarPanel({ exemplar }: { exemplar: Exemplar }) {
       </div>
 
       {/* ── the answer, or the refusal ────────────────────────────── */}
-      {refused && exemplar.refusal ? (
+      {refused ? (
         <div className="print-row mt-3 flex border border-advisory/35 bg-advisory-wash">
           <span aria-hidden="true" className="m-perforated w-[5px] shrink-0" />
           <div className="min-w-0 flex-1 px-3 py-2.5">
@@ -87,12 +98,10 @@ function ExemplarPanel({ exemplar }: { exemplar: Exemplar }) {
               <StatusLamp state="skipped" />
               REFUSAL · AN ANSWER, NOT AN ERROR
             </span>
+            {/* The API returns the refusal as the answer, with the remedy in
+                the same sentence. Splitting it here would be editing it. */}
             <p className="mt-1.5 text-[13.5px] leading-[1.5] text-ink-0">
-              {exemplar.refusal.reason}
-            </p>
-            <p className="mt-1.5 flex items-start gap-1.5 text-[12.5px] leading-[1.45] text-advisory">
-              <IconArrowRight size={12} className="mt-[3px] shrink-0" />
-              {exemplar.refusal.remedy}
+              {exemplar.answer}
             </p>
           </div>
         </div>
@@ -122,18 +131,13 @@ function ExemplarPanel({ exemplar }: { exemplar: Exemplar }) {
             SLA-2
           </span>
         </Tip>
-        {exemplar.evidence.map((e) => (
-          <Tag key={e.label} title={`Produced by ${e.by}`}>
-            {e.colour ? (
-              <span
-                aria-hidden="true"
-                className="h-[9px] w-[9px] shrink-0 border border-ink-0/25"
-                style={{ backgroundColor: e.colour }}
-              />
-            ) : null}
-            <span className="normal-case tracking-normal">{e.label}</span>
-          </Tag>
-        ))}
+        {exemplar.warningCount > 0 ? (
+          <Tip content={exemplar.warning ?? undefined}>
+            <span className="t-code-sm cursor-help border border-rule bg-panel-sunk px-1.5 py-[3px] text-ink-2">
+              {exemplar.warningCount} WARNING{exemplar.warningCount === 1 ? "" : "S"}
+            </span>
+          </Tip>
+        ) : null}
       </div>
 
       {exemplar.warning ? (
@@ -212,9 +216,9 @@ export function ConsoleMock({ className }: { className?: string }) {
         <h2 className="t-code min-w-0 flex-1 text-ink-1">
           The console, answering
         </h2>
-        <Tip content="A drawing of the workspace, not a recorded session. The cross-modal exemplar is the app's own fixture: same thresholds, same evidence colours, same warning.">
+        <Tip content="Four sessions recorded against the live API on real gallery imagery from public test splits. Answer, confidence, latency, tool order and per-tool timings are transcribed from the response, not written.">
           <span className="cursor-help">
-            <Tag tone="advisory">ILLUSTRATION</Tag>
+            <Tag tone="pass">RECORDED</Tag>
           </span>
         </Tip>
       </header>

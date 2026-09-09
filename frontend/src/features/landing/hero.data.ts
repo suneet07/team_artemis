@@ -12,13 +12,18 @@ import type { ConfidenceBasis } from "@contracts/types";
  *   carry, so the masthead and the record can never drift apart
  * - task names, tools, routing terminals and refusal wording
  *                                             → `docs/ppt/slide-3-technical.md`
- * - the cross-modal exemplar is the mock API's own fixture,
- *   `mocks/fixtures/query_crossmodal_success.json` — question, answer,
- *   confidence, evidence colours, thresholds and warning, unaltered
+ * - the four exemplars are RECORDED SESSIONS. Each was run against the live
+ *   API on real gallery imagery from a public test split, and every field
+ *   below — answer, confidence, latency, tool order, per-tool timings and
+ *   warning count — is transcribed from that response by script rather than
+ *   written by hand. The query ids are kept so a session can be found again.
  *
- * The exemplars are an ILLUSTRATION of the console and are labelled as one
- * wherever they are drawn. They are not a recorded session. Nothing here is
- * presented as a measurement except the benchmark figures, which are.
+ * That is why the confidences are low and the latencies are seconds rather
+ * than milliseconds: those are the real figures. `heuristic` confidence is
+ * weakest-link by construction, so a correct answer from a tool that was 95%
+ * sure still reports in the teens once four tools and thirteen warnings are
+ * folded in. The trace rows carry each tool's own score, which is where the
+ * gap becomes legible.
  */
 
 /* ── capability record ───────────────────────────────────────────────── */
@@ -161,186 +166,133 @@ export const PROOF_RAIL: {
 
 /* ── exemplars — the console, illustrated ────────────────────────────── */
 
-export type MockScene = "optical" | "grounding" | "crossmodal" | "sar";
+export interface ExemplarImage {
+  /** A real gallery preview, copied into `public/exemplars/`. */
+  src: string;
+  /** `optical` / `sar` / `primary`, as the bundle names it. */
+  role: string;
+}
 
 export interface Exemplar {
   id: string;
   /** Tab label — the task, as an operator would name it. */
   tab: string;
-  /** The task id the router selects. */
+  /** `trace.graded.task_selected`, verbatim. */
   task: string;
   /** Which branch of the routing tree answered. */
   router: "rules" | "llm tie-break";
   question: string;
-  scene: MockScene;
-  /** What is in the window, stated so nobody mistakes it for observed data. */
+  /** The imagery the query actually ran against. */
+  images: ExemplarImage[];
+  /** Which split the scene comes from. */
   sceneNote: string;
   answer: string;
-  /** Present only on a refusal, which is an answer and reads as one. */
-  refusal: { reason: string; remedy: string } | null;
+  /** A refusal is an answer and reads as one. */
+  refused: boolean;
   confidence: number | null;
   confidenceBasis: ConfidenceBasis | null;
   latencyMs: number;
-  evidence: { label: string; by: string; colour: string | null }[];
   trace: { tool: string; detail: string; ms: number }[];
+  /** How many warnings the trace carried, and the first of them. */
+  warningCount: number;
   warning: string | null;
+  /** The recorded query id, so the session can be found again. */
+  queryId: string;
 }
 
 export const EXEMPLARS: Exemplar[] = [
   {
     id: "e-crossmodal",
     tab: "Cross-modal",
-    task: "crossmodal_extraction",
+    task: "crossmodal_vqa",
     router: "rules",
-    question: "How much of the built-up area is under water?",
-    scene: "crossmodal",
-    sceneNote: "Optical + SAR over one ground",
-    answer:
-      "About 3.4 km² of built-up land is under water — roughly 12% of the built-up extent in the scene.",
-    refusal: null,
-    confidence: 0.81,
+    question: "Is there urban fabric in this image?",
+    images: [
+      { src: "/exemplars/crossmodal-optical.png", role: "optical" },
+      { src: "/exemplars/crossmodal-sar.png", role: "sar" },
+    ],
+    sceneNote: "Optical and SAR over one ground · reBEN held-out",
+    answer: "yes.",
+    refused: false,
+    confidence: 0.1352326127819549,
     confidenceBasis: "heuristic",
-    latencyMs: 11840,
-    evidence: [
-      {
-        label: "Water mask · NDWI, Otsu 0.14",
-        by: "spectral_index",
-        colour: "#3BA3F2",
-      },
-      {
-        label: "Water from SAR · VV < −18 dB",
-        by: "sar_backscatter",
-        colour: "#F2A03B",
-      },
-      { label: "Fused overlay", by: "optsar_fusion", colour: null },
-    ],
+    latencyMs: 8420,
     trace: [
-      {
-        tool: "coreg_check",
-        detail: "phase_correlation + AROSICS · RMSE 0.8 px",
-        ms: 240,
-      },
-      {
-        tool: "spectral_index",
-        detail: "NDWI · otsu 0.14 · bimodality passed",
-        ms: 180,
-      },
-      { tool: "sar_backscatter", detail: "VV · −18.0 dB · 3.9 km²", ms: 210 },
-      {
-        tool: "optsar_fusion",
-        detail: "IoU 0.71 ≥ 0.60 → union · confidence raised",
-        ms: 460,
-      },
+      { tool: "coreg_check", detail: "verify_only True", ms: 1835 },
+      { tool: "lulc_classifier", detail: "Urban fabric 0.9499", ms: 8170 },
+      { tool: "texture_seg", detail: "builtup · 29.0% coverage", ms: 67 },
+      { tool: "sar_backscatter", detail: "builtup · 0.7% coverage", ms: 55 },
     ],
-    warning: "NDBI unavailable: source lacks SWIR band",
+    warningCount: 13,
+    warning: "native GSD unknown from metadata; differs from pixel size if resampled",
+    queryId: "qr_83a8312b",
   },
   {
-    id: "e-vqa",
+    id: "e-single",
     tab: "Single-image",
     task: "single_vqa",
-    router: "llm tie-break",
-    question: "Is there a residential area next to the river?",
-    scene: "optical",
-    sceneNote: "One optical scene · GSD 2.0 m",
-    answer:
-      "Yes. A dense residential block sits on the north bank, directly adjacent to the channel.",
-    refusal: null,
-    confidence: 0.86,
+    router: "rules",
+    question: "Are there more rectangular residential buildings than roads?",
+    images: [
+      { src: "/exemplars/single-optical.png", role: "primary" },
+    ],
+    sceneNote: "One optical scene · RSVQA-HR test split",
+    answer: "yes.",
+    refused: false,
+    confidence: 0.27,
     confidenceBasis: "heuristic",
-    latencyMs: 3120,
-    evidence: [
-      {
-        label: "No mask — the answer is the adapter's",
-        by: "rs_vqa",
-        colour: null,
-      },
-    ],
+    latencyMs: 32585,
     trace: [
-      {
-        tool: "router",
-        detail: "one image · not a locate request · ends in ? → single_vqa",
-        ms: 4,
-      },
-      {
-        tool: "ingest",
-        detail: "optical · 4 bands · GSD 2.0 m · EPSG:32644",
-        ms: 90,
-      },
-      {
-        tool: "rs_vqa",
-        detail: "LoRA adapter · GSD injected into the prompt",
-        ms: 2980,
-      },
+      { tool: "texture_seg", detail: "builtup · 38.4% coverage", ms: 35 },
+      { tool: "rs_vqa", detail: "—", ms: 32465 },
     ],
-    warning: null,
+    warningCount: 9,
+    warning: "no CRS defined",
+    queryId: "qr_71362833",
   },
   {
     id: "e-grounding",
     tab: "Grounding",
     task: "single_grounding",
     router: "rules",
-    question: "Where is the storage tank farm?",
-    scene: "grounding",
-    sceneNote: "One optical scene · box in pixel and map space",
-    answer:
-      "The tank farm is on the western edge of the industrial block, centred at 28.5514°N 77.1183°E.",
-    refusal: null,
-    confidence: 0.74,
+    question: "The relatively larger airplane positioned near the right edge of the image can be found in the bottom-right corner.",
+    images: [
+      { src: "/exemplars/grounding-optical.png", role: "primary" },
+    ],
+    sceneNote: "One optical scene · VRSBench EVAL split",
+    answer: "[{\"bbox_2d\": [839, 567, 1000, 807]}].",
+    refused: false,
+    confidence: 0.185625,
     confidenceBasis: "heuristic",
-    latencyMs: 2650,
-    evidence: [
-      {
-        label: "Bounding box · GeoJSON",
-        by: "rs_ground_caption",
-        colour: "#3BA3F2",
-      },
-      { label: "Centroid · EPSG:32644", by: "centroid_prior", colour: null },
-    ],
+    latencyMs: 2212,
     trace: [
-      {
-        tool: "router",
-        detail: "referring expression · names a known object → grounding",
-        ms: 3,
-      },
-      {
-        tool: "rs_ground_caption",
-        detail: "base model + PRECISE_PROMPT · no adapter loaded",
-        ms: 2510,
-      },
-      { tool: "centroid_prior", detail: "box centre → map coordinate", ms: 12 },
+      { tool: "texture_seg", detail: "builtup · 4.4% coverage", ms: 52 },
+      { tool: "centroid_prior", detail: "—", ms: 15 },
+      { tool: "rs_ground_caption", detail: "phrase The relatively larger airplane positioned near the right edge of the image can be found in the bottom-r", ms: 2022 },
     ],
-    warning: null,
+    warningCount: 10,
+    warning: "no CRS defined",
+    queryId: "qr_1b94b0c0",
   },
   {
     id: "e-refusal",
     tab: "Refusal",
-    task: "refused",
+    task: "change_vqa",
     router: "rules",
-    question: "What colour are the rooftops in this scene?",
-    scene: "sar",
-    sceneNote: "One radar scene · Sentinel-1 VV",
-    answer: "",
-    refusal: {
-      reason:
-        "Radar measures backscatter, not light. There is no colour in this acquisition to report.",
-      remedy: "Add an optical acquisition of the same ground and ask again.",
-    },
-    confidence: null,
-    confidenceBasis: null,
-    latencyMs: 210,
-    evidence: [],
-    trace: [
-      {
-        tool: "ingest",
-        detail: "sar · VV · C-band · no optical bands present",
-        ms: 86,
-      },
-      {
-        tool: "router",
-        detail: "colour question + radar-only input → refusal terminal",
-        ms: 3,
-      },
+    question: "What changed between the two dates?",
+    images: [
+      { src: "/exemplars/refusal-optical.png", role: "primary" },
     ],
-    warning: null,
+    sceneNote: "One optical scene · a change question asked of it",
+    answer: "This is a change question, and change needs two images of the same area at two times. Only one was supplied. Upload the second acquisition and this becomes answerable.",
+    refused: true,
+    confidence: 0.0,
+    confidenceBasis: "heuristic",
+    latencyMs: 107,
+    trace: [
+    ],
+    warningCount: 6,
+    warning: "no CRS defined",
+    queryId: "qr_57cf61ef",
   },
 ];
