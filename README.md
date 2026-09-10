@@ -28,8 +28,8 @@
 | **Theme** | Space Technology |
 | **Organisation** | ISRO / Space Applications Centre (SAC) |
 | **Live console** | https://artemis-demo-26167.vercel.app |
-| **Team Name** | *(fill from portal — must match registration character for character)* |
-| **Team ID** | *(fill from portal)* |
+| **Team Name** | *Team Artemis* |
+| **Team ID** | *---* |
 
 ## 2. Problem Statement
 
