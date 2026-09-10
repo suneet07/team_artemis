@@ -1,17 +1,17 @@
 # Credits and licences
 
 Every model, dataset, library and paper SatQuery AI relies on, with its licence
-and its status. When a reviewer asks *"what is yours and what isn't?"* — this is
+and its status. When a reviewer asks *"what is yours and what isn't?"* -- this is
 the answer.
 
 **Status markers**
 
 | marker | meaning |
 |---|---|
-| ✅ CLEARED | licence verified against a primary source; shippable |
-| 📊 EVAL ONLY | may be measured on, permanently barred from training |
-| ⚠ PENDING | licence not yet verified at the primary source |
-| ❌ REJECTED | excluded, with the reason recorded in §8 |
+| ✓ CLEARED | licence verified against a primary source; shippable |
+| ◎ EVAL ONLY | may be measured on, permanently barred from training |
+| ⚠︎ PENDING | licence not yet verified at the primary source |
+| ✗ REJECTED | excluded, with the reason recorded in §8 |
 
 The barrier is **enforced mechanically**, not by convention:
 `tests/test_license_blocklist.py` fails the build if an excluded source appears
@@ -23,21 +23,21 @@ shipped weight has no cleared entry here.
 ## 1. The licence position
 
 This deliverable has a **dual character**, decided 2026-08-29. It is an SIH
-entry for ISRO/SAC — academic research work — *and* a candidate for operational
+entry for ISRO/SAC -- academic research work -- *and* a candidate for operational
 deployment. Both are true, so licence questions are judged **per use**, not per
 project:
 
-- **Anything that ships** — training corpora, adapter weights, deployed
-  inference — is **commercial use**. NonCommercial and academic-only sources are
+- **Anything that ships** -- training corpora, adapter weights, deployed
+  inference -- is **commercial use**. NonCommercial and academic-only sources are
   excluded absolutely.
 - **Benchmark evaluation and reported research numbers** are **academic use**,
   which is exactly what academic-only terms grant. Read-only evaluation does not
   enter the weights and is not redistributed.
-- **ShareAlike is permitted** in both, with an obligation attached — see §7.
+- **ShareAlike is permitted** in both, with an obligation attached -- see §7.
 
 **The limit of this position.** It holds only while the evaluation stays
-academic. If a benchmark number is later used as a commercial claim — a sales
-deck, a procurement response, a product page — that use is commercial, and the
+academic. If a benchmark number is later used as a commercial claim -- a sales
+deck, a procurement response, a product page -- that use is commercial, and the
 academic-only sources cannot back it.
 
 ---
@@ -48,16 +48,16 @@ Everything the deployed system loads.
 
 | Artifact | Source | Role | Licence | Status |
 |---|---|---|---|---|
-| `Qwen3-VL-4B-Instruct` | Alibaba / HuggingFace | Base VLM. One copy, shared by both LoRA adapters and the untrained grounding and captioning paths | Apache 2.0 | ✅ CLEARED |
-| `rs_vqa` LoRA | **ours** | Single-image VQA. r=16 α=32, 40,271,872 params (0.899%) | — | ours |
-| `change_vqa` LoRA | **ours** | Bi-temporal change VQA. Same shape | — | ours |
-| `BIFOLD-BigEarthNetv2-0/resnet50-s1-v0.2.0` | TU Berlin / BIFOLD | `lulc_classifier` — 19-class radar land cover, used as published, untrained by us | MIT | ✅ CLEARED |
-| SAM / SAM2 | Meta | Optional mask refinement | Apache 2.0 | ✅ CLEARED |
+| `Qwen3-VL-4B-Instruct` | Alibaba / HuggingFace | Base VLM. One copy, shared by both LoRA adapters and the untrained grounding and captioning paths | Apache 2.0 | ✓ CLEARED |
+| `rs_vqa` LoRA | **ours** | Single-image VQA. r=16 α=32, 40,271,872 params (0.899%) | -- | ours |
+| `change_vqa` LoRA | **ours** | Bi-temporal change VQA. Same shape | -- | ours |
+| `BIFOLD-BigEarthNetv2-0/resnet50-s1-v0.2.0` | TU Berlin / BIFOLD | `lulc_classifier` -- 19-class radar land cover, used as published, untrained by us | MIT | ✓ CLEARED |
+| SAM / SAM2 | Meta | Optional mask refinement | Apache 2.0 | ✓ CLEARED |
 
 **On the BIFOLD weights.** The model card for
 `BIFOLD-BigEarthNetv2-0/resnet50-s1-v0.2.0` declares **MIT**, verified against
 the Hub metadata on 2026-09-10 (§10). Plan item C57 records CDLA-Permissive-1.0
-for "BigEarthNet ViT weights" — a different artifact, and not what is served.
+for "BigEarthNet ViT weights" -- a different artifact, and not what is served.
 Both facts stand: the **weights** are MIT, while the **BigEarthNet v2.0 data**
 they were trained on is CDLA-Permissive 1.0 (§3). Conflating the two is what
 produced the disagreement.
@@ -73,23 +73,23 @@ Substitutes evaluated and available if the above were ever restricted:
 **These four, and nothing else.** Two adapters ship; this is everything that
 went into them.
 
-### `rs_vqa` — single-image VQA
+### `rs_vqa` -- single-image VQA
 
 | Dataset | Rows | Native GSD | Licence | Status |
 |---|---|---|---|---|
-| **BigEarthNet.txt** (arXiv 2603.29630) | 40,000 | 10 m | CDLA-Permissive 1.0 (annotation layer verified) | ✅ CLEARED |
-| **RSVQA-HR** — official train split | 20,529 | 0.30 m | USGS imagery public domain; annotations CC BY 4.0 | ✅ CLEARED |
-| **RSVQA-LR** — official train split | 10,000 | 10 m | CC BY 4.0 | ✅ CLEARED |
+| **BigEarthNet.txt** (arXiv 2603.29630) | 40,000 | 10 m | CDLA-Permissive 1.0 (annotation layer verified) | ✓ CLEARED |
+| **RSVQA-HR** -- official train split | 20,529 | 0.30 m | USGS imagery public domain; annotations CC BY 4.0 | ✓ CLEARED |
+| **RSVQA-LR** -- official train split | 10,000 | 10 m | CC BY 4.0 | ✓ CLEARED |
 
 BigEarthNet v2.0 / reBEN supplies the underlying imagery for the BigEarthNet.txt
 manifest subset, under the same CDLA-Permissive 1.0, with no restriction on the
 results of computational use.
 
-### `change_vqa` — bi-temporal change VQA
+### `change_vqa` -- bi-temporal change VQA
 
 | Dataset | Licence | Status |
 |---|---|---|
-| **CDVQA** (arXiv 2112.06343) | Apache 2.0 | ✅ CLEARED |
+| **CDVQA** (arXiv 2112.06343) | Apache 2.0 | ✓ CLEARED |
 
 ### Nothing was trained for grounding, captioning or SAR
 
@@ -105,14 +105,14 @@ RSVQA's **official train splits**, and this is a disclosure, not something a
 reader should have to discover.
 
 **It is not benchmark leakage.** RSVQA ships author-defined splits as separate
-files. Train and test share **no questions and no images** — verified, not
+files. Train and test share **no questions and no images** -- verified, not
 assumed: LR train 57,223 against test 10,004, overlap zero on both counts.
 Training on train and reporting on test is how every published RSVQA number was
 produced, including the baselines we compare against. RSVQA-HR's fourth split,
 `test_phili` (Philadelphia held out as a different city), is never touched.
 
 **Why RSVQA and not VRSBench.** The eval role alone is not what bars a dataset.
-VRSBench is barred because its eval role comes *with* a licence problem —
+VRSBench is barred because its eval role comes *with* a licence problem --
 DOTA-derived academic-only imagery in a deliverable that ships weights. RSVQA
 carries no such problem.
 
@@ -125,7 +125,7 @@ BigEarthNet.txt asks the same concept as a bounded choice over rasterised CORINE
 maps and does not share the fault, so the capability is kept.
 
 **Size categories are kept with their thresholds stated in the prompt.** The two
-scales define the same words 30× apart — "small" is under 3,000 m² at 10 m and
+scales define the same words 30× apart -- "small" is under 3,000 m² at 10 m and
 under 100 m² sub-metre (RSVQA paper, Table I). Rather than drop 3,067 rows, each
 row carries its own rule in the prompt prefix, keyed on source.
 
@@ -141,25 +141,25 @@ literally.
 
 | Dataset | What happened | Licence | Status |
 |---|---|---|---|
-| **SpaceNet 7 / MUDS** | Trained the **first** `change_vqa` adapter — 51,956 rows, 10,976 steps, AA 43.5. Discarded and retrained from CDVQA instead. Those weights are not served | CC BY-SA 4.0 | ✅ CLEARED · SA · **discarded** |
+| **SpaceNet 7 / MUDS** | Trained the **first** `change_vqa` adapter -- 51,956 rows, 10,976 steps, AA 43.5. Discarded and retrained from CDVQA instead. Those weights are not served | CC BY-SA 4.0 | ✓ CLEARED · SA · **discarded** |
 
 ### Staged for a capability we ended up not training
 
 | Dataset | What happened | Licence | Status |
 |---|---|---|---|
-| **RarePlanes** | Aircraft grounding corpus at 30 cm, 19,896 rows. Grounding was won by prompting the base model instead, so no adapter was ever trained on it | CC BY-SA 4.0 | ✅ CLEARED · SA |
+| **RarePlanes** | Aircraft grounding corpus at 30 cm, 19,896 rows. Grounding was won by prompting the base model instead, so no adapter was ever trained on it | CC BY-SA 4.0 | ✓ CLEARED · SA |
 
 ### Validation, preprocessing and holdout
 
 | Dataset | Role | Licence | Status |
 |---|---|---|---|
-| SpaceNet 6 MSAW | Cross-modal D1 validation at 0.5 m; also the source imagery behind the regenerated SAR text | CC BY-SA 4.0 | ✅ CLEARED · SA |
-| OpenEarthMap-SAR | Sub-metre cross-modal, single-pol validation | SAR: Umbra Lab CC BY 4.0 · optical: NAIP public domain, IGN France CC BY 2.0, GSI Japan | ✅ CLEARED |
-| OSCD — **imagery only** | AOI and date seeds re-fetched from Copernicus. *Its change labels are rejected — §8* | Modified Copernicus data, open | ✅ CLEARED |
-| HRSCD — **imagery only** | 0.5 m aerial over France. *Its annotations are rejected — §8* | IGN *licence ouverte*; the 2006 images are non-redistributable and must come from IGN directly | ✅ CLEARED |
-| SRTM / Copernicus DEM | Terrain correction during preprocessing | Open | ✅ CLEARED |
-| Open India proxy | Sentinel over Indian AOIs — India holdout v0 | Open | ✅ CLEARED |
-| Bhoonidhi (NRSC) | Cartosat-2S + RISAT samples — India holdout v1 | ISRO terms | ⚠ PENDING |
+| SpaceNet 6 MSAW | Cross-modal D1 validation at 0.5 m; also the source imagery behind the regenerated SAR text | CC BY-SA 4.0 | ✓ CLEARED · SA |
+| OpenEarthMap-SAR | Sub-metre cross-modal, single-pol validation | SAR: Umbra Lab CC BY 4.0 · optical: NAIP public domain, IGN France CC BY 2.0, GSI Japan | ✓ CLEARED |
+| OSCD -- **imagery only** | AOI and date seeds re-fetched from Copernicus. *Its change labels are rejected -- §8* | Modified Copernicus data, open | ✓ CLEARED |
+| HRSCD -- **imagery only** | 0.5 m aerial over France. *Its annotations are rejected -- §8* | IGN *licence ouverte*; the 2006 images are non-redistributable and must come from IGN directly | ✓ CLEARED |
+| SRTM / Copernicus DEM | Terrain correction during preprocessing | Open | ✓ CLEARED |
+| Open India proxy | Sentinel over Indian AOIs -- India holdout v0 | Open | ✓ CLEARED |
+| Bhoonidhi (NRSC) | Cartosat-2S + RISAT samples -- India holdout v1 | ISRO terms | ⚠︎ PENDING |
 
 ---
 
@@ -171,23 +171,23 @@ Measured against, never trained on. The barrier is enforced by
 
 | Dataset | Used for | Licence | Status |
 |---|---|---|---|
-| **VRSBench** (arXiv 2406.12384) | Referring grounding, acc@0.5 | Text CC BY 4.0. Images are **DOTA-derived: academic purposes permitted, commercial use prohibited**. Academic evaluation is the use DOTA grants — licensed, not merely tolerated | 📊 EVAL ONLY · ❌ barred from training |
+| **VRSBench** (arXiv 2406.12384) | Referring grounding, acc@0.5 | Text CC BY 4.0. Images are **DOTA-derived: academic purposes permitted, commercial use prohibited**. Academic evaluation is the use DOTA grants -- licensed, not merely tolerated | ◎ EVAL ONLY · ✗ barred from training |
 
 ---
 
 ## 6. Libraries
 
-**Geospatial** — GDAL (MIT/X) · rasterio (BSD-3) · rioxarray / xarray (Apache 2.0)
+**Geospatial** -- GDAL (MIT/X) · rasterio (BSD-3) · rioxarray / xarray (Apache 2.0)
 · pyproj (MIT) · torchgeo (MIT) · AROSICS (Apache 2.0, pinned `>=1.0.0`) ·
 scikit-image (BSD-3)
 
-**Model stack** — transformers (Apache 2.0) · peft (Apache 2.0) · bitsandbytes
+**Model stack** -- transformers (Apache 2.0) · peft (Apache 2.0) · bitsandbytes
 (MIT) · vLLM (Apache 2.0) · Outlines (Apache 2.0) · scikit-learn (BSD-3)
 
-**Serving and console** — FastAPI (MIT) · Redis (BSD) · Celery (BSD) ·
+**Serving and console** -- FastAPI (MIT) · Redis (BSD) · Celery (BSD) ·
 LangGraph (MIT) · React (MIT) · MapLibre GL (BSD-3)
 
-**External processes** — ESA SNAP + pyroSAR (**GPL-3.0**) · Weights & Biases
+**External processes** -- ESA SNAP + pyroSAR (**GPL-3.0**) · Weights & Biases
 (free tier)
 
 **SNAP GPL note.** SNAP is invoked strictly as an external process (subprocess or
@@ -208,7 +208,7 @@ codebase outside the GPL boundary. Enforced by `test_snap_is_never_imported`.
 | Earth-Agent dual-level evaluation | ICLR 2026 | Evaluation framing |
 | CDVQA Qwen study targets | arXiv 2604.18429 | Comparison targets |
 | Change-Agent multi-task interpretation | TGRS 2024 | Task decomposition |
-| SMARTIES / DOFA band projection | — | Cut-list item, not built |
+| SMARTIES / DOFA band projection | -- | Cut-list item, not built |
 
 ### Classical algorithms implemented from the literature
 
@@ -219,28 +219,28 @@ isotonic calibration.
 
 ### Citations
 
-- BigEarthNet.txt — arXiv 2603.29630
-- CDVQA — arXiv 2112.06343
-- VRSBench — arXiv 2406.12384
-- GeoPixel — arXiv 2501.13925 · EarthMind — arXiv 2506.01667
-- DOTA — arXiv 1711.10398
-- SpaceNet 6, SpaceNet 7, RarePlanes, OpenEarthMap-SAR — dataset papers and DOIs
+- BigEarthNet.txt -- arXiv 2603.29630
+- CDVQA -- arXiv 2112.06343
+- VRSBench -- arXiv 2406.12384
+- GeoPixel -- arXiv 2501.13925 · EarthMind -- arXiv 2506.01667
+- DOTA -- arXiv 1711.10398
+- SpaceNet 6, SpaceNet 7, RarePlanes, OpenEarthMap-SAR -- dataset papers and DOIs
 
 ### ShareAlike: carried by three corpora, none of them in a shipped weight
 
-Three datasets here are CC BY-SA 4.0 — **RarePlanes**, **SpaceNet 6 MSAW** and
+Three datasets here are CC BY-SA 4.0 -- **RarePlanes**, **SpaceNet 6 MSAW** and
 **SpaceNet 7 / MUDS**. Reading §3 against §4 settles what that costs:
 
 **No ShareAlike data entered either shipped adapter.** `rs_vqa` trained on
 BigEarthNet.txt and the two RSVQA train splits; `change_vqa` trained on CDVQA.
-All four are CDLA-Permissive, CC BY or Apache — none are SA. RarePlanes was
+All four are CDLA-Permissive, CC BY or Apache -- none are SA. RarePlanes was
 staged for a grounding adapter that was never trained, SpaceNet 6 was validation,
 and SpaceNet 7 trained the `change_vqa` attempt that was **discarded**.
 
 SA permits commercial use regardless. Its obligation is that **publicly shared
 adaptations carry the same licence**, and it triggers on public sharing rather
 than on training. Whether LoRA weights trained on SA imagery are an "adaptation"
-is unsettled — Creative Commons' own guidance notes that cases where model
+is unsettled -- Creative Commons' own guidance notes that cases where model
 weights are held to be derivative works are considered quite limited, while
 allowing that "adapted material" could be read to reach trained models. That
 question does not have to be answered here, because the shipped weights never
@@ -262,14 +262,14 @@ What remains:
 Grouped by the reason. **Do not reintroduce** any of these without re-reading the
 primary source and recording the finding in §8.
 
-### NonCommercial — cannot enter a shipped weight
+### NonCommercial -- cannot enter a shipped weight
 
 | Source | Finding |
 |---|---|
-| SARDet-100K | `LICENSE` in `zcablii/SARDet_100K` is CC BY-NC 4.0 — "for NonCommercial purposes only" |
-| OSCD — change labels | CC BY-NC-SA. The imagery half is open and retained; only the groundtruth masks are excluded |
-| HRSCD — change annotations | CC BY-NC-SA, same author and same split as OSCD. Unlike OSCD the imagery cannot be re-fetched, and the value here *was* the annotations |
-| SatMAE weights | Pretrained on fMoW under the Functional Map of the World Challenge Public License — NonCommercial only. DOFA is the substitute |
+| SARDet-100K | `LICENSE` in `zcablii/SARDet_100K` is CC BY-NC 4.0 -- "for NonCommercial purposes only" |
+| OSCD -- change labels | CC BY-NC-SA. The imagery half is open and retained; only the groundtruth masks are excluded |
+| HRSCD -- change annotations | CC BY-NC-SA, same author and same split as OSCD. Unlike OSCD the imagery cannot be re-fetched, and the value here *was* the annotations |
+| SatMAE weights | Pretrained on fMoW under the Functional Map of the World Challenge Public License -- NonCommercial only. DOFA is the substitute |
 | TinyCD / ChangeFormer | Pretrained weights are non-commercial / academic only |
 
 ### Academic-only or Google Earth-derived imagery
@@ -278,14 +278,14 @@ primary source and recording the finding in §8.
 |---|---|
 | LEVIR-CD · LEVIR-MCI · QAG-360K | Academic-only imagery. Purged from **all** training manifests |
 | DIOR · FAIR1M · NWPU-Captions · RSICD | Google Earth-derived; no shippable licence |
-| VRSBench (*training* use) | DOTA-derived academic-only images must never enter shipped weights. Evaluation use is permitted — see §4 |
+| VRSBench (*training* use) | DOTA-derived academic-only images must never enter shipped weights. Evaluation use is permitted -- see §4 |
 
 ### No licence grant located at the source
 
 | Source | Finding |
 |---|---|
-| SARLANG-1M | **No licence anywhere.** The paper (arXiv 2504.03254, 21 pp) contains zero occurrences of "licen", "copyright" or "terms of use"; the official repo has no LICENSE file; the HF dataset declares none. Its own contribution is the QA *text*, which carries no grant. The clean subset is 8,124 of 118,331 images (6.9%) and is SpaceNet 6 + OpenEarthMap-SAR, both held directly — so the text was regenerated in-house instead |
-| DFC2023 | IEEE GRSS contest terms state an acknowledgement requirement and **no grant**. Imagery is SuperView-1 / Gaofen-2 / Gaofen-3 — commercial and state operators |
+| SARLANG-1M | **No licence anywhere.** The paper (arXiv 2504.03254, 21 pp) contains zero occurrences of "licen", "copyright" or "terms of use"; the official repo has no LICENSE file; the HF dataset declares none. Its own contribution is the QA *text*, which carries no grant. The clean subset is 8,124 of 118,331 images (6.9%) and is SpaceNet 6 + OpenEarthMap-SAR, both held directly -- so the text was regenerated in-house instead |
+| DFC2023 | IEEE GRSS contest terms state an acknowledgement requirement and **no grant**. Imagery is SuperView-1 / Gaofen-2 / Gaofen-3 -- commercial and state operators |
 | DynamicEarthNet | Core imagery is **Planet Fusion**, a commercial product the paper itself calls "typically not freely available". No open grant at the source release. A third-party HF re-upload tags `cc-by-4.0`, but a re-uploader cannot grant rights Planet did not |
 | xView3-SAR | Terms page 404s behind a registration wall; composites carry "© Cambrio LLC; rights reserved" despite open underlying Sentinel-1 |
 
@@ -293,7 +293,7 @@ primary source and recording the finding in §8.
 
 | Source | Finding |
 |---|---|
-| LS-SSDD-v1.0 | The **annotations are Apache-2.0 and that is verified** — the repo carries a LICENSE file. **But that repository holds no imagery.** The 15 Sentinel-1 scenes come from a CAS portal whose terms were never read, and one reading recorded during the Phase 0 sweep was *"research and teaching only"*. An Apache grant over annotations conveys nothing over pixels it does not contain, and Sentinel-1 being Copernicus-open is not the same as a portal's redistribution terms being open. This entry previously read ✅ CLEARED, which overstated a clearance covering only half the dataset |
+| LS-SSDD-v1.0 | The **annotations are Apache-2.0 and that is verified** -- the repo carries a LICENSE file. **But that repository holds no imagery.** The 15 Sentinel-1 scenes come from a CAS portal whose terms were never read, and one reading recorded during the Phase 0 sweep was *"research and teaching only"*. An Apache grant over annotations conveys nothing over pixels it does not contain, and Sentinel-1 being Copernicus-open is not the same as a portal's redistribution terms being open. This entry previously read ✓ CLEARED, which overstated a clearance covering only half the dataset |
 
 ---
 
@@ -308,7 +308,7 @@ primary source and recording the finding in §8.
    project. Anything that ships is commercial use. Benchmark evaluation and
    research reporting are academic use. A benchmark number must not be
    repurposed as a commercial claim.
-3. **No training on data whose licence is still ⚠.**
+3. **No training on data whose licence is still ⚠︎.**
 4. **SNAP is an external process only**, never linked.
 5. **Attribution for ShareAlike sources appears in the deliverable**, not only
    in this file.
@@ -323,7 +323,7 @@ Checks performed against primary sources. Every row is re-checkable.
 | SARDet-100K | `github.com/zcablii/SARDet_100K` LICENSE | CC BY-NC 4.0 | 2026-08-29 |
 | DFC2023 | grss-ieee.org 2023 DFC page | Acknowledgement only; no grant | 2026-08-29 |
 | DynamicEarthNet | arXiv 2203.12560; TUM mediatum 1650201 | Planet Fusion commercial core; no open grant | 2026-08-29 |
-| SatMAE / fMoW | `github.com/fMoW/dataset` LICENSE | fMoW Challenge Public License — NonCommercial | 2026-08-29 |
+| SatMAE / fMoW | `github.com/fMoW/dataset` LICENSE | fMoW Challenge Public License -- NonCommercial | 2026-08-29 |
 | DOFA | `github.com/zhu-xlab/DOFA` | MIT code; weights carry no separate statement | 2026-08-29 |
 | AROSICS | pypi.org/pypi/arosics/json | Apache 2.0 at 1.13.2; pin present in `pyproject.toml` | 2026-08-29 |
 | OSCD | ieee-dataport.org (DOI 10.21227/asqe-7s69) | Split licence: imagery open, change labels CC BY-NC-SA | 2026-08-29 |
