@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useBundles, useDemoBundles } from "@/api/bundles";
+import { MAX_UPLOAD_BYTES } from "@/api/client";
+import { formatBytes } from "@/lib/format";
 import {
   Button,
   EmptyState,
@@ -307,9 +309,9 @@ export function LandingScreen() {
               Receiving bay
             </span>
             <span className="mt-1.5 block text-[12.5px] leading-[1.5] text-ink-2">
-              Drop GeoTIFF, PNG or JPEG scenes, designate their roles, and
-              prepare a new bundle. Files up to 4 GB each — a full Cartosat
-              scene is normal.
+              Drop image scenes — GeoTIFF, PNG, JPEG and others — designate
+              their roles, and prepare a new bundle. Files up to{" "}
+              {formatBytes(MAX_UPLOAD_BYTES)} each.
             </span>
           </span>
           <Tip content="Preparation is the slow clock: ingest, SAR normalisation, coregistration and tiling. It runs once per scene.">

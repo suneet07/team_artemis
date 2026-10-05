@@ -49,11 +49,34 @@ __all__ = ["build_app"]
 #: What the frontend's ``VITE_API_BASE`` defaults to.
 API_PREFIX = "/api/v1"
 
-#: Ceiling on a single upload. Defaults to the 4 GB the frontend already
-#: advertises in `client.ts`, so no upload that worked before is refused now;
-#: the point is that the ceiling exists on the side that can enforce it.
+#: Ceiling on a single upload. Defaults to the 4 GB the frontend advertises in
+#: `client.ts`; the point is that the ceiling exists on the side that can
+#: enforce it.
 MAX_UPLOAD_BYTES = int(os.environ.get("SATQUERY_MAX_UPLOAD_BYTES", 4 * 1024**3))
-_UPLOAD_CHUNK_BYTES = 4 * 1024 * 1024
+_UPLOAD_CHUNK_BYTES = 1024 * 1024
+
+#: Raster image extensions an upload may carry. Mirrors `IMAGE_EXTENSIONS` in
+#: the frontend's `UploadScreen.tsx`, which is only a courtesy to the user --
+#: this is the check that holds.
+UPLOAD_IMAGE_EXTENSIONS = frozenset(
+    {
+        ".tif", ".tiff", ".png", ".jpg", ".jpeg", ".jfif", ".jp2", ".j2k",
+        ".webp", ".bmp", ".gif", ".avif", ".heic", ".heif",
+    }
+)  # fmt: skip
+
+
+def _is_image_upload(filename: str | None, content_type: str | None) -> bool:
+    """Whether an upload claims to be a raster image.
+
+    The extension is the main signal: browsers send GeoTIFF and JPEG 2000 with
+    an empty or generic content type. The content type is the fallback for an
+    image whose name carries no known extension.
+    """
+    if Path(filename or "").suffix.lower() in UPLOAD_IMAGE_EXTENSIONS:
+        return True
+    kind = (content_type or "").lower()
+    return kind.startswith("image/") and kind != "image/svg+xml"
 
 #: Browser origins allowed to call this API. `*` keeps the public demo working
 #: for anyone opening the link, which is what it is for. Set this to the
@@ -983,6 +1006,15 @@ def build_app(
 
     @app.post(f"{API_PREFIX}/scenes")
     async def create_scene(file: UploadFile) -> dict[str, Any]:
+        if not _is_image_upload(file.filename, file.content_type):
+            raise HTTPException(
+                status_code=415,
+                detail=(
+                    f"{file.filename or 'the upload'} is not a raster image; "
+                    "accepted formats: "
+                    + ", ".join(sorted(UPLOAD_IMAGE_EXTENSIONS))
+                ),
+            )
         scene_id_hint = Path(file.filename or "scene.tif").name
         target = uploads / f"up_{uuid.uuid4().hex[:8]}_{scene_id_hint}"
         # Streamed in chunks against a ceiling rather than read whole. The

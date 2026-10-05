@@ -60,7 +60,56 @@ const ROLE_OPTIONS: Record<PairType, { value: SceneRole; label: string }[]> = {
   ],
 };
 
-const ACCEPT = ".tif,.tiff,.png,.jpg,.jpeg";
+/**
+ * Any raster image. The extension list exists because the browser reports an
+ * empty MIME type for the formats that matter most here — GeoTIFF and JPEG
+ * 2000 on Windows — so `image/*` alone would turn real scenes away.
+ */
+const IMAGE_EXTENSIONS = [
+  "tif",
+  "tiff",
+  "png",
+  "jpg",
+  "jpeg",
+  "jfif",
+  "jp2",
+  "j2k",
+  "webp",
+  "bmp",
+  "gif",
+  "avif",
+  "heic",
+  "heif",
+];
+
+const ACCEPT = ["image/*", ...IMAGE_EXTENSIONS.map((ext) => `.${ext}`)].join(
+  ",",
+);
+
+/**
+ * Why a file cannot be received, or null when it can. Checked here as well as
+ * through the input's `accept`, which a drop bypasses entirely.
+ */
+function rejectionFor(file: File): string | null {
+  const extension = file.name.includes(".")
+    ? file.name.split(".").pop()!.toLowerCase()
+    : "";
+  const isImage =
+    IMAGE_EXTENSIONS.includes(extension) ||
+    (file.type.startsWith("image/") && file.type !== "image/svg+xml");
+  if (!isImage) {
+    return `${extension ? `.${extension}` : "This file"} is not an image. Scenes must be raster images — GeoTIFF, JPEG 2000, PNG, JPEG, WebP and the like.`;
+  }
+  if (file.size === 0) {
+    return "The file is empty.";
+  }
+  // Pre-check the cap client-side so an oversized upload is not started only
+  // to be rejected with a 413 at the end of it.
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return `${formatBytes(file.size)} exceeds the ${formatBytes(MAX_UPLOAD_BYTES)} upload cap.`;
+  }
+  return null;
+}
 
 function DraftRow({
   draft,
@@ -162,7 +211,7 @@ function DraftRow({
           </button>
         </div>
 
-        {/* byte-level progress — these files are gigabytes */}
+        {/* byte-level progress */}
         {draft.state === "uploading" ? (
           <div>
             <div className="h-[6px] w-full border border-rule bg-panel-sunk">
@@ -271,7 +320,7 @@ export function UploadScreen() {
     | undefined;
 
   const [pairType, setPairType] = useState<PairType>(
-    preset?.pairType ?? "crossmodal",
+    preset?.pairType ?? "single",
   );
   const [label, setLabel] = useState("");
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -296,9 +345,8 @@ export function UploadScreen() {
       for (const file of incoming) {
         const localId = `${file.name}-${file.size}-${Date.now()}-${Math.random()}`;
 
-        // Pre-check the cap client-side so a 4 GB upload is not started only
-        // to be rejected with a 413 at the end of it.
-        if (file.size > MAX_UPLOAD_BYTES) {
+        const rejection = rejectionFor(file);
+        if (rejection) {
           setDrafts((current) => [
             ...current,
             {
@@ -310,7 +358,7 @@ export function UploadScreen() {
               loaded: 0,
               total: file.size,
               state: "failed",
-              error: `${formatBytes(file.size)} exceeds the ${formatBytes(MAX_UPLOAD_BYTES)} upload cap.`,
+              error: rejection,
             },
           ]);
           continue;
@@ -320,7 +368,9 @@ export function UploadScreen() {
           localId,
           file,
           sceneId: null,
-          role: preset?.role ?? null,
+          // A single-scene bundle offers one role, so it is not left for the
+          // user to pick — an unassigned scene is dropped from the request.
+          role: preset?.role ?? (pairType === "single" ? "optical" : null),
           acquiredAt: "",
           loaded: 0,
           total: file.size,
@@ -359,7 +409,7 @@ export function UploadScreen() {
           });
       }
     },
-    [preset?.role, update],
+    [pairType, preset?.role, update],
   );
 
   const validation = useMemo(
@@ -436,7 +486,10 @@ export function UploadScreen() {
                   onClick={() => {
                     setPairType(option.value);
                     setDrafts((current) =>
-                      current.map((draft) => ({ ...draft, role: null })),
+                      current.map((draft) => ({
+                        ...draft,
+                        role: option.value === "single" ? "optical" : null,
+                      })),
                     );
                   }}
                   aria-pressed={pairType === option.value}
@@ -496,9 +549,9 @@ export function UploadScreen() {
           {dragging ? "Release to receive" : "Drop scenes here"}
         </p>
         <p className="max-w-[46ch] text-[12.5px] leading-[1.5] text-ink-2">
-          GeoTIFF, PNG or JPEG. Up to {formatBytes(MAX_UPLOAD_BYTES)} each — a
-          full Cartosat scene is normal. Modality is read from the sensor tag
-          where the file carries one.
+          Any image format — GeoTIFF, JPEG 2000, PNG, JPEG, WebP and others.
+          Up to {formatBytes(MAX_UPLOAD_BYTES)} each. Modality is read from the
+          sensor tag where the file carries one.
         </p>
         <input
           ref={inputRef}

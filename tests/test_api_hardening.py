@@ -60,8 +60,37 @@ def test_a_refused_upload_leaves_nothing_behind(monkeypatch):
 
 
 def test_the_default_ceiling_matches_what_the_frontend_advertises():
-    """4 GB, so no upload that worked before this landed is refused now."""
+    """4 GB on both sides, so the client never offers what the server refuses."""
     assert srv.MAX_UPLOAD_BYTES == 4 * 1024**3
+
+
+def test_an_upload_that_is_not_an_image_is_refused(monkeypatch):
+    """The frontend filters by type, but only the server's check holds."""
+    upload_dir = Path(tempfile.mkdtemp())
+    client = TestClient(srv.build_app(upload_dir=upload_dir))
+    response = client.post(
+        "/api/v1/scenes",
+        files={"file": ("notes.pdf", io.BytesIO(b"%PDF-1.4"), "application/pdf")},
+    )
+    assert response.status_code == 415
+    assert list(upload_dir.glob("up_*")) == []
+
+
+@pytest.mark.parametrize(
+    ("filename", "content_type"),
+    [
+        ("scene.TIF", "application/octet-stream"),
+        ("scene.jp2", ""),
+        ("scene.webp", "image/webp"),
+        ("scene", "image/png"),
+    ],
+)
+def test_image_uploads_are_recognised_by_extension_or_type(filename, content_type):
+    assert srv._is_image_upload(filename, content_type)
+
+
+def test_svg_is_not_a_raster_upload():
+    assert not srv._is_image_upload("drawing.svg", "image/svg+xml")
 
 
 # -- optional key ----------------------------------------------------------

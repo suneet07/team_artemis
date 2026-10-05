@@ -787,12 +787,17 @@ export const handlers = [
         "Accepted formats: GeoTIFF (.tif/.tiff), PNG, JPEG.",
       );
     }
-    if (!/\.(tiff?|png|jpe?g)$/i.test(file.name)) {
+    if (
+      !/\.(tiff?|png|jpe?g|jfif|jp2|j2k|webp|bmp|gif|avif|hei[cf])$/i.test(
+        file.name,
+      ) &&
+      !file.type.startsWith("image/")
+    ) {
       return apiError(
         415,
         "UNSUPPORTED_FORMAT",
         `${file.name} is not a raster this system can read.`,
-        "Accepted formats: GeoTIFF (.tif/.tiff), PNG, JPEG.",
+        "Accepted formats: any raster image — GeoTIFF, JPEG 2000, PNG, JPEG, WebP.",
       );
     }
 
