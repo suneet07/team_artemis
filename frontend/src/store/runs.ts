@@ -43,6 +43,15 @@ export interface Run {
   bundleId: string;
   question: string;
   state: QueryState;
+  /**
+   * True from the moment the user submits until the API acknowledges the
+   * query. The backend answers inside that one request, so this is where
+   * nearly all of the waiting happens — and until it returns there is no
+   * query id, no stream, and nothing from the server to show. The chat pane
+   * renders this state itself rather than leaving the turn blank.
+   */
+  awaitingServer: boolean;
+  /** When the user pressed Ask, so the clock covers the whole wait. */
   startedAt: number;
   /** Wall-clock the UI measured, alongside the backend's own total. */
   finishedAt: number | null;
@@ -84,6 +93,7 @@ function emptyRun(
     bundleId,
     question,
     state: "queued",
+    awaitingServer: true,
     startedAt: Date.now(),
     finishedAt: null,
     queuedMs: null,
@@ -112,7 +122,12 @@ function emptyRun(
 interface RunStore {
   runs: Record<string, Run>;
   order: string[];
-  start: (queryId: string, bundleId: string, question: string) => void;
+  /** Open a turn the instant the user submits, under a provisional id. */
+  begin: (provisionalId: string, bundleId: string, question: string) => void;
+  /** The API acknowledged it: move the turn onto its real query id. */
+  confirm: (provisionalId: string, queryId: string) => void;
+  /** The submission never produced a query: take the turn back out. */
+  discard: (provisionalId: string) => void;
   apply: (queryId: string, event: string, data: unknown) => void;
   reset: () => void;
 }
@@ -121,11 +136,36 @@ export const useRuns = create<RunStore>((set) => ({
   runs: {},
   order: [],
 
-  start: (queryId, bundleId, question) =>
+  begin: (provisionalId, bundleId, question) =>
     set((state) => ({
-      runs: { ...state.runs, [queryId]: emptyRun(queryId, bundleId, question) },
-      order: [...state.order, queryId],
+      runs: {
+        ...state.runs,
+        [provisionalId]: emptyRun(provisionalId, bundleId, question),
+      },
+      order: [...state.order, provisionalId],
     })),
+
+  confirm: (provisionalId, queryId) =>
+    set((state) => {
+      const run = state.runs[provisionalId];
+      if (!run) return state;
+      const { [provisionalId]: _provisional, ...rest } = state.runs;
+      return {
+        // `startedAt` is kept, so the clock does not restart on acknowledgement.
+        runs: { ...rest, [queryId]: { ...run, queryId, awaitingServer: false } },
+        order: state.order.map((id) => (id === provisionalId ? queryId : id)),
+      };
+    }),
+
+  discard: (provisionalId) =>
+    set((state) => {
+      if (!state.runs[provisionalId]) return state;
+      const { [provisionalId]: _provisional, ...rest } = state.runs;
+      return {
+        runs: rest,
+        order: state.order.filter((id) => id !== provisionalId),
+      };
+    }),
 
   apply: (queryId, event, data) =>
     set((state) => {

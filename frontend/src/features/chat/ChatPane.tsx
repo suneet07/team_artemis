@@ -14,6 +14,7 @@ import {
 import {
   Button,
   EmptyState,
+  Skeleton,
   StatusLamp,
   Tag,
   Tip,
@@ -71,6 +72,87 @@ function LiveClock({ run }: { run: Run }) {
         {finished ? formatDuration(elapsed) : formatClock(elapsed)}
       </span>
     </Tip>
+  );
+}
+
+/**
+ * What to say while the submission is still unanswered.
+ *
+ * The backend computes the whole answer inside the POST and reports its steps
+ * only afterwards, so there is no live progress to relay here — and asking
+ * for some would mean extra requests against a GPU container that bills by
+ * the second and serves one request at a time. So these are not pipeline
+ * stages. They are what the console itself knows: the question went out, and
+ * how long the answer has been outstanding. Each line says only that, and the
+ * real steps replace this block the moment the server reports them.
+ */
+const AWAITING_STAGES = [
+  {
+    code: "SENDING",
+    detail: "Sending the question to the pipeline.",
+  },
+  {
+    code: "PROCESSING",
+    detail:
+      "The pipeline is routing the question and running its tools. The steps and evidence appear here as soon as it reports back.",
+  },
+  {
+    code: "STILL WORKING · MODEL LIKELY STARTING",
+    detail:
+      "This is taking longer than a warm answer. The first question after the server has been idle has to start the GPU and load the model, which can take a minute or two. Questions after that come back in seconds.",
+  },
+  {
+    code: "STILL WAITING",
+    detail:
+      "No answer yet. The request is still open and nothing has failed — a cold start on a busy GPU can run this long.",
+  },
+] as const;
+
+const SENDING_MS = 1_200;
+/** The query budget: past it, a warm server would normally have answered. */
+const WARM_ANSWER_MS = 20_000;
+/** Nothing has answered in this session yet, so a cold start is the likelier
+    explanation and is worth naming sooner. */
+const FIRST_ANSWER_MS = 8_000;
+const LONG_WAIT_MS = 150_000;
+
+function AwaitingServer({ run }: { run: Run }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 500);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const answeredBefore = useRuns((s) =>
+    s.order.some((id) => s.runs[id]?.finishedAt != null),
+  );
+
+  const elapsed = now - run.startedAt;
+  const slowAfter = answeredBefore ? WARM_ANSWER_MS : FIRST_ANSWER_MS;
+  const stage =
+    AWAITING_STAGES[
+      elapsed < SENDING_MS
+        ? 0
+        : elapsed < slowAfter
+          ? 1
+          : elapsed < LONG_WAIT_MS
+            ? 2
+            : 3
+    ];
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex flex-col gap-1.5 border-l-2 border-rule pl-2.5"
+    >
+      <span className="flex items-center gap-2">
+        <StatusLamp state="active" />
+        <span className="t-code-sm text-ink-1">{stage.code}</span>
+      </span>
+      <Skeleton className="h-[5px] w-full border border-rule" />
+      <p className="text-[12px] leading-[1.45] text-ink-2">{stage.detail}</p>
+    </div>
   );
 }
 
@@ -148,7 +230,9 @@ function RunTurn({
 
         <span className="ml-auto flex items-center gap-2">
           <LiveClock run={run} />
-          {running ? (
+          {/* No cancel before the API has acknowledged: there is no query id
+              to cancel yet. */}
+          {running && !run.awaitingServer ? (
             <button
               type="button"
               onClick={onCancel}
@@ -161,8 +245,11 @@ function RunTurn({
         </span>
       </div>
 
+      {/* submitted, nothing back yet — the long wait on a cold start */}
+      {run.awaitingServer ? <AwaitingServer run={run} /> : null}
+
       {/* live execution readout, while the trace is still assembling */}
-      {running ? (
+      {running && !run.awaitingServer ? (
         <ol className="flex flex-col gap-1 border-l-2 border-rule pl-2.5">
           {run.steps.map((step) => (
             <li
@@ -270,8 +357,9 @@ function RunTurn({
 
 export function ChatPane({ bundle }: { bundle: Bundle | undefined }) {
   const bundleId = bundle?.bundle_id ?? "";
-  const { ask, activeQueryId, streaming, transport, submitError } =
+  const { ask, activeQueryId, submitting, streaming, transport, submitError } =
     useQueryStream(bundleId);
+  const busy = submitting || streaming;
   const cancelQuery = useCancelQuery();
   const runs = useRuns((s) => s.runs);
   const order = useRuns((s) => s.order);
@@ -334,7 +422,7 @@ export function ChatPane({ bundle }: { bundle: Bundle | undefined }) {
   }, [bundle]);
 
   const submit = () => {
-    if (!ready || streaming) return;
+    if (!ready || busy) return;
     void ask(draft);
     setDraft("");
   };
@@ -433,7 +521,7 @@ export function ChatPane({ bundle }: { bundle: Bundle | undefined }) {
             id="composer"
             rows={2}
             value={draft}
-            disabled={!ready || streaming}
+            disabled={!ready || busy}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
@@ -442,15 +530,17 @@ export function ChatPane({ bundle }: { bundle: Bundle | undefined }) {
               }
             }}
             placeholder={
-              ready
-                ? "Ask about this imagery…"
-                : "The bundle is still preparing."
+              !ready
+                ? "The bundle is still preparing."
+                : busy
+                  ? "Waiting for the answer…"
+                  : "Ask about this imagery…"
             }
             className="m-sunk min-h-[52px] flex-1 resize-none px-2 py-1.5 text-[13px] leading-[1.45] text-ink-0 placeholder:text-ink-3 disabled:cursor-not-allowed disabled:text-ink-3"
           />
           <Button
             variant="primary"
-            disabled={!ready || streaming || draft.trim().length === 0}
+            disabled={!ready || busy || draft.trim().length === 0}
             onClick={submit}
             icon={<IconArrowRight size={13} />}
             className="h-[52px]"
