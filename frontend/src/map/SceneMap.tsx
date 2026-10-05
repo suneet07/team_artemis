@@ -4,7 +4,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type PointerEvent as ReactPointerEvent,
 } from "react";
 import Map, {
   Layer,
@@ -17,6 +16,8 @@ import type { StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Bundle, Scene } from "@contracts/types";
 import { ENABLE_BASEMAP, resolveUrl } from "@/api/client";
+import { bundlePanes, paneLabels } from "./panes";
+import { SwipeDivider } from "./SwipeDivider";
 import { useWorkspace, type LayerState } from "@/store/workspace";
 import { formatLatLon } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -121,6 +122,10 @@ function MapPane({
     >
       {scene?.tile_url_template ? (
         <Source
+          // Keyed by scene: a raster source does not pick up a new `tiles`
+          // URL in place, so switching optical to SAR kept drawing the first
+          // scene. A new key replaces the source instead.
+          key={scene.scene_id}
           id={`${paneId}-scene`}
           type="raster"
           tiles={[resolveUrl(scene.tile_url_template)]}
@@ -148,6 +153,7 @@ function MapPane({
            the way real tiles would. It is orientation, not analysis -- every
            measured claim still comes from a tool, with its own overlay. */
         <Source
+          key={scene.scene_id}
           id={`${paneId}-scene-preview`}
           type="image"
           url={resolveUrl(scene.preview_url)}
@@ -282,7 +288,7 @@ export function SceneMap({ bundle }: { bundle: Bundle }) {
   const baseLayer = useWorkspace((s) => s.baseLayer);
   const baseOpacity = useWorkspace((s) => s.baseOpacity);
   const showTileGrid = useWorkspace((s) => s.showTileGrid);
-  const swipeEnabled = useWorkspace((s) => s.swipeEnabled);
+  const compareMode = useWorkspace((s) => s.compareMode);
   const swipePosition = useWorkspace((s) => s.swipePosition);
   const setSwipePosition = useWorkspace((s) => s.setSwipePosition);
 
@@ -302,19 +308,7 @@ export function SceneMap({ bundle }: { bundle: Bundle }) {
   });
 
   /** A/B panes: t1 vs t2 for a bi-temporal pair, optical vs SAR otherwise. */
-  const { paneA, paneB } = useMemo(() => {
-    const scenes = bundle.scenes;
-    if (bundle.pair_type === "bitemporal") {
-      return {
-        paneA: scenes.find((s) => s.role === "t1") ?? scenes[0] ?? null,
-        paneB: scenes.find((s) => s.role === "t2") ?? scenes[1] ?? null,
-      };
-    }
-    const optical =
-      scenes.find((s) => s.compatibility?.modality !== "sar") ?? null;
-    const sar = scenes.find((s) => s.compatibility?.modality === "sar") ?? null;
-    return { paneA: optical ?? scenes[0] ?? null, paneB: sar };
-  }, [bundle]);
+  const { paneA, paneB } = useMemo(() => bundlePanes(bundle), [bundle]);
 
   const singleScene = useMemo(() => {
     if (baseLayer === "none") return null;
@@ -385,22 +379,25 @@ export function SceneMap({ bundle }: { bundle: Bundle }) {
   const fit = useCallback(() => {
     const map = primaryRef.current;
     if (!map || !bounds) return;
-    map.fitBounds(
+    // Ask the map where the camera should go and put it there through the
+    // view state. The map is controlled: calling `fitBounds` and reading the
+    // camera back returned the view it already had, so the button moved
+    // nothing once the user had panned or zoomed.
+    const camera = map.cameraForBounds(
       [
         [bounds[0], bounds[1]],
         [bounds[2], bounds[3]],
       ],
-      { padding: 36, duration: 0 },
+      { padding: 36 },
     );
-    // fitBounds with duration 0 does not emit a move event, so the readout
-    // and the comparison pane would keep the stale zoom.
-    const centreAfter = map.getCenter();
+    if (!camera?.center || camera.zoom === undefined) return;
+    const target = camera.center as { lng: number; lat: number };
     setViewState({
-      longitude: centreAfter.lng,
-      latitude: centreAfter.lat,
-      zoom: map.getZoom(),
-      bearing: map.getBearing(),
-      pitch: map.getPitch(),
+      longitude: target.lng,
+      latitude: target.lat,
+      zoom: camera.zoom,
+      bearing: 0,
+      pitch: 0,
     });
   }, [bounds]);
 
@@ -428,62 +425,50 @@ export function SceneMap({ bundle }: { bundle: Bundle }) {
     return () => observer.disconnect();
   }, [fit]);
 
-  /* the swipe divider */
-  const dragging = useRef(false);
-  const moveDivider = useCallback(
-    (clientX: number) => {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      setSwipePosition(
-        Math.min(0.98, Math.max(0.02, (clientX - rect.left) / rect.width)),
-      );
-    },
-    [setSwipePosition],
-  );
-
-  useEffect(() => {
-    if (!swipeEnabled) return;
-    const onMove = (event: PointerEvent) => {
-      if (dragging.current) moveDivider(event.clientX);
-    };
-    const onUp = () => {
-      dragging.current = false;
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-    };
-  }, [swipeEnabled, moveDivider]);
-
   const canSwipe = Boolean(paneA && paneB);
+
+  // A single-scene bundle has nothing to compare, whatever the switch says.
+  const mode = canSwipe ? compareMode : "single";
+  const labels = paneLabels(bundle);
+
+  // Side by side halves the primary map's box without resizing the container
+  // the observer above watches.
+  useEffect(() => {
+    primaryRef.current?.resize();
+  }, [mode]);
 
   return (
     <div ref={containerRef} className="on-window relative h-full w-full">
-      <MapPane
-        paneId="pane-a"
-        mapRef={(ref) => {
-          primaryRef.current = ref;
-        }}
-        scene={swipeEnabled && canSwipe ? paneA : singleScene}
-        layers={layers}
-        baseOpacity={baseOpacity}
-        viewState={viewState}
-        onMove={setViewState}
-        onCursor={setCursor}
-        tileGrid={tileGrid}
-        footprint={footprint}
-        onLoad={handleLoad}
-        interactive
+      <div
+        className={cn(
+          "absolute inset-y-0 left-0",
+          mode === "side" ? "w-1/2" : "w-full",
+        )}
       >
-        <ScaleControl position="bottom-left" maxWidth={110} unit="metric" />
-      </MapPane>
+        <MapPane
+          paneId="pane-a"
+          mapRef={(ref) => {
+            primaryRef.current = ref;
+          }}
+          scene={mode === "single" ? singleScene : paneA}
+          layers={layers}
+          baseOpacity={baseOpacity}
+          viewState={viewState}
+          onMove={setViewState}
+          onCursor={setCursor}
+          tileGrid={tileGrid}
+          footprint={footprint}
+          onLoad={handleLoad}
+          interactive
+        >
+          <ScaleControl position="bottom-left" maxWidth={110} unit="metric" />
+        </MapPane>
+      </div>
 
       {/* The comparison pane. Two synchronised maps rather than one, because
           a swipe has to clip the imagery itself, and a WebGL layer cannot be
           clipped from CSS while it shares a canvas. */}
-      {swipeEnabled && canSwipe ? (
+      {mode === "swipe" ? (
         <div
           className="pointer-events-none absolute inset-0 z-[5]"
           style={{ clipPath: `inset(0 0 0 ${swipePosition * 100}%)` }}
@@ -503,47 +488,45 @@ export function SceneMap({ bundle }: { bundle: Bundle }) {
         </div>
       ) : null}
 
-      {swipeEnabled && canSwipe ? (
-        <div
-          role="separator"
-          aria-label="Comparison divider"
-          aria-orientation="vertical"
-          aria-valuenow={Math.round(swipePosition * 100)}
-          aria-valuemin={2}
-          aria-valuemax={98}
-          tabIndex={0}
-          onPointerDown={(event: ReactPointerEvent) => {
-            dragging.current = true;
-            moveDivider(event.clientX);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "ArrowLeft") {
-              setSwipePosition(Math.max(0.02, swipePosition - 0.02));
-            }
-            if (event.key === "ArrowRight") {
-              setSwipePosition(Math.min(0.98, swipePosition + 0.02));
-            }
-          }}
-          className="absolute inset-y-0 z-10 -ml-3 w-6 cursor-ew-resize touch-none"
-          style={{ left: `${swipePosition * 100}%` }}
-        >
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-signal"
+      {mode === "swipe" ? (
+        <SwipeDivider
+          containerRef={containerRef}
+          position={swipePosition}
+          onChange={setSwipePosition}
+          labels={labels}
+        />
+      ) : null}
+
+      {/* Side by side: the same view state drives both, so panning or zooming
+          either one moves the other to the same ground. */}
+      {mode === "side" ? (
+        <div className="absolute inset-y-0 right-0 w-1/2 border-l border-signal">
+          <MapPane
+            paneId="pane-b"
+            scene={paneB}
+            layers={layers}
+            baseOpacity={baseOpacity}
+            viewState={viewState}
+            onMove={setViewState}
+            onCursor={setCursor}
+            tileGrid={tileGrid}
+            footprint={footprint}
+            interactive
           />
-          <span className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 border border-signal bg-window-0 px-1.5 py-1">
-            <span className="t-code-sm text-signal">
-              {bundle.pair_type === "bitemporal" ? "T1" : "OPT"}
-            </span>
-            <span aria-hidden="true" className="text-signal">
-              ◂▸
-            </span>
-            <span className="t-code-sm text-signal">
-              {bundle.pair_type === "bitemporal" ? "T2" : "SAR"}
-            </span>
-          </span>
         </div>
       ) : null}
+
+      {mode === "side"
+        ? labels.map((label, index) => (
+            <span
+              key={label}
+              className="t-code-sm pointer-events-none absolute top-2 z-10 border border-signal bg-window-0/85 px-1.5 py-[4px] text-signal"
+              style={{ left: `calc(${index * 50}% + 8px)` }}
+            >
+              {label}
+            </span>
+          ))
+        : null}
 
       {/* readouts, in the window's own chrome */}
       <div className="pointer-events-none absolute bottom-2 right-2 z-10 flex flex-col items-end gap-1">

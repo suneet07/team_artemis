@@ -29,6 +29,7 @@ day it disagrees.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import os
 import time
@@ -504,6 +505,18 @@ def _probe(path: Path) -> dict[str, Any]:
                 "modality": loaded.ingest.modality,
                 "modality_source": loaded.ingest.modality_source,
                 "nodata_frac": round(report.nodata_frac, 6),
+                # The receiving screen prints the rest of the report as soon as
+                # the upload lands, so the whole contract shape is sent rather
+                # than the three keys the workspace happens to read.
+                "is_georeferenced": report.is_georeferenced,
+                "bands_present": list(report.bands_present),
+                "computable_indices": list(report.computable_indices),
+                "bit_depth": report.bit_depth,
+                "bit_depth_source": report.bit_depth_source,
+                "pixel_size_m": report.pixel_size_m,
+                "native_gsd_m": report.native_gsd_m,
+                "band_inventory": dataclasses.asdict(scene.inventory),
+                "warnings": list(report.warnings),
             },
         }
     except Exception as exc:  # noqa: BLE001 - an unreadable upload is a state
@@ -519,6 +532,16 @@ def _probe(path: Path) -> dict[str, Any]:
                 "format_ok": False,
                 "crs_valid": False,
                 "modality": None,
+                "modality_source": None,
+                "is_georeferenced": False,
+                "bands_present": [],
+                "computable_indices": [],
+                "bit_depth": None,
+                "bit_depth_source": None,
+                "pixel_size_m": None,
+                "native_gsd_m": None,
+                "band_inventory": None,
+                "warnings": [f"could not read this file: {exc}"],
             },
         }
 
@@ -1052,6 +1075,15 @@ def build_app(
         if not preview or not Path(preview).exists():
             raise HTTPException(status_code=404, detail="no preview for this scene")
         return FileResponse(preview, media_type="image/png")
+
+    # The receiving screen reads each scene back by id after the upload; without
+    # this route that read 404s and the row sits on "READING…" forever.
+    @app.get(f"{API_PREFIX}/scenes/{{scene_id}}")
+    def get_scene(scene_id: str) -> dict[str, Any]:
+        record = scenes.get(scene_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail="no scene with that id")
+        return {k: v for k, v in record.items() if k not in ("path", "preview_path")}
 
     @app.get(f"{API_PREFIX}/scenes")
     def list_scenes() -> dict[str, Any]:

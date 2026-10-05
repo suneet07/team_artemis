@@ -7,7 +7,9 @@ import { ChatPane } from "@/features/chat/ChatPane";
 import { EvidencePanel } from "@/features/evidence/EvidencePanel";
 import { TracePanel } from "@/features/trace/TracePanel";
 import { SceneMap } from "@/map/SceneMap";
+import { CompareSwitch } from "@/map/CompareSwitch";
 import { ImageViewer } from "@/map/ImageViewer";
+import { bundlePanes, paneLabels } from "@/map/panes";
 import {
   Skeleton,
   StatusLamp,
@@ -37,6 +39,7 @@ export function WorkspaceScreen() {
   const setTab = useWorkspace((s) => s.setTab);
   const selectedQueryId = useWorkspace((s) => s.selectedQueryId);
   const clearLayers = useWorkspace((s) => s.clearLayers);
+  const baseLayer = useWorkspace((s) => s.baseLayer);
   const runs = useRuns((s) => s.runs);
 
   // Layers belong to a bundle; switching bundles must not carry evidence
@@ -73,9 +76,16 @@ export function WorkspaceScreen() {
     );
   }
 
-  const nonGeoScene = bundle.scenes.find(
-    (scene) => scene.compatibility?.crs_valid === false,
-  );
+  // The image viewer follows the base-imagery switch, as the map does, so the
+  // second scene of an ungeoreferenced pair can be brought up too.
+  const { paneA, paneB } = bundlePanes(bundle);
+  const chosen = baseLayer === "sar" ? (paneB ?? paneA) : (paneA ?? paneB);
+  const nonGeoScene =
+    chosen?.compatibility?.crs_valid === false
+      ? chosen
+      : bundle.scenes.find(
+          (scene) => scene.compatibility?.crs_valid === false,
+        );
 
   return (
     /* Viewport-bounded on large screens: `App` pins the shell to one viewport
@@ -161,12 +171,24 @@ export function WorkspaceScreen() {
                 : "Image viewer · pixel space"
             }
             className="no-print"
+            actions={bundle.scenes.length > 1 ? <CompareSwitch /> : undefined}
           />
           <div className="armature-field relative min-h-0 flex-1">
             {georeferenced ? (
               <SceneMap bundle={bundle} />
             ) : nonGeoScene ? (
-              <ImageViewer scene={nonGeoScene} />
+              <ImageViewer
+                scene={nonGeoScene}
+                pair={
+                  paneA &&
+                  paneB &&
+                  paneA.compatibility?.crs_valid === false &&
+                  paneB.compatibility?.crs_valid === false
+                    ? { a: paneA, b: paneB }
+                    : null
+                }
+                labels={paneLabels(bundle)}
+              />
             ) : null}
           </div>
         </div>

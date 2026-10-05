@@ -7,7 +7,6 @@ import {
   IconHidden,
   IconOptical,
   IconSar,
-  IconSwipe,
   IconVisible,
 } from "@/components/icons";
 import {
@@ -19,6 +18,7 @@ import {
   WarningList,
   ZoneHeader,
 } from "@/components/primitives";
+import { bundlePanes } from "@/map/panes";
 import { useWorkspace } from "@/store/workspace";
 import { formatArea, formatBytes } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -72,8 +72,8 @@ export function EvidencePanel({ bundle }: { bundle: Bundle }) {
   const setBaseLayer = useWorkspace((s) => s.setBaseLayer);
   const baseOpacity = useWorkspace((s) => s.baseOpacity);
   const setBaseOpacity = useWorkspace((s) => s.setBaseOpacity);
-  const swipeEnabled = useWorkspace((s) => s.swipeEnabled);
-  const setSwipeEnabled = useWorkspace((s) => s.setSwipeEnabled);
+  const compareMode = useWorkspace((s) => s.compareMode);
+  const setCompareMode = useWorkspace((s) => s.setCompareMode);
   const showTileGrid = useWorkspace((s) => s.showTileGrid);
   const setShowTileGrid = useWorkspace((s) => s.setShowTileGrid);
   const setTab = useWorkspace((s) => s.setTab);
@@ -82,6 +82,7 @@ export function EvidencePanel({ bundle }: { bundle: Bundle }) {
 
   const georeferenced = bundle.scenes.some((s) => s.compatibility?.crs_valid);
   const canCompare = bundle.scenes.length > 1;
+  const { paneB } = bundlePanes(bundle);
 
   return (
     <aside className="flex h-full min-h-0 flex-col border-r border-rule bg-panel-1">
@@ -94,22 +95,32 @@ export function EvidencePanel({ bundle }: { bundle: Bundle }) {
           <div className="mb-2.5 flex flex-col gap-1">
             {bundle.scenes.map((scene) => {
               const sar = scene.compatibility?.modality === "sar";
+              // The switch selects a pane, not a modality: the second date of
+              // a bi-temporal pair is optical too, and still has to be pane B.
+              const second = scene.scene_id === paneB?.scene_id;
               const active =
                 baseLayer !== "none" &&
-                (canCompare
-                  ? (sar && baseLayer === "sar") ||
-                    (!sar && baseLayer === "optical")
-                  : true);
+                (!canCompare || compareMode !== "single"
+                  ? true
+                  : second
+                    ? baseLayer === "sar"
+                    : baseLayer === "optical");
               return (
                 <button
                   key={scene.scene_id}
                   type="button"
-                  onClick={() => setBaseLayer(sar ? "sar" : "optical")}
+                  onClick={() => {
+                    // Picking one scene is asking for the single view.
+                    setBaseLayer(second ? "sar" : "optical");
+                    setCompareMode("single");
+                  }}
                   aria-pressed={active}
                   className={cn(
                     "flex w-full items-center gap-2 border px-2 py-1.5 text-left transition-colors",
+                    // A signal-coloured edge and a SHOWN tag, so which scene is
+                    // on screen reads at a glance and not from a border weight.
                     active
-                      ? "border-ink-0 bg-panel-2"
+                      ? "border-ink-0 bg-signal-wash shadow-[inset_3px_0_0_var(--color-signal)]"
                       : "border-rule-hair bg-panel-1 hover:border-rule hover:bg-panel-2",
                   )}
                 >
@@ -131,6 +142,11 @@ export function EvidencePanel({ bundle }: { bundle: Bundle }) {
                       {scene.compatibility.native_gsd_m} M
                     </span>
                   ) : null}
+                  {active && canCompare ? (
+                    <span className="t-code-sm shrink-0 border border-signal bg-signal px-1 py-[1px] text-white">
+                      SHOWN
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
@@ -142,22 +158,6 @@ export function EvidencePanel({ bundle }: { bundle: Bundle }) {
           />
 
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {canCompare && georeferenced ? (
-              <button
-                type="button"
-                onClick={() => setSwipeEnabled(!swipeEnabled)}
-                aria-pressed={swipeEnabled}
-                className={cn(
-                  "t-code-sm flex items-center gap-1.5 border px-1.5 py-[5px] transition-colors",
-                  swipeEnabled
-                    ? "border-signal bg-signal text-white"
-                    : "border-rule bg-panel-2 text-ink-1 hover:border-rule-heavy",
-                )}
-              >
-                <IconSwipe size={12} />
-                A/B SWIPE
-              </button>
-            ) : null}
             {bundle.tiles && georeferenced ? (
               <Tip
                 content={`${bundle.tiles.tile_count} tiles of ${bundle.tiles.tile_size_px} px with ${Math.round(bundle.tiles.overlap_frac * 100)}% overlap — the partition the pipeline actually reasons over.`}

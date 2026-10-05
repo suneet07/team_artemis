@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { PairType, Scene, SceneRole } from "@contracts/types";
 import { MAX_UPLOAD_BYTES, resolveUrl, ApiFailure } from "@/api/client";
@@ -111,6 +111,69 @@ function rejectionFor(file: File): string | null {
   return null;
 }
 
+/**
+ * The scene's thumbnail.
+ *
+ * The file the user just chose is painted straight from disk, so the row shows
+ * their image the moment it is dropped. The API's rendered preview is the
+ * fallback for what a browser cannot decode — GeoTIFF and JPEG 2000 — and the
+ * text placeholder only remains while neither exists.
+ */
+function DraftPreview({
+  draft,
+  scene,
+  percent,
+}: {
+  draft: Draft;
+  scene: Scene | undefined;
+  percent: number;
+}) {
+  const [localUrl, setLocalUrl] = useState<string | null>(null);
+  const [localFailed, setLocalFailed] = useState(false);
+  const [remoteFailed, setRemoteFailed] = useState(false);
+
+  useEffect(() => {
+    const url = URL.createObjectURL(draft.file);
+    setLocalUrl(url);
+    setLocalFailed(false);
+    return () => URL.revokeObjectURL(url);
+  }, [draft.file]);
+
+  const alt = `Preview of ${draft.file.name}`;
+
+  if (localUrl && !localFailed) {
+    return (
+      <img
+        src={localUrl}
+        alt={alt}
+        onError={() => setLocalFailed(true)}
+        className="h-full w-full object-cover"
+      />
+    );
+  }
+  if (scene?.preview_url && !remoteFailed) {
+    return (
+      <img
+        src={resolveUrl(scene.preview_url)}
+        alt={alt}
+        onError={() => setRemoteFailed(true)}
+        className="h-full w-full object-cover"
+      />
+    );
+  }
+  return (
+    <div className="flex h-full items-center justify-center">
+      <span className="t-code-sm text-window-ink-2">
+        {draft.state === "uploading"
+          ? `${percent}%`
+          : draft.state === "ingesting"
+            ? "READING…"
+            : "NO PREVIEW"}
+      </span>
+    </div>
+  );
+}
+
 function DraftRow({
   draft,
   pairType,
@@ -136,19 +199,7 @@ function DraftRow({
   return (
     <li className="m-sheet grid grid-cols-1 gap-3 p-3 sm:grid-cols-[124px_1fr]">
       <div className="m-window aspect-[4/3] overflow-hidden sm:aspect-square">
-        {compatibility && resolved ? (
-          <img
-            src={resolveUrl(resolved.preview_url)}
-            alt={`Preview of ${draft.file.name} — synthetic imagery, not observed data`}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <span className="t-code-sm text-window-ink-2">
-              {draft.state === "uploading" ? `${percent}%` : "READING…"}
-            </span>
-          </div>
-        )}
+        <DraftPreview draft={draft} scene={resolved} percent={percent} />
       </div>
 
       <div className="flex min-w-0 flex-col gap-2.5">
@@ -274,23 +325,21 @@ function DraftRow({
               />
               <Field
                 label="BIT DEPTH"
-                value={`${compatibility.bit_depth}`}
+                value={`${compatibility.bit_depth ?? "unknown"}`}
                 title={compatibility.bit_depth_source ?? undefined}
               />
+              {/* The report is read defensively: an unreadable file, or an API
+                  build older than the contract, sends it with keys missing. */}
               <Field
                 label="BANDS"
-                value={compatibility.bands_present.join(", ")}
+                value={compatibility.bands_present?.join(", ") || "unknown"}
                 className="col-span-2"
               />
               <Field
                 label="INDICES"
-                value={
-                  compatibility.computable_indices.length
-                    ? compatibility.computable_indices.join(", ")
-                    : "none"
-                }
+                value={compatibility.computable_indices?.join(", ") || "none"}
                 tone={
-                  compatibility.computable_indices.length
+                  compatibility.computable_indices?.length
                     ? "default"
                     : "caution"
                 }
@@ -298,11 +347,11 @@ function DraftRow({
               />
               <Field
                 label="SENSOR"
-                value={compatibility.band_inventory.sensor_hint ?? "unknown"}
+                value={compatibility.band_inventory?.sensor_hint ?? "unknown"}
                 className="col-span-2"
               />
             </div>
-            {compatibility.warnings.length ? (
+            {compatibility.warnings?.length ? (
               <WarningList warnings={compatibility.warnings} />
             ) : null}
           </>

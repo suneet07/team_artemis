@@ -11,6 +11,7 @@ export interface LayerState {
 
 export type WorkspaceTab = "chat" | "trace";
 export type BaseLayer = "optical" | "sar" | "none";
+export type CompareMode = "single" | "swipe" | "side";
 
 interface WorkspaceStore {
   /* evidence layers, in production order */
@@ -26,10 +27,11 @@ interface WorkspaceStore {
   baseOpacity: number;
   setBaseOpacity: (opacity: number) => void;
 
-  /* bi-temporal A/B swipe */
-  swipeEnabled: boolean;
+  /* how a two-scene bundle is shown: one scene, an A/B swipe over the same
+     position, or both next to each other with pan and zoom locked together */
+  compareMode: CompareMode;
+  setCompareMode: (mode: CompareMode) => void;
   swipePosition: number;
-  setSwipeEnabled: (enabled: boolean) => void;
   setSwipePosition: (position: number) => void;
 
   /* right pane */
@@ -83,9 +85,9 @@ export const useWorkspace = create<WorkspaceStore>((set) => ({
   baseOpacity: 1,
   setBaseOpacity: (baseOpacity) => set({ baseOpacity }),
 
-  swipeEnabled: false,
+  compareMode: "single",
+  setCompareMode: (compareMode) => set({ compareMode }),
   swipePosition: 0.5,
-  setSwipeEnabled: (swipeEnabled) => set({ swipeEnabled }),
   setSwipePosition: (swipePosition) => set({ swipePosition }),
 
   tab: "chat",
