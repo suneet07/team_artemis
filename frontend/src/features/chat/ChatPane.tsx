@@ -369,8 +369,9 @@ export function ChatPane({ bundle }: { bundle: Bundle | undefined }) {
         <div ref={endRef} />
       </div>
 
-      {/* composer */}
-      <div className="border-t border-rule bg-panel-2 p-3 no-print">
+      {/* composer — capped so that on a short window, with the blocked-task
+          list open, it scrolls rather than squeezing the turns out entirely */}
+      <div className="max-h-[70%] shrink-0 overflow-y-auto border-t border-rule bg-panel-2 p-3 no-print">
         {suggestions.length > 0 && sessionRuns.length === 0 ? (
           <div className="mb-2.5 flex flex-col gap-1.5">
             <span className="t-code-sm text-ink-3">

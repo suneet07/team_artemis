@@ -78,12 +78,14 @@ export function WorkspaceScreen() {
   );
 
   return (
-    /* Viewport-bounded on large screens. The shell is `min-h-dvh`, so a tall
-       child lengthens the whole page -- and the image viewer sizes to the
-       image's own aspect ratio, so a portrait screenshot pushed the chat box
-       hundreds of pixels below the fold. Panes scroll internally instead.
+    /* Viewport-bounded on large screens: `App` pins the shell to one viewport
+       for this route, so this fills what the identity plate leaves and the
+       panes scroll internally. A height set here did nothing -- this is a
+       `flex-1` item, and its flex-basis outranks `height`, so a long chat or
+       evidence list lengthened the whole page and took the composer and the
+       coordinate readout below the fold with it.
        Small screens keep the stacked, scrolling layout, where that is right. */
-    <div className="flex min-h-0 flex-1 flex-col lg:h-[calc(100dvh-var(--identity-plate-h,44px))] lg:overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col lg:overflow-hidden">
       {/* ── bundle bar: the two SLAs stay on screen ─────────────────── */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-rule bg-panel-1 px-4 py-2 no-print">
         <Link
@@ -144,7 +146,9 @@ export function WorkspaceScreen() {
       </div>
 
       {/* ── three panes ─────────────────────────────────────────────── */}
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[288px_minmax(0,1fr)_408px]">
+      {/* The explicit row matters: an implicit `auto` row may grow to its
+          tallest pane, which is exactly the shared scroll this avoids. */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[288px_minmax(0,1fr)_408px] lg:grid-rows-[minmax(0,1fr)]">
         <div className="order-2 min-h-[320px] lg:order-1 lg:min-h-0">
           <EvidencePanel bundle={bundle} />
         </div>

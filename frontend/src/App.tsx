@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useMatch } from "react-router-dom";
+import { cn } from "./lib/cn";
 import { IdentityPlate } from "./components/IdentityPlate";
 import { Skeleton, TipProvider } from "./components/primitives";
 import { useWorkspace } from "./store/workspace";
@@ -43,9 +44,23 @@ export function App() {
     document.documentElement.dataset.armature = armature ? "on" : "off";
   }, [armature]);
 
+  // The workspace is an instrument console, not a document: on large screens
+  // the shell is exactly one viewport tall and each pane scrolls inside itself,
+  // so the composer and the map's coordinate readout never leave the screen.
+  // Bounding the shell rather than the workspace means the identity plate can
+  // be any height -- wrapped, or carrying the degraded banner -- and the panes
+  // simply get what is left. Print is exempt: paper has no viewport, and the
+  // panes have to grow to their content there.
+  const viewportBound = useMatch("/workspace/:bundleId") !== null;
+
   return (
     <TipProvider delayDuration={140} skipDelayDuration={300}>
-      <div className="flex min-h-dvh flex-col bg-panel-0">
+      <div
+        className={cn(
+          "flex min-h-dvh flex-col bg-panel-0",
+          viewportBound && "lg:h-dvh print:h-auto",
+        )}
+      >
         <a
           href="#main"
           className="t-code sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:border focus:border-ink-0 focus:bg-panel-2 focus:px-3 focus:py-2"
